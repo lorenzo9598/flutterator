@@ -1,0 +1,6 @@
+note.txt
+*.todo
+__pycache__/
+build/
+.venv/
+flutterator.egg-info/
