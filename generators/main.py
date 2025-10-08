@@ -10,6 +10,7 @@ from .assets import copy_assets
 from .config import generate_config_files
 from .templates import generate_files
 from .initializator import initialize_project
+from .feature_generator import create_feature
 
 def run_cmd(cmd, capture_output=False):
     """Esegue un comando di shell e mostra output"""
