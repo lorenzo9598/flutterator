@@ -38,20 +38,18 @@ def update_pubspec(flutter_name, has_login):
         "flutter_launcher_icons",
         "analyzer"
     ]
-    
-    print("📦 Aggiungendo dipendenze principali...")
+
     for dep in main_dependencies:
         add_dependency(project_path, dep)
-    
-    print("🔧 Aggiungendo dipendenze di sviluppo...")
+
     for dep in dev_dependencies:
         add_dependency(project_path, dep, dev=True)
-    
-    # Aggiorna configurazione flutter in pubspec.yaml
+
+    # Update Flutter configuration in pubspec.yaml
     update_flutter_config(project_path)
 
 def add_dependency(project_path: Path, package: str, dev: bool = False):
-    """Aggiunge una singola dipendenza usando flutter pub add"""
+    """Adds a single dependency using flutter pub add"""
     try:
         cmd = ["flutter", "pub", "add"]
         cmd.append(package)
@@ -66,35 +64,34 @@ def add_dependency(project_path: Path, package: str, dev: bool = False):
             text=True, 
             check=True
         )
-        print(f"  ✅ {package}")
         
     except subprocess.CalledProcessError as e:
-        print(f"  ⚠️ Errore aggiungendo {package}: {e.stderr}")
+        print(f"  ⚠️ Error adding {package}: {e.stderr}")
     except FileNotFoundError:
-        print("❌ Flutter non trovato nel PATH")
+        print("❌ Flutter not found in PATH")
         sys.exit(1)
 
 def update_flutter_config(project_path: Path):
-    """Aggiorna la configurazione flutter nel pubspec.yaml"""
+    """Updates the Flutter configuration in pubspec.yaml"""
     pubspec_path = project_path / "pubspec.yaml"
     
     if not pubspec_path.exists():
         return
     
     try:
-        # Leggi il contenuto esistente
+        # Read the existing content
         content = pubspec_path.read_text()
-        
-        # Sostituisci solo gli assets commentati
+
+        # Replace only the commented assets
         lines = content.split('\n')
         new_lines = []
         
         for line in lines:
             stripped = line.strip()
-            
-            # Sostituisci le righe di assets commentate
+
+            # Replace commented asset lines
             if stripped.startswith("# assets:") or (stripped.startswith("#") and "assets:" in stripped):
-                # Trova l'indentazione corretta dalla riga
+                # Find the correct indentation from the line
                 indent = line[:len(line) - len(line.lstrip())]
                 new_lines.extend([
                     f"{indent}assets:",
@@ -103,17 +100,16 @@ def update_flutter_config(project_path: Path):
                 ])
             elif stripped.startswith("uses-material-design:"):
                 new_lines.append(line)
-                # Aggiungi generate: true subito dopo uses-material-design
+                # Add generate: true right after uses-material-design
                 indent = line[:len(line) - len(line.lstrip())]
                 new_lines.append(f"{indent}generate: true")
             else:
                 new_lines.append(line)
         
         content = '\n'.join(new_lines)
-        
-        # Scrivi il contenuto aggiornato
+
+        # Write the updated content
         pubspec_path.write_text(content)
-        print("✅ Configurazione Flutter aggiornata")
-        
+
     except Exception as e:
-        print(f"⚠️ Errore nell'aggiornamento della configurazione Flutter: {e}")
+        print(f"⚠️ Error updating Flutter configuration: {e}")

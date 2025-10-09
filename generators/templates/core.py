@@ -9,7 +9,7 @@ def generate_core_files(project_name: str, lib_path: Path, has_login: bool):
 
 def generate_main(project_name: str, lib_path: Path):
     # main.dart
-    generate_file(project_name, lib_path, ("main_api_template.dart"), "main.dart")
+    generate_file(project_name, lib_path, ("main_template.dart"), "main.dart")
 
 def generate_app_widget(project_name: str, lib_path: Path, has_login: bool):
     # app_widget.dart

@@ -2,31 +2,30 @@ import click
 from pathlib import Path
 
 def initialize_project(lib_path, project_path, has_login):
-    click.echo("\n📁 Rimuovendo file di default...")
     remove_default_files(lib_path, project_path)
-    click.echo("\n📁 Creando struttura delle cartelle...")
+    click.echo("\n📁 Creating folder structure...")
     create_folder_structure(lib_path, has_login)
 
 def remove_default_files(lib_path, project_path):
-     # Rimuovi il main.dart di default e test di default
+     # Remove default main.dart and test files
     default_main = lib_path / "main.dart"
     if default_main.exists():
         default_main.unlink()
-    
-    # Rimuovi cartella test di default se vuota o contiene solo widget_test.dart
+
+    # Remove default test folder if empty or contains only widget_test.dart
     test_path = project_path / "test"
     if test_path.exists():
         widget_test = test_path / "widget_test.dart"
         if widget_test.exists():
             widget_test.unlink()
-        # Rimuovi cartella test se ora è vuota
+        # Try to remove the test directory if it's empty
         try:
             test_path.rmdir()
         except OSError:
-            pass  # Non vuota, lascia stare
+            pass  # Not empty, leave it be
 
 def create_folder_structure(lib_path, login):
-     # Crea struttura delle cartelle    
+     # Create folder structure
     folders = [
         "apis/clients",
         "apis/common", 
@@ -41,8 +40,8 @@ def create_folder_structure(lib_path, login):
         "presentation/splash",
         "infrastructure/storage"
     ]
-    
-    # Aggiungi cartelle auth se login è abilitato
+
+    # Add auth folders if login is enabled
     if login:
         folders.extend([
             "application/auth",
@@ -53,7 +52,7 @@ def create_folder_structure(lib_path, login):
             "presentation/auth/widgets"
         ])
 
-    # Crea tutte le cartelle
+    # Create all folders
     for folder in folders:
         folder_path = lib_path / folder
         folder_path.mkdir(parents=True, exist_ok=True)
