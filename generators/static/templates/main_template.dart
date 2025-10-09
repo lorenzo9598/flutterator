@@ -17,8 +17,6 @@ Future<void> main() async {
 
   await configureDependencies(Environment.dev);
 
-  //await Firebase.initializeApp(); // Uncomment the following line to use Firebase Authentication
-
   runApp(const AppWidget());
 }
 
