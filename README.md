@@ -1,16 +1,15 @@
-# Flutter Project Generator CLI
+# Flutterator
 
-Una CLI per generare progetti Flutter con una struttura personalizzata e configurazioni pre-impostate.
+A CLI tool to generate Flutter projects with custom folder structure and pre-configured settings.
+## Features
 
-## Caratteristiche
+- ✅ Creates Flutter projects with custom folder structure
+- 🔐 Optional login support (Email/Password)
+- 📦 Automatically adds common dependencies
+- 🚀 Ready-to-use example files
+- 📁 Organized structure for scalable projects
 
-- ✅ Crea progetti Flutter con struttura di cartelle personalizzata
-- 🔐 Supporto opzionale per login (Email/Password, Google, Apple)
-- 📦 Aggiunge automaticamente dipendenze comuni
-- 🚀 File di esempio pronti all'uso
-- 📁 Struttura organizzata per progetti scalabili
-
-## Struttura delle Cartelle
+## Folder Structure
 
 ```
 lib/
@@ -23,7 +22,8 @@ lib/
 │   └── auth/ (se login abilitato)
 ├── infrastructure/
 │   ├── core/
-│   └── auth/ (se login abilitato)
+│   ├── auth/ (se login abilitato)
+│   └── storage/
 ├── logging/
 ├── model/
 │   ├── auth/ (se login abilitato)
@@ -35,176 +35,157 @@ lib/
     └── splash/
 ```
 
-## Installazione
+## Install
 
-### Prerequisiti
+### Prerequisites
 - Python 3.7+
-- Flutter SDK installato e nel PATH
+- Flutter SDK installed and in PATH
 
-### Installazione della CLI
+### CLI Installation
 
-1. Clona o scarica i file
-2. Naviga nella cartella del progetto
-3. Installa in modalità development:
+#### Download
+1. Go to [www.flutterator.com](https://www.flutterator.com)
+2. Download the ZIP file
+3. Extract it to your desired folder
+
+#### Add to PATH
+
+**Windows:**
+1. Extract the ZIP to a folder (e.g., `C:\flutterator`)
+2. Add the folder to your PATH:
+   - Open System Properties → Advanced → Environment Variables
+   - Edit the `PATH` variable and add `C:\flutterator`
+   - Restart your terminal
+
+**macOS/Linux:**
+1. Extract the ZIP to a folder (e.g., `/usr/local/flutterator`)
+2. Add to PATH by adding this line to your `~/.bashrc` or `~/.zshrc`:
+   ```bash
+   export PATH="/usr/local/flutterator:$PATH"
+   ```
+3. Reload your shell: `source ~/.bashrc` or `source ~/.zshrc`
+
+## Usage
+
+### Interactive Mode (Recommended)
 
 ```bash
-pip install -e .
+flutterator create
 ```
 
-Oppure installa direttamente:
+The CLI will guide you through the options:
+- Project name
+- Whether to include login functionality
+- Login types to support
+
+### Command with Parameters
 
 ```bash
-pip install .
+# Basic project without login
+flutterator create --name my_project
+
+# Project with login
+flutterator create --name my_project --login
 ```
 
-### Installazione dipendenze
+### Available Options
+
+- `--name TEXT`: Project name (required when not in interactive mode)
+- `--login`: Include login functionality
+- `--help`: Show help
+
+## Example Usage
 
 ```bash
-pip install click
-```
+$ flutterator create
+Project name: my_awesome_app 
+Does the project have login? [y/N]: y
+prova2
 
-## Utilizzo
+🚀 Creating Flutter project: my_awesome_app
 
-### Modalità Interattiva (Consigliata)
+📁 Creating folder structure...
 
-```bash
-flutter-gen
-```
+📁 Generating files...
 
-La CLI ti guiderà attraverso le opzioni:
-- Nome del progetto
-- Se includere login
-- Tipi di login da supportare
+✅ Project created successfully!
 
-### Modalità con Parametri
+📋 Summary:
+   Name: prova2
+   Path: /your/project/folder/my_awesome_app
+   Login: ✅ Email/Password
 
-```bash
-# Progetto base senza login
-flutter-gen --name mio_progetto
-
-# Progetto con login email/password
-flutter-gen --name mio_progetto --login --email-password
-
-# Progetto con tutti i tipi di login
-flutter-gen --name mio_progetto --login --email-password --google --apple
-```
-
-### Opzioni Disponibili
-
-- `--name TEXT`: Nome del progetto (richiesto)
-- `--login`: Include funzionalità di login
-- `--email-password`: Include login con email/password
-- `--google`: Include login con Google
-- `--apple`: Include login con Apple
-- `--help`: Mostra l'aiuto
-
-## Esempio di Utilizzo
-
-```bash
-$ flutter-gen
-Nome del progetto: mia_app_fantastica
-Il progetto ha login? [y/N]: y
-
-🔐 Seleziona i tipi di login da includere:
-  Email/Password? [y/N]: y
-  Google? [y/N]: y  
-  Apple? [y/N]: n
-
-🚀 Creando progetto Flutter: mia_app_fantastica
-🔐 Con login: Email/Password, Google
-
-📦 Creando progetto Flutter base...
-✅ Progetto Flutter creato
-
-📁 Creando struttura delle cartelle...
-
-✅ Progetto creato con successo!
-
-📋 Riepilogo:
-   Nome: mia_app_fantastica
-   Percorso: /path/to/mia_app_fantastica
-   Login: ✅ Email/Password, ✅ Google, ❌ Apple
-
-🚀 Per iniziare:
-   cd mia_app_fantastica
+🚀 To get started:
+   cd my_awesome_app
    flutter pub get
+   dart run build_runner build
    flutter run
 ```
 
-## File Generati
+## Generated Files
 
-### File di Esempio Inclusi
-- `main.dart` - Entry point dell'app
-- `presentation/splash/splash_screen.dart` - Schermata di caricamento
-- `presentation/home/home_screen.dart` - Schermata principale
-- `presentation/auth/login_screen.dart` - Schermata di login (se abilitato)
+### Included Example Files
+WIP
 
-### Dipendenze Aggiunte Automaticamente
+### Automatically Added Dependencies
+**Always included:**
 
-**Sempre incluse:**
-- `dio` - Client HTTP
-- `get_it` - Dependency Injection
-- `injectable` - Annotations per DI
+**Dependencies:**
+- `dartz` - Functional programming constructs for Dart
+- `freezed_annotation` - Annotations for code generation with freezed
+- `injectable` - Compile-time dependency injection
+- `flutter_bloc` - State management using the BLoC pattern
+- `get_it` - Service locator for dependency injection
+- `bloc` - Core BLoC state management library
+- `another_flushbar` - Customizable snackbar notifications
+- `caravaggio_ui` - UI component library
+- `font_awesome_flutter` - Font Awesome icons for Flutter
+- `uuid` - Generate RFC4122 UUIDs
+- `collection` - Utility functions for collections
+- `rxdart` - Reactive extensions for Dart streams
+- `flutter_svg` - SVG rendering support
+- `shared_preferences` - Local data persistence
+- `dio` - HTTP client for API requests
+- `retrofit` - Type-safe HTTP client generator
+- `go_router` - Declarative routing solution
 
-**Con login:**
-- `shared_preferences` - Storage locale
-- `http` - Client HTTP aggiuntivo
-- `google_sign_in` - Login Google (se selezionato)
-- `sign_in_with_apple` - Login Apple (se selezionato)
-
-## Sviluppo
-
-### Struttura del Progetto
-```
-flutter-project-cli/
-├── flutter_cli.py       # Script principale
-├── setup.py             # Configurazione installazione
-├── README.md            # Documentazione
-└── requirements.txt     # Dipendenze Python
-```
-
-### Modifica della CLI
-
-Per modificare la CLI:
-1. Modifica `flutter_cli.py`
-2. Reinstalla con `pip install -e .`
-3. Testa i cambiamenti
-
-### Aggiungere Nuove Funzionalità
-
-Puoi facilmente estendere la CLI:
-- Aggiungere nuovi tipi di login
-- Modificare la struttura delle cartelle
-- Includere template aggiuntivi
-- Aggiungere configurazioni specifiche
+**Dev Dependencies:**
+- `build_runner` - Code generation runner
+- `freezed` - Code generation for data classes
+- `injectable_generator` - Generator for injectable annotations
+- `json_serializable` - JSON serialization code generation
+- `retrofit_generator` - Generator for retrofit HTTP clients
+- `flutter_launcher_icons` - Generate app launcher icons
+- `analyzer` - Static analysis for Dart code
 
 ## Troubleshooting
 
-### Flutter non trovato
+### Flutter not found
 ```
-❌ Flutter non trovato. Assicurati che Flutter sia installato e nel PATH.
+❌ Flutter not found. Make sure Flutter is installed and in PATH.
 ```
-**Soluzione:** Installa Flutter e assicurati che sia nel PATH.
+**Solution:** Install Flutter and ensure it's in your PATH.
 
-### Errore nella creazione del progetto
+### Project creation error
 ```
-❌ Errore nella creazione del progetto Flutter
+❌ Error creating Flutter project
 ```
-**Soluzione:** Verifica che il nome del progetto sia valido (solo lettere, numeri, _ e -).
+**Solution:** Verify the project name is valid (letters, numbers, _ and - only).
 
-### Click non installato
+### Command not found
 ```
-ModuleNotFoundError: No module named 'click'
+flutterator: command not found
 ```
-**Soluzione:** Installa click con `pip install click`.
+**Solution:** Make sure flutterator is properly added to your PATH.
 
-## Contributi
+## Contributing
 
-I contributi sono benvenuti! Sentiti libero di:
-- Aprire issue per bug o richieste di funzionalità
-- Inviare pull request
-- Migliorare la documentazione
+Contributions are welcome! Feel free to:
+- Open issues for bugs or feature requests
+- Submit pull requests
+- Improve documentation
 
-## Licenza
 
-Questo progetto è rilasciato sotto licenza MIT.
+## License
+
+This project is released under the MIT License.
