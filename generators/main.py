@@ -29,17 +29,17 @@ def init(flutter_name, login):
     # Controlla se esiste già una cartella con lo stesso nome del progetto
     project_dir = Path(flutter_name)
     if project_dir.exists():
-      click.echo(f"⚠️ Esiste già una cartella chiamata '{flutter_name}' in questa directory.")
-      if click.confirm("Vuoi sovrascrivere la cartella esistente?", default=False):
+      click.echo(f"⚠️ Folder named '{flutter_name}' already exists in this directory.")
+      if click.confirm("Do you want to overwrite the existing folder?", default=False):
           # Rimuovi la cartella esistente
           shutil.rmtree(project_dir)
-          click.echo("✅ Cartella precedente rimossa.")
+          click.echo("✅ Previous folder removed.")
       else:
-          click.echo("❌ Operazione annullata.")
+          click.echo("❌ Operation canceled.")
           sys.exit(1)
     
     
-    click.echo(f"\n🚀 Creando progetto Flutter: {flutter_name}")
+    click.echo(f"\n🚀 Creating Flutter project: {flutter_name}")
     
     # Crea il progetto Flutter base
     run_cmd(f"flutter create {flutter_name} --org com.example --project-name {flutter_name} --template app", capture_output=True)
@@ -60,16 +60,16 @@ def init(flutter_name, login):
     # Copia gli asset nella cartella lib/assets
     copy_assets(flutter_name)
 
-    click.echo("\n✅ Progetto creato con successo!")
-    click.echo(f"\n📋 Riepilogo:")
-    click.echo(f"   Nome: {flutter_name}")
-    click.echo(f"   Percorso: {project_path.absolute()}")
+    click.echo("\n✅ Project created successfully!")
+    click.echo(f"\n📋 Summary:")
+    click.echo(f"   Name: {flutter_name}")
+    click.echo(f"   Path: {project_path.absolute()}")
     if login:
         click.echo(f"   Login: ✅ Email/Password")
     else:
-        click.echo(f"   Login: ❌ Nessuno")
-    
-    click.echo(f"\n🚀 Per iniziare:")
+        click.echo(f"   Login: ❌ None")
+
+    click.echo(f"\n🚀 To get started:")
     click.echo(f"   cd {flutter_name}")
     click.echo(f"   flutter pub get")
     click.echo(f"   dart run build_runner build")
