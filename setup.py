@@ -11,13 +11,13 @@ setup(
     description="CLI per creare progetti Flutter con struttura personalizzata - by GetAutomation",
     long_description=open("README.md").read() if os.path.exists("README.md") else "",
     long_description_content_type="text/markdown",
-    py_modules=["flutter_cli"],
+    py_modules=["flutterator"],
     install_requires=[
         "click>=8.0.0",
     ],
     entry_points={
         "console_scripts": [
-            "flutterator=flutter_cli:create",
+            "flutterator=flutterator:create",
         ],
     },
     python_requires=">=3.7",
