@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:${project_name}/presentation/home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   static const String routeName = '/';
@@ -11,14 +12,14 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  int _animation = 0;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _animation = 1;
+      // After 500 milliseconds, navigate to the next screen
+      Future<void>.delayed(const Duration(milliseconds: 500), () {
+        // Navigate to the next screen or perform any action here
+        context.replace(HomeScreen.routeName);
       });
     });
   }
@@ -27,10 +28,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: AnimatedContainer(
-          duration: const Duration(seconds: 1),
-          curve: Curves.easeInOut,
-          width: _animation == 1 ? 200 : 100,
+        child: SizedBox(
+          width: 200,
           child: Image.asset('assets/logo.png'),
         ),
       ),

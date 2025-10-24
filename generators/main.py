@@ -12,7 +12,7 @@ from .templates import generate_files
 from .initializator import initialize_project
 
 def run_cmd(cmd, capture_output=False):
-    """Esegue un comando di shell e mostra output"""
+    """Executes a shell command and displays output"""
     try:
         result = subprocess.run(cmd, shell=True, check=True, capture_output=capture_output)
         return result.returncode
@@ -29,36 +29,37 @@ def init(flutter_name, login):
     # Controlla se esiste già una cartella con lo stesso nome del progetto
     project_dir = Path(flutter_name)
     if project_dir.exists():
-      click.echo(f"⚠️ Folder named '{flutter_name}' already exists in this directory.")
-      if click.confirm("Do you want to overwrite the existing folder?", default=False):
-          # Rimuovi la cartella esistente
-          shutil.rmtree(project_dir)
-          click.echo("✅ Previous folder removed.")
-      else:
-          click.echo("❌ Operation canceled.")
-          sys.exit(1)
+        click.echo(f"⚠️ Folder named '{flutter_name}' already exists in this directory.")
+        if click.confirm("Do you want to overwrite the existing folder?", default=False):
+            # Rimuovi la cartella esistente
+            shutil.rmtree(project_dir)
+            click.echo("✅ Previous folder removed.")
+        else:
+            click.echo("❌ Operation canceled.")
+            sys.exit(1)
     
     
     click.echo(f"\n🚀 Creating Flutter project: {flutter_name}")
-    
-    # Crea il progetto Flutter base
+
+    # Create the base Flutter project
     run_cmd(f"flutter create {flutter_name} --org com.example --project-name {flutter_name} --template app", capture_output=True)
     
-    # Percorso del progetto
+    # Project path
     project_path = Path(flutter_name)
     lib_path = project_path / "lib"
     
-    # Inizializza il progetto (rimuovi file di default, crea cartelle, ecc.)
+    # Initialize the project (remove default files, create folders, etc.)
     initialize_project(lib_path, project_path, login)
 
-    # Genera i file nelle varie cartelle
+    # Generate files in various folders
     generate_files(lib_path, login, flutter_name)
     
-    # Genera i file di configurazione (pubspec.yaml, analysis_options.yaml)
+    # Generate configuration files (pubspec.yaml, analysis_options.yaml)
     generate_config_files(lib_path, login, flutter_name)
 
-    # Copia gli asset nella cartella lib/assets
+    # Copy assets to the lib/assets folder
     copy_assets(flutter_name)
+
 
     click.echo("\n✅ Project created successfully!")
     click.echo(f"\n📋 Summary:")

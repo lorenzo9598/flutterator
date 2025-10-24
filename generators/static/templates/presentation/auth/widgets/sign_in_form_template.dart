@@ -1,14 +1,14 @@
 import 'package:another_flushbar/flushbar_helper.dart';
 import 'package:caravaggio_ui/caravaggio_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:$project_name/application/auth/auth_bloc.dart';
 import 'package:$project_name/application/auth/sign_in_form/sign_in_form_bloc.dart';
 import 'package:$project_name/presentation/home/home_screen.dart';
-import 'package:prova2/model/auth/auth_failure.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:$project_name/model/auth/auth_failure.dart';
 import 'package:go_router/go_router.dart';
-import 'package:prova2/model/core/failures.dart';
+import 'package:$project_name/model/core/failures.dart';
 import 'package:dartz/dartz.dart' as dz;
 
 class SignInForm extends StatelessWidget {

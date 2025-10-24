@@ -6,7 +6,7 @@ import 'package:$project_name/presentation/home/home_screen.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
-  static const String routeName = '/splash';
+  static const String routeName = '/';
 
   const SplashScreen({super.key});
 

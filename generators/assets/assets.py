@@ -4,7 +4,7 @@ import os
 import shutil
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent  # la cartella dove si trova copier.py, cioè "templates/"
+BASE_DIR = Path(__file__).parent 
 STATIC_DIR = BASE_DIR.parent / "static"
 
 def move_assets_to_lib(project_name):

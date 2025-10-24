@@ -1,10 +1,10 @@
 from pathlib import Path
 
 def update_analysis_options(flutter_name):
-    # Percorso del progetto
+    # Project path
     project_path = Path(flutter_name)
 
-    """Aggiorna analysis_options.yaml con configurazioni comuni"""
+    """Updates analysis_options.yaml with common configurations"""
     analysis_options_path = project_path / "analysis_options.yaml"
     analysis_options_content = """include: package:flutter_lints/flutter.yaml
 

@@ -35,4 +35,36 @@ def generate_splash_screen(project_name: str, lib_path: Path, has_login: bool):
     generate_file(project_name, lib_path, ("presentation/splash/splash_screen_auth_template.dart" if has_login else "presentation/splash/splash_screen_template.dart"), "presentation/splash/splash_screen.dart")
 
 def generate_router(project_name: str, lib_path: Path, has_login: bool):
-    generate_file(project_name, lib_path, ("router_auth_template.dart" if has_login else "router_template.dart"), "router.dart")
+    content = ""
+
+    if has_login:
+        content += f"import 'package:{project_name}/presentation/auth/login_screen.dart';\n"
+
+    content += f"""import 'package:{project_name}/presentation/home/home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:{project_name}/presentation/splash/splash_screen.dart';
+import 'package:go_router/go_router.dart';
+
+final GoRouter router = GoRouter(
+  routes: <RouteBase>["""
+    
+    if has_login:
+        content += f"""
+    GoRoute(
+        path: LoginScreen.routeName,
+        builder: (BuildContext context, GoRouterState state) => const LoginScreen(),
+    ),"""
+    
+    content += f"""
+    GoRoute(
+      path: HomeScreen.routeName,
+      builder: (BuildContext context, GoRouterState state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: SplashScreen.routeName,
+      builder: (BuildContext context, GoRouterState state) => const SplashScreen(),
+    ),
+  ],
+);
+"""
+    (lib_path / "router.dart").write_text(content)

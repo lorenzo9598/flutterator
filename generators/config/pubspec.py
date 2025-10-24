@@ -6,7 +6,7 @@ def update_pubspec(flutter_name, has_login):
     """Aggiunge dipendenze al pubspec.yaml usando flutter pub add"""
     project_path = Path(flutter_name)
     
-    # Dipendenze principali sempre necessarie
+    # Main dependencies required
     main_dependencies = [
         "dartz",
         "freezed_annotation", 
@@ -39,21 +39,19 @@ def update_pubspec(flutter_name, has_login):
         "analyzer"
     ]
 
-    for dep in main_dependencies:
-        add_dependency(project_path, dep)
-
-    for dep in dev_dependencies:
-        add_dependency(project_path, dep, dev=True)
+    # Add all main dependencies in a single command
+    add_multiple_dependencies(project_path, main_dependencies)
+    add_multiple_dependencies(project_path, dev_dependencies, dev=True)
 
     # Update Flutter configuration in pubspec.yaml
     update_flutter_config(project_path)
 
-def add_dependency(project_path: Path, package: str, dev: bool = False):
-    """Adds a single dependency using flutter pub add"""
+
+def add_multiple_dependencies(project_path: Path, packages: list, dev: bool = False):
+    """Adds multiple dependencies using flutter pub add"""
     try:
-        cmd = ["flutter", "pub", "add"]
-        cmd.append(package)
-        
+        cmd = ["flutter", "pub", "add"] + packages
+
         if dev:
             cmd.append("--dev")
         
@@ -66,10 +64,33 @@ def add_dependency(project_path: Path, package: str, dev: bool = False):
         )
         
     except subprocess.CalledProcessError as e:
-        print(f"  ⚠️ Error adding {package}: {e.stderr}")
+        print(f"  ⚠️ Error adding dependencies: {e.stderr}")
     except FileNotFoundError:
         print("❌ Flutter not found in PATH")
         sys.exit(1)
+
+# def add_dependency(project_path: Path, package: str, dev: bool = False):
+#     """Adds a single dependency using flutter pub add"""
+#     try:
+#         cmd = ["flutter", "pub", "add"]
+#         cmd.append(package)
+        
+#         if dev:
+#             cmd.append("--dev")
+        
+#         result = subprocess.run(
+#             cmd, 
+#             cwd=project_path, 
+#             capture_output=True, 
+#             text=True, 
+#             check=True
+#         )
+        
+#     except subprocess.CalledProcessError as e:
+#         print(f"  ⚠️ Error adding {package}: {e.stderr}")
+#     except FileNotFoundError:
+#         print("❌ Flutter not found in PATH")
+#         sys.exit(1)
 
 def update_flutter_config(project_path: Path):
     """Updates the Flutter configuration in pubspec.yaml"""
