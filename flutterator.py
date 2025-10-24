@@ -10,9 +10,9 @@ from generators import *
 @click.group()
 def cli():
     """
-    🚀 Flutterator - CLI per creare e gestire progetti Flutter con struttura personalizzata
+    🚀 Flutterator - CLI to create and manage Flutter projects with custom structure
     
-    Creato da Lorenzo Busi @ GetAutomation
+    Created by Lorenzo Busi @ GetAutomation
     
     """
     pass
@@ -22,15 +22,15 @@ def cli():
 @click.option('--login', is_flag=True, prompt='Does the project have login?', help='Include login functionality')
 def create(name, login):
     """
-    Crea un nuovo progetto Flutter con struttura personalizzata
+    Create a new Flutter project with custom structure
     """
     print(name)
-    # Validazione nome progetto
+    # Project name validation
     if not name.replace('_', '').replace('-', '').isalnum():
         click.echo("❌ The project name must contain only letters, numbers, _ and -")
         sys.exit(1)
 
-    # Converti nome per Flutter (lowercase con underscore)
+    # Convert name for Flutter (lowercase with underscore)
     flutter_name = name.lower().replace('-', '_')
 
     init(flutter_name, login)
