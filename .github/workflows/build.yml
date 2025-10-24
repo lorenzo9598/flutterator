@@ -22,3 +22,78 @@ jobs:
         with:
           name: flutterator-distribution
           path: dist/flutterator-v*.zip
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ steps.date.outputs.date }}
+          name: Flutterator Build ${{ steps.date.outputs.date }}
+          body: |
+            🚀 **Flutterator Automatic Build**
+
+            Automatic distribution generated from commit: ${{ github.sha }}
+
+            ## 📦 How to install:
+            1. Download the `flutterator-v1.0.0.zip` file
+            2. Extract the archive: `unzip flutterator-v1.0.0.zip`
+            3. Enter the directory: `cd flutterator-v1.0.0`
+            4. Run the installer: `./install.sh` (Unix/Mac) or `install.bat` (Windows)
+            5. Add to PATH: `export PATH="/path/to/flutterator/bin:$PATH"`
+            6. Use anywhere: `flutterator create --name myapp`
+
+            ## 🎯 Features:
+            - ✅ Flutter project creation with Clean Architecture
+            - ✅ Complete feature generation (BLoC + Freezed + Injectable)
+            - ✅ Automatic pubspec.yaml dependency management
+            - ✅ Cross-platform (Windows, macOS, Linux)
+
+            ## 📥 Direct download:
+            The file is publicly available through this link
+          draft: false
+          prerelease: false
+          files: dist/flutterator-v1.0.0.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Latest Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          name: Flutterator Latest
+          body: |
+            🚀 **Flutterator - Latest Version**
+
+            This is always the latest available version of Flutterator.
+
+            ## 🔗 Direct download link:
+            ```
+            https://github.com/lorenzo9598/flutterator/releases/download/latest/flutterator-v1.0.0.zip
+            ```
+
+            ## 📦 Quick installation (Unix/Mac):
+            ```bash
+            curl -L -o flutterator.zip https://github.com/lorenzo9598/flutterator/releases/download/latest/flutterator-v1.0.0.zip
+            unzip flutterator.zip
+            cd flutterator-v1.0.0
+            ./install.sh
+            ```
+
+            ## 📦 Quick installation (Windows):
+            ```cmd
+            curl -L -o flutterator.zip https://github.com/lorenzo9598/flutterator/releases/download/latest/flutterator-v1.0.0.zip
+            # Extract the zip file manually
+            # Run install.bat
+            ```
+
+            ---
+            Last updated: ${{ steps.date.outputs.date }}
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: dist/flutterator-v1.0.0.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
