@@ -55,10 +55,19 @@ fi
 rm -f temp_imports.txt
 
 # Correggi gli import relativi nel file main.py
-sed -i '' 's/from \.assets/from assets.main/g' dist/${DIST_NAME}/lib/main.py
-sed -i '' 's/from \.config/from config.main/g' dist/${DIST_NAME}/lib/main.py
-sed -i '' 's/from \.templates/from templates.main/g' dist/${DIST_NAME}/lib/main.py
-sed -i '' 's/from \.initializator/from initializator/g' dist/${DIST_NAME}/lib/main.py
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' 's/from \.assets/from assets.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i '' 's/from \.config/from config.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i '' 's/from \.templates/from templates.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i '' 's/from \.initializator/from initializator/g' dist/${DIST_NAME}/lib/main.py
+else
+    # Linux
+    sed -i 's/from \.assets/from assets.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i 's/from \.config/from config.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i 's/from \.templates/from templates.main/g' dist/${DIST_NAME}/lib/main.py
+    sed -i 's/from \.initializator/from initializator/g' dist/${DIST_NAME}/lib/main.py
+fi
 cp requirements.txt dist/${DIST_NAME}/ 2>/dev/null || echo "requirements.txt not found, creating one..."
 
 # Crea requirements.txt se non esiste
