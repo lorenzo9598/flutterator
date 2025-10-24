@@ -22,14 +22,37 @@ cp flutterator.py dist/${DIST_NAME}/lib/
 cp -r generators/* dist/${DIST_NAME}/lib/
 
 # Correggi gli import nel file principale per la distribuzione
-sed -i '' 's/from generators import \*/# Aggiungi il path dei moduli al sys.path\
-import sys\
-from pathlib import Path\
-lib_path = Path(__file__).parent\
-sys.path.insert(0, str(lib_path))\
-\
-# Import dei moduli necessari\
-from main import init/g' dist/${DIST_NAME}/lib/flutterator.py
+# Rimuovi l'import generators e aggiungi gli import corretti
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' 's/from generators import \*/# Import corretti per distribuzione/' dist/${DIST_NAME}/lib/flutterator.py
+else
+    # Linux
+    sed -i 's/from generators import \*/# Import corretti per distribuzione/' dist/${DIST_NAME}/lib/flutterator.py
+fi
+
+# Aggiungi gli import necessari dopo la riga con sys e pathlib
+cat > temp_imports.txt << 'EOF'
+
+# Aggiungi il path dei moduli al sys.path per la distribuzione
+lib_path = Path(__file__).parent
+sys.path.insert(0, str(lib_path))
+
+# Import dei moduli necessari
+from main import init
+EOF
+
+# Inserisci gli import dopo le import standard
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' '/from pathlib import Path/r temp_imports.txt' dist/${DIST_NAME}/lib/flutterator.py
+else
+    # Linux  
+    sed -i '/from pathlib import Path/r temp_imports.txt' dist/${DIST_NAME}/lib/flutterator.py
+fi
+
+# Rimuovi il file temporaneo
+rm -f temp_imports.txt
 
 # Correggi gli import relativi nel file main.py
 sed -i '' 's/from \.assets/from assets.main/g' dist/${DIST_NAME}/lib/main.py
