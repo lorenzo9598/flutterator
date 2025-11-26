@@ -1,0 +1,12 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+import 'package:[[project_name]]/[[feature_name]]/model/value_objects.dart';
+
+part '[[feature_name]].freezed.dart';
+
+@freezed
+abstract class [[feature_name.capitalize()]] with _$[[feature_name.capitalize()]] {
+  const factory [[feature_name.capitalize()]]({
+[[fields]]
+  }) = _[[feature_name.capitalize()]];
+}

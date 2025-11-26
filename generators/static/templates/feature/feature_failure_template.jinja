@@ -1,0 +1,11 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part '[[feature_name]]_failure.freezed.dart';
+
+@freezed
+abstract class [[feature_name.capitalize()]]Failure with _$[[feature_name.capitalize()]]Failure {
+  const factory [[feature_name.capitalize()]]Failure.unexpected() = _Unexpected;
+  const factory [[feature_name.capitalize()]]Failure.insufficientPermission() = _InsufficientPermission;
+  const factory [[feature_name.capitalize()]]Failure.unableToUpdate() = _UnableToUpdate;
+  const factory [[feature_name.capitalize()]]Failure.notFound() = _NotFound;
+}

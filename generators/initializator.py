@@ -31,25 +31,29 @@ def create_folder_structure(lib_path, login):
         "apis/common", 
         "apis/core",
         "apis/interceptors",
-        "application",
-        "infrastructure/core",
+        "core",
+        "core/infrastructure",
+        "core/presentation",
+        "core/model",
+        "home",
+        "home/presentation",
+        "splash",
+        "splash/presentation",
         "logging",
-        "model/core",
-        "presentation/core",
-        "presentation/home",
-        "presentation/splash",
-        "infrastructure/storage"
+        "storage",
     ]
 
     # Add auth folders if login is enabled
     if login:
         folders.extend([
-            "application/auth",
-            "application/auth/sign_in_form",
-            "infrastructure/auth", 
-            "model/auth",
-            "presentation/auth",
-            "presentation/auth/widgets"
+            "auth",
+            "auth/application",
+            "auth/infrastructure",
+            "auth/presentation",
+            "auth/model",
+            "auth/sign_in_form",
+            "auth/sign_in_form/application",
+            "auth/sign_in_form/presentation",
         ])
 
     # Create all folders

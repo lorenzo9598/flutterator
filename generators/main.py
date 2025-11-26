@@ -1,4 +1,3 @@
-
 import click
 import subprocess
 import sys
@@ -70,8 +69,5 @@ def init(flutter_name, login):
     else:
         click.echo(f"   Login: ❌ None")
 
-    click.echo(f"\n🚀 To get started:")
-    click.echo(f"   cd {flutter_name}")
-    click.echo(f"   flutter pub get")
-    click.echo(f"   dart run build_runner build")
+    click.echo(f"\n🚀 Dependencies and code generation will be handled automatically!")
     click.echo(f"   flutter run")

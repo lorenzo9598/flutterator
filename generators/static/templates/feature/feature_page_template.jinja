@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prova/injection.dart';
+import '../application/[[feature_name]]_bloc.dart';
+
+class [[feature_name.capitalize()]]Page extends StatelessWidget {
+  static const String routeName = '/[[feature_name]]';
+  
+  const [[feature_name.capitalize()]]Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt.get<[[feature_name.capitalize()]]Bloc>(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('[[feature_name.replace("_", " ").capitalize()]]'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                // TODO: Navigate to create form
+              },
+            ),
+          ],
+        ),
+        body: BlocBuilder<[[feature_name.capitalize()]]Bloc, [[feature_name.capitalize()]]State>(
+          builder: (context, state) {
+            return switch (state) {
+              Initial() => const Center(child: Text('Welcome')),
+              Loading() => const Center(child: CircularProgressIndicator()),
+              Loaded(:final items) => ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return ListTile(
+                        title: Text(item.toString()),
+                        trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                            IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                                // TODO: Navigate to edit form
+                            },
+                            ),
+                            IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                                context.read<[[feature_name.capitalize()]]Bloc>().add(
+                                [[feature_name.capitalize()]]Event.deleteRequested(item.id.getOrCrash()),
+                                );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              Error(:final message) => Center(child: Text('Errore: $message')),
+              _ => const Center(child: Text('Stato sconosciuto')),
+            };
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            context.read<[[feature_name.capitalize()]]Bloc>().add(
+              const [[feature_name.capitalize()]]Event.loadRequested(),
+            );
+          },
+          child: const Icon(Icons.refresh),
+        ),
+      ),
+    );
+  }
+}

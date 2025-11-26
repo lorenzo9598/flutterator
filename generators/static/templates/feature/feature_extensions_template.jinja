@@ -1,0 +1,14 @@
+import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]].dart';
+import 'package:[[project_name]]/[[feature_name]]/infrastructure/[[feature_name]]_dto.dart';
+
+extension [[feature_name.capitalize()]]DtoX on [[feature_name.capitalize()]]Dto {
+  [[feature_name.capitalize()]] toDomain() => [[feature_name.capitalize()]](
+[[dto_to_domain_fields]]
+      );
+}
+
+extension [[feature_name.capitalize()]]X on [[feature_name.capitalize()]] {
+  [[feature_name.capitalize()]]Dto toDto() => [[feature_name.capitalize()]]Dto(
+[[domain_to_dto_fields]]
+      );
+}

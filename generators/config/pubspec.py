@@ -26,6 +26,7 @@ def update_pubspec(flutter_name, has_login):
         "dio",
         "retrofit",
         "go_router",
+        "json_annotation"
     ]
     
     # Dipendenze di sviluppo

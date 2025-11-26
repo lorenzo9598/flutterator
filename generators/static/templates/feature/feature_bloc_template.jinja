@@ -1,0 +1,76 @@
+import 'package:bloc/bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]].dart';
+import 'package:[[project_name]]/[[feature_name]]/model/i_[[feature_name]]_repository.dart';
+
+part '[[feature_name]]_event.dart';
+part '[[feature_name]]_state.dart';
+
+part '[[feature_name]]_bloc.freezed.dart';
+
+@injectable
+class [[feature_name.capitalize()]]Bloc extends Bloc<[[feature_name.capitalize()]]Event, [[feature_name.capitalize()]]State> {
+  final I[[feature_name.capitalize()]]Repository _repository;
+
+  [[feature_name.capitalize()]]Bloc(this._repository) : super(const [[feature_name.capitalize()]]State.initial()) {
+    on<LoadRequested>(_onLoadRequested);
+    on<CreateRequested>(_onCreateRequested);
+    on<UpdateRequested>(_onUpdateRequested);
+    on<DeleteRequested>(_onDeleteRequested);
+  }
+
+  void _onLoadRequested(LoadRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+    emit(const [[feature_name.capitalize()]]State.loading());
+    final result = await _repository.getAll();
+    result.fold(
+      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+    );
+  }
+
+  void _onCreateRequested(CreateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+    emit(const [[feature_name.capitalize()]]State.loading());
+    final result = await _repository.create(event.item);
+    result.fold(
+      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (_) async {
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+        );
+      },
+    );
+  }
+
+  void _onUpdateRequested(UpdateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+    emit(const [[feature_name.capitalize()]]State.loading());
+    final result = await _repository.update(event.item);
+    result.fold(
+      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (_) async {
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+        );
+      },
+    );
+  }
+
+  void _onDeleteRequested(DeleteRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+    emit(const [[feature_name.capitalize()]]State.loading());
+    final result = await _repository.delete(event.id);
+    result.fold(
+      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (_) async {
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+        );
+      },
+    );
+  }
+}

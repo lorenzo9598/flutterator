@@ -25,4 +25,4 @@ classifiers = [
 ]
 
 [project.scripts]
-flutterator = "flutterator:create"
+flutterator = "flutterator:cli"

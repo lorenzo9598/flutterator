@@ -1,0 +1,86 @@
+import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+import 'package:retrofit/retrofit.dart';
+import 'package:[[project_name]]/[[feature_name]]/infrastructure/[[feature_name]]_extensions.dart';
+import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]].dart';
+import 'package:[[project_name]]/[[feature_name]]/infrastructure/[[feature_name]]_dto.dart';
+import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]]_failure.dart';
+import 'package:[[project_name]]/[[feature_name]]/model/i_[[feature_name]]_repository.dart';
+
+part '[[feature_name]]_repository.g.dart';
+
+
+@Injectable(as: I[[feature_name.capitalize()]]Repository)
+@RestApi()
+abstract class [[feature_name.capitalize()]]Repository implements I[[feature_name.capitalize()]]Repository {
+  @factoryMethod
+  factory [[feature_name.capitalize()]]Repository(Dio dio, {String baseUrl}) = _[[feature_name.capitalize()]]Repository;
+
+  @GET('/[[feature_name]]s')
+  Future<List<[[feature_name.capitalize()]]Dto>> _getAllDto();
+
+  @GET('/[[feature_name]]s/{id}')
+  Future<[[feature_name.capitalize()]]Dto> _getByIdDto(@Path('id') String id);
+
+  @POST('/[[feature_name]]s')
+  Future<void> _createDto(@Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
+
+  @PUT('/[[feature_name]]s/{id}')
+  Future<void> _updateDto(@Path('id') String id, @Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
+
+  @DELETE('/[[feature_name]]s/{id}')
+  Future<void> _deleteDto(@Path('id') String id);
+
+  @override
+  Future<Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>>> getAll() async {
+    try {
+      final dtos = await _getAllDto();
+      final domain = dtos.map((dto) => dto.toDomain()).toList();
+      return right(domain);
+    } catch (e) {
+      return left(const [[feature_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[feature_name.capitalize()]]Failure, [[feature_name.capitalize()]]>> getById(String id) async {
+    try {
+      final dto = await _getByIdDto(id);
+      final domain = dto.toDomain();
+      return right(domain);
+    } catch (e) {
+      return left(const [[feature_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> create([[feature_name.capitalize()]] item) async {
+    try {
+      await _createDto(item.toDto());
+      return right(unit);
+    } catch (e) {
+      return left(const [[feature_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> update([[feature_name.capitalize()]] item) async {
+    try {
+      await _updateDto(item.id.getOrCrash(), item.toDto());
+      return right(unit);
+    } catch (e) {
+      return left(const [[feature_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> delete(String id) async {
+    try {
+      await _deleteDto(id);
+      return right(unit);
+    } catch (e) {
+      return left(const [[feature_name.capitalize()]]Failure.unexpected());
+    }
+  }
+}
