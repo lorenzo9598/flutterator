@@ -182,10 +182,32 @@ def add_drawer_item(name, project_path):
         click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
         sys.exit(1)
     
-    # This would require modifying the app widget and router
-    # For now, just show a message
-    click.echo(f"📱 Drawer item '{name}' functionality would be implemented here")
-    click.echo("This requires modifying the main app widget and navigation structure.")
+    lib_path = project_dir / "lib"
+    if not lib_path.exists():
+        click.echo("❌ lib directory not found.")
+        sys.exit(1)
+    
+    # Convert name to appropriate format
+    drawer_item_name = name.lower().replace(' ', '_')
+    
+    click.echo(f"📱 Adding drawer item: {drawer_item_name}")
+    
+    # Check if home screen exists
+    home_presentation_dir = lib_path / "home" / "presentation"
+    if not home_presentation_dir.exists():
+        click.echo("❌ Home presentation directory not found. Make sure this is a Flutterator project.")
+        sys.exit(1)
+    
+    # Create page for the drawer item
+    create_drawer_page(project_dir, drawer_item_name)
+    
+    # Update home screen to include drawer
+    update_home_screen_with_drawer(project_dir, drawer_item_name)
+    
+    # Create drawer widget if it doesn't exist
+    create_drawer_widget(project_dir, drawer_item_name)
+    
+    click.echo(f"✅ Drawer item '{drawer_item_name}' added successfully!")
 
 @cli.command()
 @click.option('--name', prompt='Bottom nav item name', help='Name of the bottom navigation item to add')
@@ -199,9 +221,35 @@ def add_bottom_nav_item(name, project_path):
         click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
         sys.exit(1)
     
-    # This would require modifying the app widget and router
-    click.echo(f"📱 Bottom nav item '{name}' functionality would be implemented here")
-    click.echo("This requires modifying the main app widget and navigation structure.")
+    lib_path = project_dir / "lib"
+    if not lib_path.exists():
+        click.echo("❌ lib directory not found.")
+        sys.exit(1)
+    
+    # Convert name to appropriate format
+    bottom_nav_item_name = name.lower().replace(' ', '_')
+    
+    click.echo(f"📱 Adding bottom nav item: {bottom_nav_item_name}")
+    
+    # Check if home screen exists
+    home_presentation_dir = lib_path / "home" / "presentation"
+    if not home_presentation_dir.exists():
+        click.echo("❌ Home presentation directory not found. Make sure this is a Flutterator project.")
+        sys.exit(1)
+    
+    # Create page for the bottom nav item
+    create_bottom_nav_page(project_dir, bottom_nav_item_name)
+    
+    # Update home screen to include bottom navigation
+    update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name)
+    
+    # Create bottom navigation widget if it doesn't exist
+    create_bottom_nav_widget(project_dir, bottom_nav_item_name)
+    
+    # Run Flutter commands to update dependencies and generate code
+    run_flutter_commands(project_dir)
+    
+    click.echo(f"✅ Bottom nav item '{bottom_nav_item_name}' added successfully!")
 
 def generate_page_file(page_name, presentation_dir):
     """Generate a basic page file"""
@@ -502,3 +550,399 @@ extension {feature_name.capitalize()}DomainX on {feature_name.capitalize()} {{
 
 """
     (infra_dir / f"{feature_name}_extensions.dart").write_text(extension_content)
+
+def create_drawer_page(project_dir, drawer_item_name):
+    """Create a page for the drawer item"""
+    lib_path = project_dir / "lib"
+    
+    # Create page directory structure
+    page_dir = lib_path / drawer_item_name
+    page_dir.mkdir(exist_ok=True)
+    
+    # Create presentation layer
+    presentation_dir = page_dir / "presentation"
+    presentation_dir.mkdir(exist_ok=True)
+    
+    # Generate page file
+    generate_page_file(drawer_item_name, presentation_dir)
+    
+    # Update router
+    update_router(project_dir, drawer_item_name)
+
+def update_home_screen_with_drawer(project_dir, drawer_item_name):
+    """Update the home screen to include a drawer"""
+    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
+    
+    if not home_screen_path.exists():
+        click.echo("⚠️ Home screen not found, creating basic drawer implementation")
+        return
+    
+    content = home_screen_path.read_text()
+    
+    # Check if drawer is already implemented
+    if "drawer:" in content:
+        click.echo("ℹ️ Drawer already exists in home screen")
+        return
+    
+    # Add drawer import if not present
+    project_name = project_dir.name
+    drawer_import = f"import 'package:{project_name}/core/presentation/app_drawer.dart';"
+    if drawer_import not in content:
+        # Add import after existing imports
+        lines = content.split('\n')
+        insert_index = 0
+        for i, line in enumerate(lines):
+            if line.startswith('import'):
+                insert_index = i + 1
+            elif line.strip() and not line.startswith('//'):
+                break
+        
+        lines.insert(insert_index, drawer_import)
+        content = '\n'.join(lines)
+    
+    # Modify the Scaffold to include drawer
+    # Replace "return const Scaffold(" with "return Scaffold(" and add drawer
+    if "return const Scaffold(" in content:
+        content = content.replace(
+            "return const Scaffold(",
+            "return Scaffold(\n      drawer: const AppDrawer(),"
+        )
+    elif "return Scaffold(" in content:
+        # If it's already non-const, just add the drawer
+        if "drawer:" not in content:
+            content = content.replace(
+                "return Scaffold(",
+                "return Scaffold(\n      drawer: const AppDrawer(),"
+            )
+    
+    home_screen_path.write_text(content)
+
+def create_drawer_widget(project_dir, drawer_item_name):
+    """Create or update the drawer widget"""
+    core_presentation_dir = project_dir / "lib" / "core" / "presentation"
+    core_presentation_dir.mkdir(parents=True, exist_ok=True)
+    
+    drawer_path = core_presentation_dir / "app_drawer.dart"
+    
+    if drawer_path.exists():
+        # Update existing drawer - add new drawer item
+        content = drawer_path.read_text()
+        
+        # Add import for the new page
+        project_name = project_dir.name
+        page_import = f"import 'package:{project_name}/{drawer_item_name}/presentation/{drawer_item_name}_page.dart';"
+        if page_import not in content:
+            # Add import after existing imports
+            lines = content.split('\n')
+            insert_index = 0
+            for i, line in enumerate(lines):
+                if line.startswith('import'):
+                    insert_index = i + 1
+                elif line.strip() and not line.startswith('//'):
+                    break
+            
+            lines.insert(insert_index, page_import)
+            content = '\n'.join(lines)
+        
+        # Add new drawer item to the list - replace the closing bracket of children list
+        if f"{drawer_item_name.capitalize()}Page.routeName" not in content:
+            capitalized_name = drawer_item_name.replace('_', ' ').title()
+            class_name = drawer_item_name.capitalize() + 'Page'
+            new_tile = f"""          ListTile(
+            leading: const Icon(Icons.star),
+            title: const Text('{capitalized_name}'),
+            onTap: () {{
+              Navigator.of(context).pop(); // Close drawer
+              context.go({class_name}.routeName);
+            }},
+          ),"""
+            
+            # Replace the closing bracket of the children list with the new tile + closing bracket
+            content = content.replace('        ],', f'          {new_tile}\n        ],')
+        
+        drawer_path.write_text(content)
+    else:
+        # Create new drawer widget
+        project_name = project_dir.name
+        capitalized_name = drawer_item_name.replace('_', ' ').title()
+        class_name = drawer_item_name.capitalize() + 'Page'
+        
+        drawer_content = f"""import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:{project_name}/home/presentation/home_screen.dart';
+import 'package:{project_name}/{drawer_item_name}/presentation/{drawer_item_name}_page.dart';
+
+class AppDrawer extends StatelessWidget {{
+  const AppDrawer({{super.key}});
+
+  @override
+  Widget build(BuildContext context) {{
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Text(
+              'App Navigation',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home'),
+            onTap: () {{
+              Navigator.of(context).pop(); // Close drawer
+              context.go(HomeScreen.routeName);
+            }},
+          ),
+          ListTile(
+            leading: const Icon(Icons.star),
+            title: const Text('{capitalized_name}'),
+            onTap: () {{
+              Navigator.of(context).pop(); // Close drawer
+              context.go({class_name}.routeName);
+            }},
+          ),
+        ],
+      ),
+    );
+  }}
+}}
+"""
+        drawer_path.write_text(drawer_content)
+
+def update_router_for_drawer_item(project_dir, drawer_item_name):
+    """Update router to include the drawer item route if needed"""
+    router_path = project_dir / "lib" / "router.dart"
+    
+    if not router_path.exists():
+        click.echo("⚠️ router.dart not found, skipping router update")
+        return
+    
+    content = router_path.read_text()
+    
+    # Check if route already exists
+    route_pattern = f"path: '/{drawer_item_name}'"
+    if route_pattern in content:
+        click.echo("ℹ️ Route already exists in router")
+        return
+    
+    # Add route for the drawer item
+    route_line = f"""GoRoute(
+      path: '/{drawer_item_name}',
+      builder: (BuildContext context, GoRouterState state) => const Placeholder(),
+    ),"""
+    
+    if route_line not in content:
+        # Find routes list and add the new route before the closing bracket
+        if 'routes: <RouteBase>[' in content:
+            content = content.replace('  ],', f'    {route_line}\n  ],')
+        elif 'routes: [' in content:
+            content = content.replace('  ],', f'    {route_line}\n  ],')
+        else:
+            click.echo("⚠️ Could not find routes list in router.dart")
+    
+    router_path.write_text(content)
+
+def create_bottom_nav_page(project_dir, bottom_nav_item_name):
+    """Create a page for the bottom nav item"""
+    lib_path = project_dir / "lib"
+    
+    # Create page directory structure
+    page_dir = lib_path / bottom_nav_item_name
+    page_dir.mkdir(exist_ok=True)
+    
+    # Create presentation layer
+    presentation_dir = page_dir / "presentation"
+    presentation_dir.mkdir(exist_ok=True)
+    
+    # Generate page file
+    generate_page_file(bottom_nav_item_name, presentation_dir)
+    
+    # Update router
+    update_router(project_dir, bottom_nav_item_name)
+
+def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
+    """Update the home screen to include bottom navigation"""
+    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
+    
+    if not home_screen_path.exists():
+        click.echo("⚠️ Home screen not found, creating basic bottom nav implementation")
+        return
+    
+    content = home_screen_path.read_text()
+    
+    # Check if bottom navigation is already implemented
+    if "BottomNavigationBar" in content or "BottomNavBar" in content:
+        # Update existing bottom navigation - add new page to the list
+        project_name = project_dir.name
+        class_name = bottom_nav_item_name.capitalize() + 'Page'
+        
+        # Add import for the new page
+        page_import = f"import 'package:{project_name}/{bottom_nav_item_name}/presentation/{bottom_nav_item_name}_page.dart';"
+        if page_import not in content:
+            # Add import after existing imports
+            lines = content.split('\n')
+            insert_index = 0
+            for i, line in enumerate(lines):
+                if line.startswith('import'):
+                    insert_index = i + 1
+                elif line.strip() and not line.startswith('//'):
+                    break
+            
+            lines.insert(insert_index, page_import)
+            content = '\n'.join(lines)
+        
+        # Find the _pages list and add the new page
+        lines = content.split('\n')
+        pages_list_start = -1
+        for i, line in enumerate(lines):
+            if 'final List<Widget> _pages = [' in line or '_pages = [' in line:
+                pages_list_start = i
+                break
+        
+        if pages_list_start != -1:
+            # Find the closing bracket of the _pages list
+            bracket_count = 0
+            for j in range(pages_list_start, len(lines)):
+                bracket_count += lines[j].count('[')
+                bracket_count -= lines[j].count(']')
+                if bracket_count == 0 and '];' in lines[j]:
+                    # Insert the new page before the closing bracket
+                    lines.insert(j, f'    const {class_name}(),')
+                    break
+            
+            content = '\n'.join(lines)
+    else:
+        # Create new home screen with bottom navigation
+        project_name = project_dir.name
+        capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
+        class_name = bottom_nav_item_name.capitalize() + 'Page'
+        
+        # Check if drawer exists in current home screen
+        existing_content = home_screen_path.read_text()
+        has_drawer = "drawer:" in existing_content
+        drawer_import_needed = "import 'package:" + project_name + "/core/presentation/app_drawer.dart';" in existing_content
+        
+        # Build imports
+        imports = f"""import 'package:flutter/material.dart';
+import 'package:{project_name}/core/presentation/bottom_nav_bar.dart';
+import 'package:{project_name}/{bottom_nav_item_name}/presentation/{bottom_nav_item_name}_page.dart';"""
+        
+        if drawer_import_needed:
+            imports += f"\nimport 'package:{project_name}/core/presentation/app_drawer.dart';"
+        
+        # Build drawer line if needed
+        drawer_line = ""
+        if has_drawer:
+            drawer_line = "      drawer: const AppDrawer(),"
+        
+        content = f"""{imports}
+
+class HomeScreen extends StatefulWidget {{
+  static const String routeName = '/home';
+
+  const HomeScreen({{super.key}});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}}
+
+class _HomeScreenState extends State<HomeScreen> {{
+  int _selectedIndex = 0;
+  
+  final List<Widget> _pages = [
+    const Center(child: Text('Home Content')),
+    const {class_name}(),
+  ];
+  
+  void _onItemTapped(int index) {{
+    setState(() {{
+      _selectedIndex = index;
+    }});
+  }}
+
+  @override
+  Widget build(BuildContext context) {{
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+      ),
+{drawer_line}
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }}
+}}
+"""
+    
+    home_screen_path.write_text(content)
+
+def create_bottom_nav_widget(project_dir, bottom_nav_item_name):
+    """Create or update the bottom navigation widget"""
+    core_presentation_dir = project_dir / "lib" / "core" / "presentation"
+    core_presentation_dir.mkdir(parents=True, exist_ok=True)
+    
+    bottom_nav_path = core_presentation_dir / "bottom_nav_bar.dart"
+    
+    if bottom_nav_path.exists():
+        # Update existing bottom navigation - add new item
+        content = bottom_nav_path.read_text()
+        
+        # Add new bottom nav item to the list - replace the closing bracket of items list
+        if f"'{bottom_nav_item_name}'" not in content:
+            capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
+            new_item = f"""        BottomNavigationBarItem(
+          icon: const Icon(Icons.star),
+          label: '{capitalized_name}',
+        ),"""
+            
+            # Replace the closing bracket of the items list with the new item + closing bracket
+            content = content.replace('      ],', f'        {new_item}\n      ],')
+        
+        bottom_nav_path.write_text(content)
+    else:
+        # Create new bottom navigation widget
+        capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
+        
+        bottom_nav_content = f"""import 'package:flutter/material.dart';
+
+class BottomNavBar extends StatelessWidget {{
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const BottomNavBar({{
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  }});
+
+  @override
+  Widget build(BuildContext context) {{
+    return BottomNavigationBar(
+      currentIndex: currentIndex,
+      onTap: onTap,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.star),
+          label: '{capitalized_name}',
+        ),
+      ],
+    );
+  }}
+}}
+"""
+        bottom_nav_path.write_text(bottom_nav_content)
