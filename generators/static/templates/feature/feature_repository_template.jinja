@@ -7,35 +7,50 @@ import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]].dart';
 import 'package:[[project_name]]/[[feature_name]]/infrastructure/[[feature_name]]_dto.dart';
 import 'package:[[project_name]]/[[feature_name]]/model/[[feature_name]]_failure.dart';
 import 'package:[[project_name]]/[[feature_name]]/model/i_[[feature_name]]_repository.dart';
+import 'package:[[project_name]]/apis/common/constants.dart';
 
 part '[[feature_name]]_repository.g.dart';
 
+@module
+abstract class [[feature_name.capitalize()]]RemoteModule {
+  @preResolve
+  @LazySingleton()
+  Future<[[feature_name.capitalize()]]RemoteService> [[feature_name]]RemoteService(Dio dio) async {
+    return [[feature_name.capitalize()]]RemoteService(dio, baseUrl: Constants.apiUrl);
+  }
+}
 
-@Injectable(as: I[[feature_name.capitalize()]]Repository)
 @RestApi()
-abstract class [[feature_name.capitalize()]]Repository implements I[[feature_name.capitalize()]]Repository {
+abstract class [[feature_name.capitalize()]]RemoteService {
   @factoryMethod
-  factory [[feature_name.capitalize()]]Repository(Dio dio, {String baseUrl}) = _[[feature_name.capitalize()]]Repository;
+  factory [[feature_name.capitalize()]]RemoteService(Dio dio, {String baseUrl}) = _[[feature_name.capitalize()]]RemoteService;
 
   @GET('/[[feature_name]]s')
-  Future<List<[[feature_name.capitalize()]]Dto>> _getAllDto();
+  Future<List<[[feature_name.capitalize()]]Dto>> getAllDto();
 
   @GET('/[[feature_name]]s/{id}')
-  Future<[[feature_name.capitalize()]]Dto> _getByIdDto(@Path('id') String id);
+  Future<[[feature_name.capitalize()]]Dto> getByIdDto(@Path('id') String id);
 
   @POST('/[[feature_name]]s')
-  Future<void> _createDto(@Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
+  Future<void> createDto(@Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
 
   @PUT('/[[feature_name]]s/{id}')
-  Future<void> _updateDto(@Path('id') String id, @Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
+  Future<void> updateDto(@Path('id') String id, @Body() [[feature_name.capitalize()]]Dto [[feature_name]]Dto);
 
   @DELETE('/[[feature_name]]s/{id}')
-  Future<void> _deleteDto(@Path('id') String id);
+  Future<void> deleteDto(@Path('id') String id);
+}
+
+@Injectable(as: I[[feature_name.capitalize()]]Repository)
+class [[feature_name.capitalize()]]Repository implements I[[feature_name.capitalize()]]Repository {
+  final [[feature_name.capitalize()]]RemoteService _remoteService;
+
+  [[feature_name.capitalize()]]Repository(this._remoteService);
 
   @override
   Future<Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>>> getAll() async {
     try {
-      final dtos = await _getAllDto();
+      final dtos = await _remoteService.getAllDto();
       final domain = dtos.map((dto) => dto.toDomain()).toList();
       return right(domain);
     } catch (e) {
@@ -46,7 +61,7 @@ abstract class [[feature_name.capitalize()]]Repository implements I[[feature_nam
   @override
   Future<Either<[[feature_name.capitalize()]]Failure, [[feature_name.capitalize()]]>> getById(String id) async {
     try {
-      final dto = await _getByIdDto(id);
+      final dto = await _remoteService.getByIdDto(id);
       final domain = dto.toDomain();
       return right(domain);
     } catch (e) {
@@ -57,7 +72,7 @@ abstract class [[feature_name.capitalize()]]Repository implements I[[feature_nam
   @override
   Future<Either<[[feature_name.capitalize()]]Failure, Unit>> create([[feature_name.capitalize()]] item) async {
     try {
-      await _createDto(item.toDto());
+      await _remoteService.createDto(item.toDto());
       return right(unit);
     } catch (e) {
       return left(const [[feature_name.capitalize()]]Failure.unexpected());
@@ -67,7 +82,7 @@ abstract class [[feature_name.capitalize()]]Repository implements I[[feature_nam
   @override
   Future<Either<[[feature_name.capitalize()]]Failure, Unit>> update([[feature_name.capitalize()]] item) async {
     try {
-      await _updateDto(item.id.getOrCrash(), item.toDto());
+      await _remoteService.updateDto(item.id.getOrCrash(), item.toDto());
       return right(unit);
     } catch (e) {
       return left(const [[feature_name.capitalize()]]Failure.unexpected());
@@ -77,7 +92,7 @@ abstract class [[feature_name.capitalize()]]Repository implements I[[feature_nam
   @override
   Future<Either<[[feature_name.capitalize()]]Failure, Unit>> delete(String id) async {
     try {
-      await _deleteDto(id);
+      await _remoteService.deleteDto(id);
       return right(unit);
     } catch (e) {
       return left(const [[feature_name.capitalize()]]Failure.unexpected());

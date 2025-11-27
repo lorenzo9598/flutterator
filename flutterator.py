@@ -751,22 +751,26 @@ def update_router_for_drawer_item(project_dir, drawer_item_name):
     router_path.write_text(content)
 
 def create_bottom_nav_page(project_dir, bottom_nav_item_name):
-    """Create a page for the bottom nav item"""
-    lib_path = project_dir / "lib"
+    """Create a screen for the bottom nav item in home/presentation"""
+    home_presentation_dir = project_dir / "lib" / "home" / "presentation"
+    home_presentation_dir.mkdir(parents=True, exist_ok=True)
     
-    # Create page directory structure
-    page_dir = lib_path / bottom_nav_item_name
-    page_dir.mkdir(exist_ok=True)
-    
-    # Create presentation layer
-    presentation_dir = page_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Generate page file
-    generate_page_file(bottom_nav_item_name, presentation_dir)
-    
-    # Update router
-    update_router(project_dir, bottom_nav_item_name)
+    # Generate screen file (not a full page with route)
+    screen_content = f"""import 'package:flutter/material.dart';
+
+class {bottom_nav_item_name.capitalize()}Screen extends StatelessWidget {{
+  const {bottom_nav_item_name.capitalize()}Screen({{super.key}});
+
+  @override
+  Widget build(BuildContext context) {{
+    return const Center(
+      child: Text('{bottom_nav_item_name.replace("_", " ").capitalize()} Page'),
+    );
+  }}
+}}
+"""
+    screen_path = home_presentation_dir / f"{bottom_nav_item_name}_screen.dart"
+    screen_path.write_text(screen_content)
 
 def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
     """Update the home screen to include bottom navigation"""
@@ -780,13 +784,13 @@ def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
     
     # Check if bottom navigation is already implemented
     if "BottomNavigationBar" in content or "BottomNavBar" in content:
-        # Update existing bottom navigation - add new page to the list
+        # Update existing bottom navigation - add new screen to the list
         project_name = project_dir.name
-        class_name = bottom_nav_item_name.capitalize() + 'Page'
+        class_name = bottom_nav_item_name.capitalize() + 'Screen'
         
-        # Add import for the new page
-        page_import = f"import 'package:{project_name}/{bottom_nav_item_name}/presentation/{bottom_nav_item_name}_page.dart';"
-        if page_import not in content:
+        # Add import for the new screen
+        screen_import = f"import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"
+        if screen_import not in content:
             # Add import after existing imports
             lines = content.split('\n')
             insert_index = 0
@@ -796,7 +800,7 @@ def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
                 elif line.strip() and not line.startswith('//'):
                     break
             
-            lines.insert(insert_index, page_import)
+            lines.insert(insert_index, screen_import)
             content = '\n'.join(lines)
         
         # Find the _pages list and add the new page
@@ -823,7 +827,7 @@ def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
         # Create new home screen with bottom navigation
         project_name = project_dir.name
         capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
-        class_name = bottom_nav_item_name.capitalize() + 'Page'
+        class_name = bottom_nav_item_name.capitalize() + 'Screen'
         
         # Check if drawer exists in current home screen
         existing_content = home_screen_path.read_text()
@@ -833,7 +837,7 @@ def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
         # Build imports
         imports = f"""import 'package:flutter/material.dart';
 import 'package:{project_name}/core/presentation/bottom_nav_bar.dart';
-import 'package:{project_name}/{bottom_nav_item_name}/presentation/{bottom_nav_item_name}_page.dart';"""
+import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"""
         
         if drawer_import_needed:
             imports += f"\nimport 'package:{project_name}/core/presentation/app_drawer.dart';"

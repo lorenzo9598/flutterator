@@ -24,7 +24,8 @@ import 'package:{project_name}/core/presentation/app_widget.dart';
 
 Future<void> main() async {{
   CaravaggioUI.initialize(
-    primaryColor: Colors.red, // Change this to your desired primary color
+    primaryColor: Colors.blue, // Change this to your desired primary color
+    secondaryColor: Colors.orange
     // fontFamily: 'Noto Sans', // Uncomment and set your desired font family
   );
 

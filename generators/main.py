@@ -25,6 +25,7 @@ def run_cmd(cmd, capture_output=False):
         sys.exit(1)
 
 def init(flutter_name, login):
+    print(f"DEBUG: init called with flutter_name={flutter_name}, login={login}")
     # Controlla se esiste già una cartella con lo stesso nome del progetto
     project_dir = Path(flutter_name)
     if project_dir.exists():
@@ -41,7 +42,7 @@ def init(flutter_name, login):
     click.echo(f"\n🚀 Creating Flutter project: {flutter_name}")
 
     # Create the base Flutter project
-    run_cmd(f"flutter create {flutter_name} --org com.example --project-name {flutter_name} --template app", capture_output=True)
+    run_cmd(f"flutter create {flutter_name} --org com.example --project-name {flutter_name} --template app", capture_output=False)
     
     # Project path
     project_path = Path(flutter_name)
