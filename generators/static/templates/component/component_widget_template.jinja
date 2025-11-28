@@ -1,0 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+[[bloc_import]]
+
+class [[pascal_name]]Component extends StatelessWidget {
+  const [[pascal_name]]Component({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<[[bloc_name]], [[state_name]]>(
+      builder: (context, state) {
+        return const Center(
+          child: Text('[[component_name|replace("_", " ")|title]] Component'),
+        );
+      },
+    );
+  }
+}

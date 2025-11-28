@@ -1,0 +1,18 @@
+part of '[[component_name]]_form_bloc.dart';
+
+@freezed
+abstract class [[pascal_name]]FormState with _$[[pascal_name]]FormState {
+  const factory [[pascal_name]]FormState({
+/*[[field_declarations]]*/
+    required bool showErrorMessages,
+    required bool isSubmitting,
+    required Option<Either<String, Unit>> failureOrSuccessOption,
+  }) = _[[pascal_name]]FormState;
+
+  factory [[pascal_name]]FormState.initial() => [[pascal_name]]FormState(
+/*[[initial_values]]*/
+        showErrorMessages: false,
+        isSubmitting: false,
+        failureOrSuccessOption: none(),
+      );
+}
