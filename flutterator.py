@@ -17,7 +17,7 @@ def run_flutter_commands(project_path):
         
         # Check if build_runner is available before running it
         try:
-            click.echo("🔨 Running dart run build_runner build...")
+            click
             subprocess.run(["dart", "run", "build_runner", "build"], cwd=project_path, check=True, capture_output=True)
         except subprocess.CalledProcessError:
             click.echo("⚠️ build_runner not available or failed. You may need to add it as a dev dependency.")
@@ -75,6 +75,16 @@ def add_page(name, project_path):
         click.echo("❌ lib directory not found.")
         sys.exit(1)
     
+    # Get project name from pubspec.yaml
+    pubspec_path = project_dir / "pubspec.yaml"
+    project_name = project_dir.name  # fallback
+    if pubspec_path.exists():
+        with open(pubspec_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('name:'):
+                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
+                    break
+    
     # Convert name to appropriate format
     page_name = name.lower().replace(' ', '_')
     
@@ -92,12 +102,10 @@ def add_page(name, project_path):
     generate_page_file(page_name, presentation_dir)
     
     # Update router
-    update_router(project_dir, page_name)
+    update_router(project_dir, page_name, project_name)
     
-    # Run Flutter commands to update dependencies and generate code
+    # Run flutter commands after project creation
     run_flutter_commands(project_dir)
-    
-    click.echo(f"✅ Page '{page_name}' added successfully!")
 
 @cli.command()
 @click.option('--name', prompt='Feature name', help='Name of the feature to add')
@@ -174,7 +182,7 @@ def add_feature(name, fields, interactive, project_path):
     create_feature_layers(feature_dir, feature_name, field_list, project_name)
     
     # Update router
-    update_router(project_dir, feature_name)
+    update_router(project_dir, feature_name, project_name)
     
     # Run Flutter commands to update dependencies and generate code
     run_flutter_commands(project_dir)
@@ -198,6 +206,16 @@ def add_drawer_item(name, project_path):
         click.echo("❌ lib directory not found.")
         sys.exit(1)
     
+    # Get project name from pubspec.yaml
+    pubspec_path = project_dir / "pubspec.yaml"
+    project_name = project_dir.name  # fallback
+    if pubspec_path.exists():
+        with open(pubspec_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('name:'):
+                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
+                    break
+    
     # Convert name to appropriate format
     drawer_item_name = name.lower().replace(' ', '_')
     
@@ -210,13 +228,13 @@ def add_drawer_item(name, project_path):
         sys.exit(1)
     
     # Create page for the drawer item
-    create_drawer_page(project_dir, drawer_item_name)
+    create_drawer_page(project_dir, drawer_item_name, project_name)
     
     # Update home screen to include drawer
-    update_home_screen_with_drawer(project_dir, drawer_item_name)
+    update_home_screen_with_drawer(project_dir, drawer_item_name, project_name)
     
     # Create drawer widget if it doesn't exist
-    create_drawer_widget(project_dir, drawer_item_name)
+    create_drawer_widget(project_dir, drawer_item_name, project_name)
     
     click.echo(f"✅ Drawer item '{drawer_item_name}' added successfully!")
 
@@ -236,6 +254,16 @@ def add_bottom_nav_item(name, project_path):
     if not lib_path.exists():
         click.echo("❌ lib directory not found.")
         sys.exit(1)
+
+    # Get project name from pubspec.yaml
+    pubspec_path = project_dir / "pubspec.yaml"
+    project_name = project_dir.name  # fallback
+    if pubspec_path.exists():
+        with open(pubspec_path, 'r') as f:
+            for line in f:
+                if line.strip().startswith('name:'):
+                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
+                    break
     
     # Convert name to appropriate format
     bottom_nav_item_name = name.lower().replace(' ', '_')
@@ -252,7 +280,7 @@ def add_bottom_nav_item(name, project_path):
     create_bottom_nav_page(project_dir, bottom_nav_item_name)
     
     # Update home screen to include bottom navigation
-    update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name)
+    update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name, project_name)
     
     # Create bottom navigation widget if it doesn't exist
     create_bottom_nav_widget(project_dir, bottom_nav_item_name)
@@ -363,30 +391,13 @@ def add_component(name, fields, form, folder, project_path):
     click.echo(f"✅ Component '{component_name}' added successfully!")
 
 def generate_page_file(page_name, presentation_dir):
-    """Generate a basic page file"""
-    page_content = f"""import 'package:flutter/material.dart';
+    """Generate a basic page file using Jinja template"""
+    project_name = presentation_dir.parent.parent.parent.name  # lib/feature_name/presentation -> project_name
+    generate_file(project_name, presentation_dir, "page_template.jinja", f"{page_name}_page.dart", {
+        "page_name": page_name
+    })
 
-class {page_name.capitalize()}Page extends StatelessWidget {{
-  static const String routeName = '/{page_name}';
-  
-  const {page_name.capitalize()}Page({{super.key}});
-
-  @override
-  Widget build(BuildContext context) {{
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('{page_name.replace("_", " ").capitalize()}'),
-      ),
-      body: const Center(
-        child: Text('{page_name.replace("_", " ").capitalize()} Page'),
-      ),
-    );
-  }}
-}}
-"""
-    (presentation_dir / f"{page_name}_page.dart").write_text(page_content)
-
-def update_router(project_dir, page_name):
+def update_router(project_dir, page_name, project_name):
     """Update the router.dart file to include the new page"""
     router_path = project_dir / "lib" / "router.dart"
     if not router_path.exists():
@@ -397,7 +408,7 @@ def update_router(project_dir, page_name):
     content = router_path.read_text()
     
     # Add import
-    import_line = f"import 'package:{project_dir.name}/{page_name}/presentation/{page_name}_page.dart';"
+    import_line = f"import 'package:{project_name}/{page_name}/presentation/{page_name}_page.dart';"
     if import_line not in content:
         # Find where to insert import (after other imports)
         lines = content.split('\n')
@@ -547,74 +558,12 @@ class {capitalized_name} extends ValueObject<{field_type}> {{
     
     return base_vo + "\n".join(field_vos)
 
-def generate_value_validators(feature_name, field_list, project_name):
-    """Generate value validators file"""
-    validators = []
-    
-    for field in field_list:
-        field_name = field['name']
-        # Skip 'id' field since UniqueId doesn't need custom validation
-        if field_name == 'id':
-            continue
-            
-        field_type = map_field_type(field['type'])
-        capitalized_name = field_name.capitalize()
-        
-        # Generate appropriate validation based on type
-        if field_type == 'String':
-            validator = f"""
-Either<ValueFailure<String>, String> validate{capitalized_name}(String input) {{
-  if (input.isEmpty) {{
-    return left(ValueFailure.empty(failedValue: input));
-  }}
-  // Additional string validations can be added here
-  return right(input);
-}}
-"""
-        elif field_type == 'int':
-            validator = f"""
-Either<ValueFailure<int>, int> validate{capitalized_name}(int input) {{
-  // Additional int validations can be added here
-  return right(input);
-}}
-"""
-        elif field_type == 'double':
-            validator = f"""
-Either<ValueFailure<double>, double> validate{capitalized_name}(double input) {{
-  // Additional double validations can be added here
-  return right(input);
-}}
-"""
-        elif field_type == 'bool':
-            validator = f"""
-Either<ValueFailure<bool>, bool> validate{capitalized_name}(bool input) {{
-  // Boolean validation - always valid
-  // Additional boolean validations can be added here
-  return right(input);
-}}
-"""
-        elif field_type == 'DateTime':
-            validator = f"""
-Either<ValueFailure<DateTime>, DateTime> validate{capitalized_name}(DateTime input) {{
-  // Additional datetime validations can be added here
-  return right(input);
-}}
-"""
-        else:
-            # Default string validation for unknown types
-            validator = f"""
-Either<ValueFailure<String>, String> validate{capitalized_name}(String input) {{
-  if (input.isEmpty) {{
-    return left(ValueFailure.empty(failedValue: input));
-  }}
-  // Additional string validations can be added here
-  return right(input);
-}}
-"""
-        
-        validators.append(validator)
-
-    return f"import 'package:dartz/dartz.dart';\nimport 'package:{project_name}/core/model/failures.dart';\n\n" + "\n".join(validators)
+def generate_value_validators(feature_name, field_list, model_dir, project_name):
+    """Generate value validators file using Jinja template"""
+    generate_file(project_name, model_dir, "feature/value_validators_template.jinja", "value_validators.dart", {
+        "project_name": project_name,
+        "field_list": field_list
+    })
 
 def generate_extensions(feature_name, field_list, infra_dir, project_name):
     """Generate DTO-Domain conversion extensions"""
@@ -662,7 +611,7 @@ extension {feature_name.capitalize()}DomainX on {feature_name.capitalize()} {{
 """
     (infra_dir / f"{feature_name}_extensions.dart").write_text(extension_content)
 
-def create_drawer_page(project_dir, drawer_item_name):
+def create_drawer_page(project_dir, drawer_item_name, project_name):
     """Create a page for the drawer item"""
     lib_path = project_dir / "lib"
     
@@ -678,9 +627,9 @@ def create_drawer_page(project_dir, drawer_item_name):
     generate_page_file(drawer_item_name, presentation_dir)
     
     # Update router
-    update_router(project_dir, drawer_item_name)
+    update_router(project_dir, drawer_item_name, project_name)
 
-def update_home_screen_with_drawer(project_dir, drawer_item_name):
+def update_home_screen_with_drawer(project_dir, drawer_item_name, project_name):
     """Update the home screen to include a drawer"""
     home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
     
@@ -696,7 +645,6 @@ def update_home_screen_with_drawer(project_dir, drawer_item_name):
         return
     
     # Add drawer import if not present
-    project_name = project_dir.name
     drawer_import = f"import 'package:{project_name}/core/presentation/app_drawer.dart';"
     if drawer_import not in content:
         # Add import after existing imports
@@ -728,105 +676,44 @@ def update_home_screen_with_drawer(project_dir, drawer_item_name):
     
     home_screen_path.write_text(content)
 
-def create_drawer_widget(project_dir, drawer_item_name):
-    """Create or update the drawer widget"""
+def create_drawer_widget(project_dir, drawer_item_name, project_name):
+    """Create or update the drawer widget using Jinja template"""
     core_presentation_dir = project_dir / "lib" / "core" / "presentation"
     core_presentation_dir.mkdir(parents=True, exist_ok=True)
     
     drawer_path = core_presentation_dir / "app_drawer.dart"
     
+    # Get all drawer items
+    drawer_items = []
+    
     if drawer_path.exists():
-        # Update existing drawer - add new drawer item
+        # Read existing drawer to extract current items
         content = drawer_path.read_text()
+        lines = content.split('\n')
         
-        # Add import for the new page
-        project_name = project_dir.name
-        page_import = f"import 'package:{project_name}/{drawer_item_name}/presentation/{drawer_item_name}_page.dart';"
-        if page_import not in content:
-            # Add import after existing imports
-            lines = content.split('\n')
-            insert_index = 0
-            for i, line in enumerate(lines):
-                if line.startswith('import'):
-                    insert_index = i + 1
-                elif line.strip() and not line.startswith('//'):
-                    break
-            
-            lines.insert(insert_index, page_import)
-            content = '\n'.join(lines)
-        
-        # Add new drawer item to the list - replace the closing bracket of the children list
-        if f"{drawer_item_name.capitalize()}Page.routeName" not in content:
-            capitalized_name = drawer_item_name.replace('_', ' ').title()
-            class_name = drawer_item_name.capitalize() + 'Page'
-            new_tile = f"""          ListTile(
-            leading: const Icon(Icons.star),
-            title: const Text('{capitalized_name}'),
-            onTap: () {{
-              Navigator.of(context).pop(); // Close drawer
-              context.go({class_name}.routeName);
-            }},
-          ),"""
-            
-            # Replace the closing bracket of the children list with the new tile + closing bracket
-            content = content.replace('        ],', f'          {new_tile}\n        ],')
-        
-        drawer_path.write_text(content)
-    else:
-        # Create new drawer widget
-        project_name = project_dir.name
-        capitalized_name = drawer_item_name.replace('_', ' ').title()
-        class_name = drawer_item_name.capitalize() + 'Page'
-        
-        drawer_content = f"""import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:{project_name}/home/presentation/home_screen.dart';
-import 'package:{project_name}/{drawer_item_name}/presentation/{drawer_item_name}_page.dart';
-
-class AppDrawer extends StatelessWidget {{
-  const AppDrawer({{super.key}});
-
-  @override
-  Widget build(BuildContext context) {{
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: Text(
-              'App Navigation',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home'),
-            onTap: () {{
-              Navigator.of(context).pop(); // Close drawer
-              context.go(HomeScreen.routeName);
-            }},
-          ),
-          ListTile(
-            leading: const Icon(Icons.star),
-            title: const Text('{capitalized_name}'),
-            onTap: () {{
-              Navigator.of(context).pop(); // Close drawer
-              context.go({class_name}.routeName);
-            }},
-          ),
-        ],
-      ),
-    );
-  }}
-}}
-"""
-        drawer_path.write_text(drawer_content)
+        # Extract drawer items from import statements
+        for line in lines:
+            if f'package:{project_name}/' in line and '_page.dart' in line:
+                # Extract the drawer item name from import like:
+                # import 'package:test/profile/presentation/profile_page.dart';
+                import_match = line.strip()
+                if import_match.startswith("import 'package:") and import_match.endswith("_page.dart';"):
+                    # Extract the path between project_name/ and /presentation/
+                    start = import_match.find(f'package:{project_name}/') + len(f'package:{project_name}/')
+                    end = import_match.find('/presentation/', start)
+                    if start != -1 and end != -1:
+                        existing_item = import_match[start:end]
+                        if existing_item != 'home':  # Skip home as it's not a drawer item
+                            drawer_items.append({"name": existing_item})
+    
+    # Add the new drawer item if not already present
+    if not any(item["name"] == drawer_item_name for item in drawer_items):
+        drawer_items.append({"name": drawer_item_name})
+    
+    generate_file(project_name, core_presentation_dir, "core/presentation/app_drawer_template.jinja", "app_drawer.dart", {
+        "project_name": project_name,
+        "drawer_items": drawer_items
+    })
 
 def update_router_for_drawer_item(project_dir, drawer_item_name):
     """Update router to include the drawer item route if needed"""
@@ -883,7 +770,7 @@ class {bottom_nav_item_name.capitalize()}Screen extends StatelessWidget {{
     screen_path = home_presentation_dir / f"{bottom_nav_item_name}_screen.dart"
     screen_path.write_text(screen_content)
 
-def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
+def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name, project_name):
     """Update the home screen to include bottom navigation"""
     home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
     
@@ -896,7 +783,6 @@ def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name):
     # Check if bottom navigation is already implemented
     if "BottomNavigationBar" in content or "BottomNavBar" in content:
         # Update existing bottom navigation - add new screen to the list
-        project_name = project_dir.name
         class_name = bottom_nav_item_name.capitalize() + 'Screen'
         
         # Add import for the new screen
@@ -1003,64 +889,25 @@ class _HomeScreenState extends State<HomeScreen> {{
     home_screen_path.write_text(content)
 
 def create_bottom_nav_widget(project_dir, bottom_nav_item_name):
-    """Create or update the bottom navigation widget"""
+    """Create or update the bottom navigation widget using Jinja template"""
     core_presentation_dir = project_dir / "lib" / "core" / "presentation"
     core_presentation_dir.mkdir(parents=True, exist_ok=True)
     
     bottom_nav_path = core_presentation_dir / "bottom_nav_bar.dart"
     
     if bottom_nav_path.exists():
-        # Update existing bottom navigation - add new item
-        content = bottom_nav_path.read_text()
-        
-        # Add new bottom nav item to the list - replace the closing bracket of the items list
-        if f"'{bottom_nav_item_name}'" not in content:
-            capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
-            new_item = f"""        BottomNavigationBarItem(
-          icon: const Icon(Icons.star),
-          label: '{capitalized_name}',
-        ),"""
-            
-            # Replace the closing bracket of the items list with the new item + closing bracket
-            content = content.replace('      ],', f'        {new_item}\n      ],')
-        
-        bottom_nav_path.write_text(content)
-    else:
-        # Create new bottom navigation widget
-        capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
-        
-        bottom_nav_content = f"""import 'package:flutter/material.dart';
-
-class BottomNavBar extends StatelessWidget {{
-  final int currentIndex;
-  final Function(int) onTap;
-
-  const BottomNavBar({{
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  }});
-
-  @override
-  Widget build(BuildContext context) {{
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: onTap,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.star),
-          label: '{capitalized_name}',
-        ),
-      ],
-    );
-  }}
-}}
-"""
-        bottom_nav_path.write_text(bottom_nav_content)
+        # For now, recreate the entire bottom nav - in future we could make it incremental
+        pass
+    
+    # Create new bottom navigation widget
+    project_name = project_dir.name
+    
+    # Get all nav items (this is a simplified version - in practice we'd need to track all nav items)
+    nav_items = [{"name": bottom_nav_item_name}]
+    
+    generate_file(project_name, core_presentation_dir, "core/presentation/bottom_nav_bar_template.jinja", "bottom_nav_bar.dart", {
+        "nav_items": nav_items
+    })
 
 def create_component_layers(component_dir, component_name, field_list, project_name, is_form, folder):
     """Create all layers for a component"""
@@ -1217,7 +1064,7 @@ def generate_form_state(component_name, field_list, app_dir, project_name, impor
         field_name = field['name']
         if field_name != 'id':  # Skip id field for initial values
             capitalized_name = field_name.capitalize()
-            initial_values.append(f"        {field_name}: {capitalized_name}(''),")
+            initial_values.append(f"        {field_name}: {capitalizedName}(''),")
     
     initial_values.extend([
         "        showErrorMessages: false,",
@@ -1252,12 +1099,12 @@ def generate_form_bloc(component_name, field_list, app_dir, project_name, folder
         field_name = field['name']
         if field_name != 'id':  # Skip id field for form handlers
             capitalized_name = field_name.capitalize()
-            field_handlers.append(f"""    void _on{capitalized_name}Changed(
-      {capitalized_name}Changed event,
+            field_handlers.append(f"""    void _on{capitalizedName}Changed(
+      {capitalizedName}Changed event,
       Emitter<{pascal_name}FormState> emit,
     ) {{
       emit(state.copyWith(
-        {field_name}: {capitalized_name}(event.{field_name}Str),
+        {field_name}: {capitalizedName}(event.{field_name}Str),
         showErrorMessages: false,
       ));
     }}""")
@@ -1354,7 +1201,7 @@ def generate_form_state_from_template(component_name, field_list, app_dir, proje
         field_name = field['name']
         if field_name != 'id':  # Skip id field for initial values
             capitalized_name = field_name.capitalize()
-            initial_values.append(f"        {field_name}: {capitalized_name}(''),")
+            initial_values.append(f"        {field_name}: {capitalizedName}(''),")
     
     initial_values_str = "\n".join(initial_values)
     

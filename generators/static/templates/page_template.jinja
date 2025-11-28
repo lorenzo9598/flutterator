@@ -1,0 +1,19 @@
+import 'package:flutter/material.dart';
+
+class [[page_name|title]]Page extends StatelessWidget {
+  static const String routeName = '/[[page_name]]';
+
+  const [[page_name|title]]Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('[[page_name|replace("_", " ")|title]]'),
+      ),
+      body: const Center(
+        child: Text('[[page_name|replace("_", " ")|title]] Page'),
+      ),
+    );
+  }
+}

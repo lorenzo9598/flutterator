@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:[[project_name]]/core/presentation/bottom_nav_bar.dart';
+{% for nav_item in nav_items %}
+import 'package:[[project_name]]/home/presentation/[[nav_item.name]]_screen.dart';
+{% endfor %}
+{% if has_drawer %}
+import 'package:[[project_name]]/core/presentation/app_drawer.dart';
+{% endif %}
+
+class HomeScreen extends StatefulWidget {{
+  static const String routeName = '/home';
+
+  const HomeScreen({{super.key}});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}}
+
+class _HomeScreenState extends State<HomeScreen> {{
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const Center(child: Text('Home Content')),
+{% for nav_item in nav_items %}
+    const [[nav_item.name|title]]Screen(),
+{% endfor %}
+  ];
+
+  void _onItemTapped(int index) {{
+    setState(() {{
+      _selectedIndex = index;
+    }});
+  }}
+
+  @override
+  Widget build(BuildContext context) {{
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+      ),
+{% if has_drawer %}
+      drawer: const AppDrawer(),
+{% endif %}
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }}
+}}

@@ -1,0 +1,45 @@
+import 'package:dartz/dartz.dart';
+import 'package:[[project_name]]/core/model/failures.dart';
+
+{% for field in field_list %}
+{% if field.name != 'id' %}
+{% if field.type == 'String' %}
+Either<ValueFailure<String>, String> validate[[field.name|title]](String input) {{
+  if (input.isEmpty) {{
+    return left(ValueFailure.empty(failedValue: input));
+  }}
+  // Additional string validations can be added here
+  return right(input);
+}}
+{% elif field.type == 'int' %}
+Either<ValueFailure<int>, int> validate[[field.name|title]](int input) {{
+  // Additional int validations can be added here
+  return right(input);
+}}
+{% elif field.type == 'double' %}
+Either<ValueFailure<double>, double> validate[[field.name|title]](double input) {{
+  // Additional double validations can be added here
+  return right(input);
+}}
+{% elif field.type == 'bool' %}
+Either<ValueFailure<bool>, bool> validate[[field.name|title]](bool input) {{
+  // Boolean validation - always valid
+  // Additional boolean validations can be added here
+  return right(input);
+}}
+{% elif field.type == 'DateTime' %}
+Either<ValueFailure<DateTime>, DateTime> validate[[field.name|title]](DateTime input) {{
+  // Additional datetime validations can be added here
+  return right(input);
+}}
+{% else %}
+Either<ValueFailure<String>, String> validate[[field.name|title]](String input) {{
+  if (input.isEmpty) {{
+    return left(ValueFailure.empty(failedValue: input));
+  }}
+  // Additional string validations can be added here
+  return right(input);
+}}
+{% endif %}
+{% endif %}
+{% endfor %}
