@@ -1,3 +1,14 @@
+/*
+ * Entity/Model template for domain objects
+ * Generates an immutable data class using Freezed package
+ * Represents core business objects with:
+ * - Value object integration for type safety
+ * - Immutable properties 
+ * - Auto-generated equality and copyWith methods
+ * 
+ * This is the domain layer model that represents business entities
+ */
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:[[project_name]]/core/model/value_objects.dart';
 [[entity_import]]

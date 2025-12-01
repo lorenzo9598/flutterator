@@ -1,3 +1,17 @@
+/*
+ * BLoC (Business Logic Component) template for feature management
+ * Generates a fully functional BLoC with CRUD operations:
+ * - Load: Fetch all items from repository
+ * - Create: Add new item
+ * - Update: Modify existing item  
+ * - Delete: Remove item
+ * 
+ * Uses:
+ * - Injectable for dependency injection
+ * - Freezed for immutable state/events
+ * - Repository pattern for data access
+ */
+
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';

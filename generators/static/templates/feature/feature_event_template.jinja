@@ -1,3 +1,14 @@
+/*
+ * BLoC events template for feature operations
+ * Defines immutable events using Freezed that trigger BLoC actions:
+ * - LoadRequested: Fetch all items
+ * - CreateRequested: Create new item
+ * - UpdateRequested: Update existing item
+ * - DeleteRequested: Remove item by ID
+ * 
+ * Events represent user intentions and trigger state changes
+ */
+
 part of '[[feature_name]]_bloc.dart';
 
 @freezed

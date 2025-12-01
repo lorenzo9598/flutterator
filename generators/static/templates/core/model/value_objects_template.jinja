@@ -1,3 +1,15 @@
+/*
+ * Core value objects for domain-driven design
+ * Provides base classes for type-safe value objects:
+ * - ValueObject<T>: Abstract base for all value objects
+ * - Concrete implementations for common types (strings, emails, etc.)
+ * - Validation integration with Either types
+ * - Immutability and equality built-in
+ * 
+ * Value objects ensure data integrity and type safety
+ * throughout the domain layer by encapsulating validation logic
+ */
+
 import 'package:dartz/dartz.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';

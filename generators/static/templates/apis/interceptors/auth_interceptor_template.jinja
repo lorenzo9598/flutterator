@@ -1,3 +1,15 @@
+/*
+ * Authentication interceptor template for API requests
+ * Automatically handles authentication for HTTP requests:
+ * - Adds bearer tokens to request headers
+ * - Token refresh logic for expired tokens
+ * - Storage integration for token management
+ * - Queued interceptor to prevent race conditions
+ * 
+ * This ensures all authenticated API calls include proper
+ * authorization headers without manual intervention
+ */
+
 // ignore_for_file: always_specify_types
 
 import 'package:dio/dio.dart';

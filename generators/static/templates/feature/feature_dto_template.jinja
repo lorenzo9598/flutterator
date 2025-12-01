@@ -1,3 +1,14 @@
+/*
+ * Data Transfer Object (DTO) template for API communication
+ * Generates a serializable class for network data transfer with:
+ * - JSON serialization/deserialization
+ * - Freezed for immutability and code generation
+ * - Automatic fromJson/toJson methods
+ * 
+ * DTOs represent the data structure expected by the API
+ * and are mapped to/from domain entities in repositories
+ */
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part '[[feature_name]]_dto.freezed.dart';

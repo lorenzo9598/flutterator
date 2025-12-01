@@ -1,3 +1,14 @@
+/*
+ * Centralized logger template for application-wide logging
+ * Provides structured logging with:
+ * - Multiple log levels (verbose, info, warning, error, etc.)
+ * - Pluggable logging integrations (console, analytics, etc.)
+ * - Dependency injection support
+ * - Consistent logging interface across the app
+ * 
+ * Supports different logging backends through LoggingIntegration interface
+ */
+
 import 'package:injectable/injectable.dart';
 
 enum LoggerLevel {

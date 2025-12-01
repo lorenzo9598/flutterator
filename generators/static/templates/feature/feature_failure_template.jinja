@@ -1,3 +1,15 @@
+/*
+ * Failure classes template for error handling
+ * Defines immutable failure types using Freezed for common error scenarios:
+ * - Unexpected: General unexpected errors
+ * - InsufficientPermission: Authorization/permission errors
+ * - UnableToUpdate: Update operation failures
+ * - NotFound: Resource not found errors
+ * 
+ * Used with Either types to provide type-safe error handling
+ * instead of throwing exceptions
+ */
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part '[[feature_name]]_failure.freezed.dart';

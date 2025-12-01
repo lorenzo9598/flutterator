@@ -1,3 +1,14 @@
+/*
+ * Repository interface template for data access abstraction
+ * Defines the contract for data operations using:
+ * - Either type for error handling (Left = failure, Right = success)
+ * - CRUD operations (Create, Read, Update, Delete)
+ * - Async operations returning Futures
+ * 
+ * This interface allows different implementations (API, local storage, etc.)
+ * while keeping the business logic independent of data source
+ */
+
 import 'package:dartz/dartz.dart';
 [[i_repo_import]]
 

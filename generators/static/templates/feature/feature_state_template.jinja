@@ -1,3 +1,14 @@
+/*
+ * BLoC states template for feature UI representation
+ * Defines immutable states using Freezed for different UI states:
+ * - Initial: App just started, no data loaded
+ * - Loading: Data is being fetched/processed
+ * - Loaded: Data successfully retrieved with items list
+ * - Error: Something went wrong with error message
+ * 
+ * States represent the current condition of the feature
+ */
+
 part of '[[feature_name]]_bloc.dart';
 
 @freezed

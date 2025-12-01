@@ -1,3 +1,14 @@
+/*
+ * Logger dependency injection module
+ * Registers logging integrations with Injectable:
+ * - Analytics logging integration
+ * - Console logging integration
+ * - Configurable list of logging backends
+ * 
+ * This module makes logging integrations available
+ * throughout the app via dependency injection
+ */
+
 import 'package:injectable/injectable.dart';
 import 'package:[[project_name]]/logging/analytics_logging.dart';
 import 'package:[[project_name]]/logging/console.dart';
