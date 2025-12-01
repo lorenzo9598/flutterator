@@ -1,0 +1,7 @@
+part of '[[feature_name]]_bloc.dart';
+
+@freezed
+abstract class [[feature_name.capitalize()]]Event with _$[[feature_name.capitalize()]]Event {
+  const factory [[feature_name.capitalize()]]Event.loadRequested() = LoadRequested;
+  const factory [[feature_name.capitalize()]]Event.deleteRequested(String id) = DeleteRequested;
+}

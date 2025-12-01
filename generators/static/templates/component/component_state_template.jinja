@@ -1,0 +1,9 @@
+part of '[[feature_name]]_bloc.dart';
+
+@freezed
+abstract class [[feature_name.capitalize()]]State with _$[[feature_name.capitalize()]]State {
+  const factory [[feature_name.capitalize()]]State.initial() = Initial;
+  const factory [[feature_name.capitalize()]]State.loading() = Loading;
+  // const factory [[feature_name.capitalize()]]State.loaded([[feature_name.capitalize()]] items) = Loaded;
+  const factory [[feature_name.capitalize()]]State.error(String message) = Error;
+}

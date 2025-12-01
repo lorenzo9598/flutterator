@@ -26,12 +26,12 @@ def generate_app_widget(project_name: str, lib_path: Path, has_login: bool):
 import 'package:flutter/material.dart';
 import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:{project_name}/injection.dart';
 """
 
     if( has_login ):
         content += f"""
 import 'package:{project_name}/auth/application/auth_bloc.dart';
+import 'package:{project_name}/injection.dart';
 """
 
     content += f"""

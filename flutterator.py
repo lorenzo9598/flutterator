@@ -99,7 +99,7 @@ def add_page(name, project_path):
     presentation_dir.mkdir(exist_ok=True)
     
     # Generate page file
-    generate_page_file(page_name, presentation_dir)
+    generate_page_file(page_name, presentation_dir, project_name)
     
     # Update router
     update_router(project_dir, page_name, project_name)
@@ -109,10 +109,10 @@ def add_page(name, project_path):
 
 @cli.command()
 @click.option('--name', prompt='Feature name', help='Name of the feature to add')
+@click.option('--folder', help='Folder to create the feature in (default: lib/feature_name)')
 @click.option('--fields', help='Model fields in format: field1:type,field2:type (e.g., title:string,done:bool)')
-@click.option('--interactive', is_flag=True, help='Interactive mode to add fields one by one')
 @click.option('--project-path', default='.', help='Path to the Flutter project (default: current directory)')
-def add_feature(name, fields, interactive, project_path):
+def add_feature(name, folder, fields, project_path):
     """
     Add a complete feature to an existing Flutter project
     """
@@ -138,10 +138,14 @@ def add_feature(name, fields, interactive, project_path):
     
     # Convert name to appropriate format
     feature_name = name.lower().replace(' ', '_')
+
+    # Interactive folder
+    if not folder:
+        folder = click.prompt("Folder (leave empty for root)", default="")
     
     # Parse fields
     field_list = []
-    if interactive:
+    if not fields:
         click.echo("🔧 Adding fields interactively. Type 'done' when finished.")
         while True:
             field_name = click.prompt("Field name (or 'done')")
@@ -154,19 +158,9 @@ def add_feature(name, fields, interactive, project_path):
             field_name, field_type = field.split(':')
             field_list.append({'name': field_name.strip(), 'type': field_type.strip()})
     
-    # Interactive form flag
-    if name and fields:  # If both name and fields are provided via CLI, use form parameter
-        form = click.confirm("Is this a form component?", default=False)
-    else:
-        form = click.confirm("Is this a form component?", default=False)
     
-    # Interactive folder
-    if not folder:
-        folder = click.prompt("Folder (leave empty for root)", default="")
-    
-    # Automatically add 'id' field as the first field (only if not form)
-    if not form:
-        field_list.insert(0, {'name': 'id', 'type': 'string'})
+    # Automatically add 'id' field as the first field
+    field_list.insert(0, {'name': 'id', 'type': 'string'})
     
     if not field_list:
         click.echo("❌ No fields specified. Use --fields or --interactive")
@@ -174,15 +168,27 @@ def add_feature(name, fields, interactive, project_path):
     
     click.echo(f"🔧 Adding feature: {feature_name} with fields: {', '.join([f'{f['name']}:{f['type']}' for f in field_list])}")
     
+    if folder:
+        click.echo(f"📁 Component will be placed in folder: {folder}")
+    
+    # Create component directory structure
+    if folder:
+        # Create nested folder structure
+        folder_path = lib_path
+        for folder_part in folder.split('/'):
+            folder_path = folder_path / folder_part
+        feature_dir = folder_path / feature_name
+    else:
+        feature_dir = lib_path / feature_name
+
     # Create feature directory structure
-    feature_dir = lib_path / feature_name
     feature_dir.mkdir(exist_ok=True)
     
     # Create all layers
-    create_feature_layers(feature_dir, feature_name, field_list, project_name)
+    create_feature_layers(feature_dir, feature_name, field_list, project_name, folder)
     
     # Update router
-    update_router(project_dir, feature_name, project_name)
+    update_router(project_dir, feature_name, project_name, folder)
     
     # Run Flutter commands to update dependencies and generate code
     run_flutter_commands(project_dir)
@@ -231,7 +237,7 @@ def add_drawer_item(name, project_path):
     create_drawer_page(project_dir, drawer_item_name, project_name)
     
     # Update home screen to include drawer
-    update_home_screen_with_drawer(project_dir, drawer_item_name, project_name)
+    update_home_screen_with_drawer(project_dir, project_name)
     
     # Create drawer widget if it doesn't exist
     create_drawer_widget(project_dir, drawer_item_name, project_name)
@@ -309,6 +315,10 @@ def add_component(name, fields, form, folder, project_path):
     if not lib_path.exists():
         click.echo("❌ lib directory not found.")
         sys.exit(1)
+
+    if form is False and fields is not None:
+        click.echo("❌ The --fields option can only be used with --form to create a form component.")
+        sys.exit(1)
     
     # Get project name from pubspec.yaml
     pubspec_path = project_dir / "pubspec.yaml"
@@ -325,26 +335,10 @@ def add_component(name, fields, form, folder, project_path):
         name = click.prompt("Component name")
     
     component_name = name.lower().replace(' ', '_')
-    
-    # Interactive fields
-    if not fields:
-        click.echo("🔧 Adding fields interactively. Type 'done' when finished.")
-        field_list = []
-        while True:
-            field_name = click.prompt("Field name (or 'done')")
-            if field_name.lower() == 'done':
-                break
-            field_type = click.prompt("Field type", default='String')
-            field_list.append(f"{field_name.strip()}:{field_type.strip()}")
-        fields = ','.join(field_list)
-    
-    # Parse fields
-    field_list = []
-    for field in fields.split(','):
-        field_name, field_type = field.split(':')
-        field_list.append({'name': field_name.strip(), 'type': field_type.strip()})
-    
-    print(form)
+
+    # Interactive folder
+    if not folder:
+        folder = click.prompt("Folder (leave empty for root)", default="")
     
     # Interactive form flag - use parameter if provided via CLI, otherwise ask
     if form is not None:  # If both name and fields are provided via CLI, use form parameter
@@ -352,21 +346,33 @@ def add_component(name, fields, form, folder, project_path):
     else:
         is_form = click.confirm("Is this a form component?", default=False)
     
-    # Interactive folder
-    if not folder:
-        folder = click.prompt("Folder (leave empty for root)", default="")
-    
-    # Automatically add 'id' field as the first field (only if not form)
-    if not is_form:
-        field_list.insert(0, {'name': 'id', 'type': 'string'})
-    
-    if not field_list:
-        click.echo("❌ No fields specified.")
-        sys.exit(1)
-    
-    click.echo(f"🔧 Adding component: {component_name} with fields: {', '.join([f'{f['name']}:{f['type']}' for f in field_list])}")
     if is_form:
+        # Interactive fields
+        if not fields :
+            click.echo("🔧 Adding fields interactively. Type 'done' when finished.")
+            field_list = []
+            while True:
+                field_name = click.prompt("Field name (or 'done')")
+                if field_name.lower() == 'done':
+                    break
+                field_type = click.prompt("Field type", default='String')
+                field_list.append(f"{field_name.strip()}:{field_type.strip()}")
+            fields = ','.join(field_list)
+    
+        # Parse fields
+        field_list = []
+        for field in fields.split(','):
+            field_name, field_type = field.split(':')
+            field_list.append({'name': field_name.strip(), 'type': field_type.strip()})
+
+        if not field_list:
+            click.echo("❌ No fields specified.")
+            sys.exit(1)
+
+        click.echo(f"🔧 Adding component: {component_name} with fields: {', '.join([f'{f['name']}:{f['type']}' for f in field_list])}")
         click.echo("📝 Component will be created as a form component")
+
+    
     if folder:
         click.echo(f"📁 Component will be placed in folder: {folder}")
     
@@ -382,33 +388,43 @@ def add_component(name, fields, form, folder, project_path):
     
     component_dir.mkdir(parents=True, exist_ok=True)
     
-    # Create all layers
-    create_component_layers(component_dir, component_name, field_list, project_name, is_form, folder)
-    
+    if not is_form:
+        # Create all layers
+        create_component_layers(component_dir, component_name, project_name, folder)
+    else:
+        # Create all layers
+        create_component_form_layers(component_dir, component_name, field_list, project_name, folder)
+
     # Run Flutter commands to update dependencies and generate code
     run_flutter_commands(project_dir)
     
     click.echo(f"✅ Component '{component_name}' added successfully!")
 
-def generate_page_file(page_name, presentation_dir):
+def generate_page_file(page_name, presentation_dir, project_name):
     """Generate a basic page file using Jinja template"""
-    project_name = presentation_dir.parent.parent.parent.name  # lib/feature_name/presentation -> project_name
+    # project_name = presentation_dir.parent.parent.parent.name  # lib/feature_name/presentation -> project_name
     generate_file(project_name, presentation_dir, "page_template.jinja", f"{page_name}_page.dart", {
         "page_name": page_name
     })
 
-def update_router(project_dir, page_name, project_name):
+def update_router(project_dir, page_name, project_name, folder=None):
     """Update the router.dart file to include the new page"""
     router_path = project_dir / "lib" / "router.dart"
     if not router_path.exists():
         click.echo("⚠️ router.dart not found, skipping router update")
         return
-    
+
+    # Build the import path prefix
+    if folder:
+        import_prefix = f"{folder.replace('/', '/')}/{page_name}"
+    else:
+        import_prefix = page_name
+
     # Read current router
     content = router_path.read_text()
     
     # Add import
-    import_line = f"import 'package:{project_name}/{page_name}/presentation/{page_name}_page.dart';"
+    import_line = f"import 'package:{project_name}/{import_prefix}/presentation/{page_name}_page.dart';"
     if import_line not in content:
         # Find where to insert import (after other imports)
         lines = content.split('\n')
@@ -439,14 +455,20 @@ def update_router(project_dir, page_name, project_name):
     
     router_path.write_text(content)
 
-def create_feature_layers(feature_dir, feature_name, field_list, project_name):
+def create_feature_layers(feature_dir, feature_name, field_list, project_name, folder):
     """Create all layers for a feature"""
+    # Build the import path prefix
+    if folder:
+        import_prefix = f"{folder.replace('/', '/')}/{feature_name}"
+    else:
+        import_prefix = feature_name
+    
     # Model layer
     model_dir = feature_dir / "model"
     model_dir.mkdir(exist_ok=True)
-    
+
     # Create value objects and validators
-    generate_value_objects_and_validators(feature_name, field_list, model_dir, project_name)
+    generate_value_objects_and_validators(import_prefix, field_list, model_dir, project_name)
     
     # Create entity (domain model)
     entity_fields = []
@@ -457,10 +479,13 @@ def create_feature_layers(feature_dir, feature_name, field_list, project_name):
         else:
             entity_fields.append(f"  required {field_name.capitalize()} {field_name},")
     
+    entity_import = f"import 'package:{project_name}/{import_prefix}/model/value_objects.dart';"
+    
     entity_fields_str = "\n".join(entity_fields)
     generate_file(project_name, model_dir, "feature/feature_entity_template.jinja", f"{feature_name}.dart", {
         "feature_name": feature_name, 
-        "fields": entity_fields_str
+        "fields": entity_fields_str,
+        "entity_import": entity_import
     })
     
     # Create failure
@@ -475,13 +500,30 @@ def create_feature_layers(feature_dir, feature_name, field_list, project_name):
     generate_file(project_name, infra_dir, "feature/feature_dto_template.jinja", f"{feature_name}_dto.dart", {"feature_name": feature_name, "fields": dto_fields})
     
     # Create extensions for DTO-Domain conversions
-    generate_extensions(feature_name, field_list, infra_dir, project_name)
+    generate_extensions(feature_name, field_list, infra_dir, project_name, import_prefix)
+    
+    i_repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
+import 'package:{project_name}/{import_prefix}/model/{feature_name}_failure.dart';
+"""
     
     # Create repository interface
-    generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{feature_name}_repository.dart", {"feature_name": feature_name})
+    generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{feature_name}_repository.dart", {
+        "feature_name": feature_name,
+        "i_repo_import": i_repo_import
+    })
+
+    repo_import = f"""import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_extensions.dart';
+import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
+import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_dto.dart';
+import 'package:{project_name}/{import_prefix}/model/{feature_name}_failure.dart';
+import 'package:{project_name}/{import_prefix}/model/i_{feature_name}_repository.dart';
+"""
     
     # Create repository implementation
-    generate_file(project_name, infra_dir, "feature/feature_repository_template.jinja", f"{feature_name}_repository.dart", {"feature_name": feature_name})
+    generate_file(project_name, infra_dir, "feature/feature_repository_template.jinja", f"{feature_name}_repository.dart", {
+        "feature_name": feature_name,
+        "repo_import": repo_import
+    })
     
     # Application layer
     app_dir = feature_dir / "application"
@@ -490,8 +532,11 @@ def create_feature_layers(feature_dir, feature_name, field_list, project_name):
     # Create BLoC files
     generate_file(project_name, app_dir, "feature/feature_event_template.jinja", f"{feature_name}_event.dart", {"feature_name": feature_name})
     generate_file(project_name, app_dir, "feature/feature_state_template.jinja", f"{feature_name}_state.dart", {"feature_name": feature_name})
-    generate_file(project_name, app_dir, "feature/feature_bloc_template.jinja", f"{feature_name}_bloc.dart", {"feature_name": feature_name})
-    
+    generate_file(project_name, app_dir, "feature/feature_bloc_template.jinja", f"{feature_name}_bloc.dart", {
+        "feature_name": feature_name,
+        "feature_import_prefix": f"{project_name}/{import_prefix}"
+    })
+
     # Presentation layer
     presentation_dir = feature_dir / "presentation"
     presentation_dir.mkdir(exist_ok=True)
@@ -511,23 +556,22 @@ def map_field_type(field_type):
     }
     return type_mapping.get(field_type.lower(), 'String')
 
-def generate_value_objects_and_validators(feature_name, field_list, model_dir, project_name):
+def generate_value_objects_and_validators(import_prefix, field_list, model_dir, project_name):
     """Generate consolidated value objects and validators"""
     # Generate value objects (base + specific ones)
-    value_objects_content = generate_consolidated_value_objects(feature_name, field_list, project_name)
+    value_objects_content = generate_consolidated_value_objects(import_prefix, field_list, project_name)
     (model_dir / "value_objects.dart").write_text(value_objects_content)
     
     # Generate validators
-    validators_content = generate_value_validators(feature_name, field_list, project_name)
-    (model_dir / "value_validators.dart").write_text(validators_content)
+    generate_value_validators(field_list, model_dir, project_name)
 
-def generate_consolidated_value_objects(feature_name, field_list, project_name):
+def generate_consolidated_value_objects(import_prefix, field_list, project_name):
     """Generate consolidated value objects file"""
     # Base ValueObject class
     base_vo = f"""import 'package:dartz/dartz.dart';
 import 'package:{project_name}/core/model/failures.dart';
 import 'package:{project_name}/core/model/value_objects.dart';
-import 'package:{project_name}/{feature_name}/model/value_validators.dart';
+import 'package:{project_name}/{import_prefix}/model/value_validators.dart';
 
 """
     
@@ -558,14 +602,14 @@ class {capitalized_name} extends ValueObject<{field_type}> {{
     
     return base_vo + "\n".join(field_vos)
 
-def generate_value_validators(feature_name, field_list, model_dir, project_name):
+def generate_value_validators(field_list, model_dir, project_name):
     """Generate value validators file using Jinja template"""
     generate_file(project_name, model_dir, "feature/value_validators_template.jinja", "value_validators.dart", {
         "project_name": project_name,
         "field_list": field_list
     })
 
-def generate_extensions(feature_name, field_list, infra_dir, project_name):
+def generate_extensions(feature_name, field_list, infra_dir, project_name, import_prefix):
     """Generate DTO-Domain conversion extensions"""
     
     # Generate toDto() method
@@ -588,9 +632,9 @@ def generate_extensions(feature_name, field_list, infra_dir, project_name):
             from_dto_fields.append(f"      {field_name}: {capitalized_name}({field_name})")
     
     extension_content = f"""import 'package:{project_name}/core/model/value_objects.dart';
-import 'package:{project_name}/{feature_name}/model/{feature_name}.dart';
-import 'package:{project_name}/{feature_name}/model/value_objects.dart';
-import 'package:{project_name}/{feature_name}/infrastructure/{feature_name}_dto.dart';
+import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
+import 'package:{project_name}/{import_prefix}/model/value_objects.dart';
+import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_dto.dart';
 
 extension {feature_name.capitalize()}DtoX on {feature_name.capitalize()}Dto {{
   {feature_name.capitalize()} toDomain() {{
@@ -624,12 +668,12 @@ def create_drawer_page(project_dir, drawer_item_name, project_name):
     presentation_dir.mkdir(exist_ok=True)
     
     # Generate page file
-    generate_page_file(drawer_item_name, presentation_dir)
+    generate_page_file(drawer_item_name, presentation_dir, project_name)
     
     # Update router
     update_router(project_dir, drawer_item_name, project_name)
 
-def update_home_screen_with_drawer(project_dir, drawer_item_name, project_name):
+def update_home_screen_with_drawer(project_dir, project_name):
     """Update the home screen to include a drawer"""
     home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
     
@@ -909,7 +953,7 @@ def create_bottom_nav_widget(project_dir, bottom_nav_item_name):
         "nav_items": nav_items
     })
 
-def create_component_layers(component_dir, component_name, field_list, project_name, is_form, folder):
+def create_component_form_layers(component_dir, component_name, field_list, project_name, folder):
     """Create all layers for a component"""
     # Build the import path prefix
     if folder:
@@ -918,71 +962,51 @@ def create_component_layers(component_dir, component_name, field_list, project_n
         import_prefix = component_name
     
     # Model layer - only for non-form components
-    if not is_form:
-        model_dir = component_dir / "model"
-        model_dir.mkdir(exist_ok=True)
-        
-        # Create value objects and validators
-        generate_value_objects_and_validators(component_name, field_list, model_dir, project_name)
-        
-        # Create entity (domain model) - only for non-form components
-        entity_fields = []
-        for field in field_list:
-            field_name = field['name']
-            if field_name == 'id':
-                entity_fields.append(f"  required UniqueId id,")
-            else:
-                entity_fields.append(f"  required {field_name.capitalize()} {field_name},")
-        
-        entity_fields_str = "\n".join(entity_fields)
-        generate_file(project_name, model_dir, "feature/feature_entity_template.jinja", f"{component_name}.dart", {
-            "feature_name": component_name, 
-            "fields": entity_fields_str
-        })
-        
-        # Create failure
-        generate_file(project_name, model_dir, "feature/feature_failure_template.jinja", f"{component_name}_failure.dart", {"feature_name": component_name})
-        
-        # Infrastructure layer
-        infra_dir = component_dir / "infrastructure"
-        infra_dir.mkdir(exist_ok=True)
-        
-        # Create DTO
-        dto_fields = ",\n".join([f"    required {map_field_type(field['type'])} {field['name']}" for field in field_list])
-        generate_file(project_name, infra_dir, "feature/feature_dto_template.jinja", f"{component_name}_dto.dart", {"feature_name": component_name, "fields": dto_fields})
-        
-        # Create extensions for DTO-Domain conversions
-        generate_extensions(component_name, field_list, infra_dir, project_name)
-        
-        # Create repository interface
-        generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{component_name}_repository.dart", {"feature_name": component_name})
-        
-        # Create repository implementation
-        generate_file(project_name, infra_dir, "feature/feature_repository_template.jinja", f"{component_name}_repository.dart", {"feature_name": component_name})
     
     # Application layer
     app_dir = component_dir / "application"
     app_dir.mkdir(exist_ok=True)
     
-    if is_form:
-        # Create form-specific BLoC files using templates
-        generate_form_event_from_template(component_name, field_list, app_dir, project_name, import_prefix)
-        generate_form_state_from_template(component_name, field_list, app_dir, project_name, import_prefix)
-        generate_form_bloc_from_template(component_name, field_list, app_dir, project_name, import_prefix)
-    else:
-        # Create standard BLoC files
-        generate_file(project_name, app_dir, "feature/feature_event_template.jinja", f"{component_name}_event.dart", {"feature_name": component_name})
-        generate_file(project_name, app_dir, "feature/feature_state_template.jinja", f"{component_name}_state.dart", {"feature_name": component_name})
-        generate_file(project_name, app_dir, "feature/feature_bloc_template.jinja", f"{component_name}_bloc.dart", {"feature_name": component_name})
+    # Create form-specific BLoC files using templates
+    generate_form_event_from_template(component_name, field_list, app_dir, project_name)
+    generate_form_state_from_template(component_name, field_list, app_dir, project_name)
+    generate_form_bloc_from_template(component_name, field_list, app_dir, project_name)
     
     # Presentation layer
     presentation_dir = component_dir / "presentation"
     presentation_dir.mkdir(exist_ok=True)
     
     # Create component widget
-    generate_component_widget_from_template(component_name, field_list, presentation_dir, project_name, is_form, import_prefix)
+    generate_component_widget_from_template(component_name, presentation_dir, project_name, True, import_prefix)
 
-def generate_component_widget_from_template(component_name, field_list, presentation_dir, project_name, is_form, import_prefix):
+def create_component_layers(component_dir, component_name, project_name, folder):
+    """Create all layers for a component"""
+    # Build the import path prefix
+    if folder:
+        import_prefix = f"{folder.replace('/', '/')}/{component_name}"
+    else:
+        import_prefix = component_name
+    
+    # Application layer
+    app_dir = component_dir / "application"
+    app_dir.mkdir(exist_ok=True)
+    
+    # Create standard BLoC files
+    generate_file(project_name, app_dir, "component/component_event_template.jinja", f"{component_name}_event.dart", {"feature_name": component_name})
+    generate_file(project_name, app_dir, "component/component_state_template.jinja", f"{component_name}_state.dart", {"feature_name": component_name})
+    generate_file(project_name, app_dir, "component/component_bloc_template.jinja", f"{component_name}_bloc.dart", {
+        "feature_name": component_name,
+        "feature_import_prefix": f"{project_name}/{import_prefix}"
+    })
+    
+    # Presentation layer
+    presentation_dir = component_dir / "presentation"
+    presentation_dir.mkdir(exist_ok=True)
+    
+    # Create component widget
+    generate_component_widget_from_template(component_name, presentation_dir, project_name, False, import_prefix)
+
+def generate_component_widget_from_template(component_name, presentation_dir, project_name, is_form, import_prefix):
     """Generate component widget file using Jinja template"""
     pascal_name = to_pascal_case(component_name)
     
@@ -1011,157 +1035,7 @@ def to_pascal_case(snake_str):
     """Convert snake_case to PascalCase"""
     return ''.join(word.capitalize() for word in snake_str.split('_'))
 
-def generate_form_event(component_name, field_list, app_dir, project_name):
-    """Generate form event file for component"""
-    pascal_name = to_pascal_case(component_name)
-    
-    # Generate field change events
-    field_events = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for form events
-            capitalized_name = field_name.capitalize()
-            field_events.append(f"  const factory {pascal_name}FormEvent.{field_name}Changed(String {field_name}Str) = {capitalized_name}Changed;")
-    
-    # Add CRUD events
-    field_events.append(f"  const factory {pascal_name}FormEvent.submit() = Submit;")
-    
-    field_events_str = "\n".join(field_events)
-    
-    form_event_content = f"""part of '{component_name}_form_bloc.dart';
-
-@freezed
-abstract class {pascal_name}FormEvent with _${pascal_name}FormEvent {{
-{field_events_str}
-}}
-"""
-    (app_dir / f"{component_name}_form_event.dart").write_text(form_event_content)
-
-def generate_form_state(component_name, field_list, app_dir, project_name, import_prefix):
-    """Generate form state file for component"""
-    pascal_name = to_pascal_case(component_name)
-    
-    # Generate field declarations
-    field_declarations = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for form state
-            capitalized_name = field_name.capitalize()
-            field_declarations.append(f"    required {capitalized_name} {field_name},")
-    
-    # Add standard form fields
-    field_declarations.extend([
-        "    required bool showErrorMessages,",
-        "    required bool isSubmitting,",
-        f"    required Option<Either<{pascal_name}Failure, Unit>> {component_name}FailureOrSuccessOption,"
-    ])
-    
-    field_declarations_str = "\n".join(field_declarations)
-    
-    # Generate initial values
-    initial_values = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for initial values
-            capitalized_name = field_name.capitalize()
-            initial_values.append(f"        {field_name}: {capitalizedName}(''),")
-    
-    initial_values.extend([
-        "        showErrorMessages: false,",
-        "        isSubmitting: false,",
-        f"        {component_name}FailureOrSuccessOption: none(),"
-    ])
-    
-    initial_values_str = "\n".join(initial_values)
-    
-    form_state_content = f"""part of '{component_name}_form_bloc.dart';
-
-@freezed
-abstract class {pascal_name}FormState with _${pascal_name}FormState {{
-  const factory {pascal_name}FormState({{
-{field_declarations_str}
-  }}) = _{pascal_name}FormState;
-
-  factory {pascal_name}FormState.initial() => {pascal_name}FormState(
-{initial_values_str}
-      );
-}}
-"""
-    (app_dir / f"{component_name}_form_state.dart").write_text(form_state_content)
-
-def generate_form_bloc(component_name, field_list, app_dir, project_name, folder):
-    """Generate form bloc file for component"""
-    pascal_name = to_pascal_case(component_name)
-    
-    # Generate field change handlers
-    field_handlers = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for form handlers
-            capitalized_name = field_name.capitalize()
-            field_handlers.append(f"""    void _on{capitalizedName}Changed(
-      {capitalizedName}Changed event,
-      Emitter<{pascal_name}FormState> emit,
-    ) {{
-      emit(state.copyWith(
-        {field_name}: {capitalizedName}(event.{field_name}Str),
-        showErrorMessages: false,
-      ));
-    }}""")
-    
-    # Add CRUD handlers
-    field_handlers.extend([
-        f"""    EventHandler<{pascal_name}FormEvent, {pascal_name}FormState>(
-      (event, emit) async {{
-        event.maybeMap(
-          add{pascal_name}: (e) async {{
-            emit(state.copyWith(isSubmitting: true, showErrorMessages: false));
-            // TODO: Implement add {component_name} logic
-            emit(state.copyWith(isSubmitting: false, showErrorMessages: true));
-          }},
-          orElse: () => null,
-        );
-      }},
-    ),""",
-        f"""    EventHandler<{pascal_name}FormEvent, {pascal_name}FormState>(
-      (event, emit) async {{
-        event.maybeMap(
-          update{pascal_name}: (e) async {{
-            emit(state.copyWith(isSubmitting: true, showErrorMessages: false));
-            // TODO: Implement update {component_name} logic
-            emit(state.copyWith(isSubmitting: false, showErrorMessages: true));
-          }},
-          orElse: () => null,
-        );
-      }},
-    ),"""
-    ])
-    
-    field_handlers_str = "\n".join(field_handlers)
-    
-    form_bloc_content = f"""import 'package:dartz/dartz.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:injectable/injectable.dart';
-import 'package:test/core/model/failures.dart';
-
-part '{component_name}_form_event.dart';
-part '{component_name}_form_state.dart';
-
-part '{component_name}_form_bloc.freezed.dart';
-
-@injectable
-class {pascal_name}FormBloc extends Bloc<{pascal_name}FormEvent, {pascal_name}FormState> {{
-  {pascal_name}FormBloc() : super({pascal_name}FormState.initial()) {{
-    on<{pascal_name}FormEvent>((event, emit) {{
-      // Handle events
-    }});
-  }}
-}}
-"""
-    (app_dir / f"{component_name}_form_bloc.dart").write_text(form_bloc_content)
-
-def generate_form_event_from_template(component_name, field_list, app_dir, project_name, import_prefix):
+def generate_form_event_from_template(component_name, field_list, app_dir, project_name):
     """Generate form event file using Jinja template"""
     pascal_name = to_pascal_case(component_name)
     
@@ -1181,7 +1055,7 @@ def generate_form_event_from_template(component_name, field_list, app_dir, proje
         "field_events": field_events_str
     })
 
-def generate_form_state_from_template(component_name, field_list, app_dir, project_name, import_prefix):
+def generate_form_state_from_template(component_name, field_list, app_dir, project_name):
     """Generate form state file using Jinja template"""
     pascal_name = to_pascal_case(component_name)
     
@@ -1201,7 +1075,7 @@ def generate_form_state_from_template(component_name, field_list, app_dir, proje
         field_name = field['name']
         if field_name != 'id':  # Skip id field for initial values
             capitalized_name = field_name.capitalize()
-            initial_values.append(f"        {field_name}: {capitalizedName}(''),")
+            initial_values.append(f"        {field_name}: {capitalized_name}(''),")
     
     initial_values_str = "\n".join(initial_values)
     
@@ -1212,7 +1086,7 @@ def generate_form_state_from_template(component_name, field_list, app_dir, proje
         "initial_values": initial_values_str
     })
 
-def generate_form_bloc_from_template(component_name, field_list, app_dir, project_name, import_prefix):
+def generate_form_bloc_from_template(component_name, field_list, app_dir, project_name):
     """Generate form bloc file using Jinja template"""
     pascal_name = to_pascal_case(component_name)
     

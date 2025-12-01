@@ -25,7 +25,6 @@ def run_cmd(cmd, capture_output=False):
         sys.exit(1)
 
 def init(flutter_name, login):
-    print(f"DEBUG: init called with flutter_name={flutter_name}, login={login}")
     # Controlla se esiste già una cartella con lo stesso nome del progetto
     project_dir = Path(flutter_name)
     if project_dir.exists():
