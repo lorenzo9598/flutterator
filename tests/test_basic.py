@@ -1,5 +1,8 @@
 """Test basic functionality of Flutterator"""
 
+import pytest
+
+
 def test_imports():
     """Test that we can import flutterator modules"""
     try:

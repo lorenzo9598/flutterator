@@ -1,15 +1,34 @@
 #!/usr/bin/env python3
+"""
+Flutterator - CLI to create and manage Flutter projects with custom structure
+
+Created by Lorenzo Busi @ GetAutomation
+"""
 
 import click
-import os
 import sys
 from pathlib import Path
-import shutil
-from generators import *
-from generators.templates.copier import generate_file
 import subprocess
 
-def run_flutter_commands(project_path):
+from generators import init
+from generators.helpers import (
+    get_project_name,
+    validate_flutter_project,
+    generate_page_file,
+    update_router,
+    create_feature_layers,
+    create_drawer_page,
+    update_home_screen_with_drawer,
+    create_drawer_widget,
+    create_bottom_nav_page,
+    update_home_screen_with_bottom_nav,
+    create_bottom_nav_widget,
+    create_component_layers,
+    create_component_form_layers,
+)
+
+
+def run_flutter_commands(project_path: Path) -> None:
     """Run flutter pub get and build_runner build after project modifications"""
     try:
         click.echo("📦 Running flutter pub get...")
@@ -17,7 +36,7 @@ def run_flutter_commands(project_path):
         
         # Check if build_runner is available before running it
         try:
-            click
+            click.echo("🔨 Running build_runner build...")
             subprocess.run(["dart", "run", "build_runner", "build"], cwd=project_path, check=True, capture_output=True)
         except subprocess.CalledProcessError:
             click.echo("⚠️ build_runner not available or failed. You may need to add it as a dev dependency.")
@@ -26,6 +45,7 @@ def run_flutter_commands(project_path):
     except subprocess.CalledProcessError as e:
         click.echo(f"⚠️ Warning: Could not run flutter commands: {e}")
         click.echo("You may need to run 'flutter pub get' manually.")
+
 
 @click.group()
 def cli():
@@ -37,6 +57,7 @@ def cli():
     """
     pass
 
+
 @cli.command()
 @click.option('--name', prompt='Project name', help='Name of the Flutter project')
 @click.option('--login', is_flag=True, prompt='Does the project have login?', help='Include login functionality')
@@ -44,7 +65,6 @@ def create(name, login):
     """
     Create a new Flutter project with custom structure
     """
-    print(name)
     # Project name validation
     if not name.replace('_', '').replace('-', '').isalnum():
         click.echo("❌ The project name must contain only letters, numbers, _ and -")
@@ -58,6 +78,7 @@ def create(name, login):
     # Run flutter commands after project creation
     run_flutter_commands(Path(flutter_name))
 
+
 @cli.command()
 @click.option('--name', prompt='Page name', help='Name of the page to add')
 @click.option('--project-path', default='.', help='Path to the Flutter project (default: current directory)')
@@ -66,24 +87,7 @@ def add_page(name, project_path):
     Add a new page to an existing Flutter project
     """
     project_dir = Path(project_path)
-    if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
-        sys.exit(1)
-    
-    lib_path = project_dir / "lib"
-    if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
-        sys.exit(1)
-    
-    # Get project name from pubspec.yaml
-    pubspec_path = project_dir / "pubspec.yaml"
-    project_name = project_dir.name  # fallback
-    if pubspec_path.exists():
-        with open(pubspec_path, 'r') as f:
-            for line in f:
-                if line.strip().startswith('name:'):
-                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
-                    break
+    lib_path, project_name = validate_flutter_project(project_dir)
     
     # Convert name to appropriate format
     page_name = name.lower().replace(' ', '_')
@@ -107,6 +111,7 @@ def add_page(name, project_path):
     # Run flutter commands after project creation
     run_flutter_commands(project_dir)
 
+
 @cli.command()
 @click.option('--name', prompt='Feature name', help='Name of the feature to add')
 @click.option('--folder', help='Folder to create the feature in (default: lib/feature_name)')
@@ -117,24 +122,7 @@ def add_feature(name, folder, fields, project_path):
     Add a complete feature to an existing Flutter project
     """
     project_dir = Path(project_path)
-    if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
-        sys.exit(1)
-    
-    lib_path = project_dir / "lib"
-    if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
-        sys.exit(1)
-    
-    # Get project name from pubspec.yaml
-    pubspec_path = project_dir / "pubspec.yaml"
-    project_name = project_dir.name  # fallback
-    if pubspec_path.exists():
-        with open(pubspec_path, 'r') as f:
-            for line in f:
-                if line.strip().startswith('name:'):
-                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
-                    break
+    lib_path, project_name = validate_flutter_project(project_dir)
     
     # Convert name to appropriate format
     feature_name = name.lower().replace(' ', '_')
@@ -195,6 +183,7 @@ def add_feature(name, folder, fields, project_path):
     
     click.echo(f"✅ Feature '{feature_name}' added successfully!")
 
+
 @cli.command()
 @click.option('--name', prompt='Drawer item name', help='Name of the drawer item to add')
 @click.option('--project-path', default='.', help='Path to the Flutter project (default: current directory)')
@@ -203,24 +192,7 @@ def add_drawer_item(name, project_path):
     Add a drawer navigation item to an existing Flutter project
     """
     project_dir = Path(project_path)
-    if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
-        sys.exit(1)
-    
-    lib_path = project_dir / "lib"
-    if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
-        sys.exit(1)
-    
-    # Get project name from pubspec.yaml
-    pubspec_path = project_dir / "pubspec.yaml"
-    project_name = project_dir.name  # fallback
-    if pubspec_path.exists():
-        with open(pubspec_path, 'r') as f:
-            for line in f:
-                if line.strip().startswith('name:'):
-                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
-                    break
+    lib_path, project_name = validate_flutter_project(project_dir)
     
     # Convert name to appropriate format
     drawer_item_name = name.lower().replace(' ', '_')
@@ -244,6 +216,7 @@ def add_drawer_item(name, project_path):
     
     click.echo(f"✅ Drawer item '{drawer_item_name}' added successfully!")
 
+
 @cli.command()
 @click.option('--name', prompt='Bottom nav item name', help='Name of the bottom navigation item to add')
 @click.option('--project-path', default='.', help='Path to the Flutter project (default: current directory)')
@@ -252,24 +225,7 @@ def add_bottom_nav_item(name, project_path):
     Add a bottom navigation item to an existing Flutter project
     """
     project_dir = Path(project_path)
-    if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
-        sys.exit(1)
-    
-    lib_path = project_dir / "lib"
-    if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
-        sys.exit(1)
-
-    # Get project name from pubspec.yaml
-    pubspec_path = project_dir / "pubspec.yaml"
-    project_name = project_dir.name  # fallback
-    if pubspec_path.exists():
-        with open(pubspec_path, 'r') as f:
-            for line in f:
-                if line.strip().startswith('name:'):
-                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
-                    break
+    lib_path, project_name = validate_flutter_project(project_dir)
     
     # Convert name to appropriate format
     bottom_nav_item_name = name.lower().replace(' ', '_')
@@ -296,6 +252,7 @@ def add_bottom_nav_item(name, project_path):
     
     click.echo(f"✅ Bottom nav item '{bottom_nav_item_name}' added successfully!")
 
+
 @cli.command()
 @click.option('--name', help='Name of the component to add')
 @click.option('--fields', help='Model fields in format: field1:type,field2:type (e.g., title:string,done:bool)')
@@ -307,28 +264,11 @@ def add_component(name, fields, form, folder, project_path):
     Add a complete component to an existing Flutter project
     """
     project_dir = Path(project_path)
-    if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
-        sys.exit(1)
-    
-    lib_path = project_dir / "lib"
-    if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
-        sys.exit(1)
+    lib_path, project_name = validate_flutter_project(project_dir)
 
     if form is False and fields is not None:
         click.echo("❌ The --fields option can only be used with --form to create a form component.")
         sys.exit(1)
-    
-    # Get project name from pubspec.yaml
-    pubspec_path = project_dir / "pubspec.yaml"
-    project_name = project_dir.name  # fallback
-    if pubspec_path.exists():
-        with open(pubspec_path, 'r') as f:
-            for line in f:
-                if line.strip().startswith('name:'):
-                    project_name = line.split(':', 1)[1].strip().strip('"').strip("'")
-                    break
     
     # Interactive mode - always ask for missing parameters
     if not name:
@@ -341,14 +281,14 @@ def add_component(name, fields, form, folder, project_path):
         folder = click.prompt("Folder (leave empty for root)", default="")
     
     # Interactive form flag - use parameter if provided via CLI, otherwise ask
-    if form is not None:  # If both name and fields are provided via CLI, use form parameter
+    if form is not None:
         is_form = form
     else:
         is_form = click.confirm("Is this a form component?", default=False)
     
     if is_form:
         # Interactive fields
-        if not fields :
+        if not fields:
             click.echo("🔧 Adding fields interactively. Type 'done' when finished.")
             field_list = []
             while True:
@@ -399,699 +339,3 @@ def add_component(name, fields, form, folder, project_path):
     run_flutter_commands(project_dir)
     
     click.echo(f"✅ Component '{component_name}' added successfully!")
-
-def generate_page_file(page_name, presentation_dir, project_name):
-    """Generate a basic page file using Jinja template"""
-    # project_name = presentation_dir.parent.parent.parent.name  # lib/feature_name/presentation -> project_name
-    generate_file(project_name, presentation_dir, "page_template.jinja", f"{page_name}_page.dart", {
-        "page_name": page_name
-    })
-
-def update_router(project_dir, page_name, project_name, folder=None):
-    """Update the router.dart file to include the new page"""
-    router_path = project_dir / "lib" / "router.dart"
-    if not router_path.exists():
-        click.echo("⚠️ router.dart not found, skipping router update")
-        return
-
-    # Build the import path prefix
-    if folder:
-        import_prefix = f"{folder.replace('/', '/')}/{page_name}"
-    else:
-        import_prefix = page_name
-
-    # Read current router
-    content = router_path.read_text()
-    
-    # Add import
-    import_line = f"import 'package:{project_name}/{import_prefix}/presentation/{page_name}_page.dart';"
-    if import_line not in content:
-        # Find where to insert import (after other imports)
-        lines = content.split('\n')
-        insert_index = 0
-        for i, line in enumerate(lines):
-            if line.startswith('import'):
-                insert_index = i + 1
-            elif line.strip() and not line.startswith('//'):
-                break
-        
-        lines.insert(insert_index, import_line)
-        content = '\n'.join(lines)
-    
-    # Add route
-    route_line = f"""GoRoute(
-      path: {page_name.capitalize()}Page.routeName,
-      builder: (BuildContext context, GoRouterState state) => const {page_name.capitalize()}Page(),
-    ),"""
-    if route_line not in content:
-        # Find routes list and add the new route before the closing bracket
-        if 'routes: <RouteBase>[' in content:
-            # Replace the closing bracket with the new route + closing bracket
-            content = content.replace('  ],', f'    {route_line}\n  ],')
-        elif 'routes: [' in content:
-            content = content.replace('  ],', f'    {route_line}\n  ],')
-        else:
-            click.echo("⚠️ Could not find routes list in router.dart")
-    
-    router_path.write_text(content)
-
-def create_feature_layers(feature_dir, feature_name, field_list, project_name, folder):
-    """Create all layers for a feature"""
-    # Build the import path prefix
-    if folder:
-        import_prefix = f"{folder.replace('/', '/')}/{feature_name}"
-    else:
-        import_prefix = feature_name
-    
-    # Model layer
-    model_dir = feature_dir / "model"
-    model_dir.mkdir(exist_ok=True)
-
-    # Create value objects and validators
-    generate_value_objects_and_validators(import_prefix, field_list, model_dir, project_name)
-    
-    # Create entity (domain model)
-    entity_fields = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name == 'id':
-            entity_fields.append(f"  required UniqueId id,")
-        else:
-            entity_fields.append(f"  required {field_name.capitalize()} {field_name},")
-    
-    entity_import = f"import 'package:{project_name}/{import_prefix}/model/value_objects.dart';"
-    
-    entity_fields_str = "\n".join(entity_fields)
-    generate_file(project_name, model_dir, "feature/feature_entity_template.jinja", f"{feature_name}.dart", {
-        "feature_name": feature_name, 
-        "fields": entity_fields_str,
-        "entity_import": entity_import
-    })
-    
-    # Create failure
-    generate_file(project_name, model_dir, "feature/feature_failure_template.jinja", f"{feature_name}_failure.dart", {"feature_name": feature_name})
-    
-    # Infrastructure layer
-    infra_dir = feature_dir / "infrastructure"
-    infra_dir.mkdir(exist_ok=True)
-    
-    # Create DTO
-    dto_fields = ",\n".join([f"    required {map_field_type(field['type'])} {field['name']}" for field in field_list])
-    generate_file(project_name, infra_dir, "feature/feature_dto_template.jinja", f"{feature_name}_dto.dart", {"feature_name": feature_name, "fields": dto_fields})
-    
-    # Create extensions for DTO-Domain conversions
-    generate_extensions(feature_name, field_list, infra_dir, project_name, import_prefix)
-    
-    i_repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
-import 'package:{project_name}/{import_prefix}/model/{feature_name}_failure.dart';
-"""
-    
-    # Create repository interface
-    generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{feature_name}_repository.dart", {
-        "feature_name": feature_name,
-        "i_repo_import": i_repo_import
-    })
-
-    repo_import = f"""import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_extensions.dart';
-import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
-import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_dto.dart';
-import 'package:{project_name}/{import_prefix}/model/{feature_name}_failure.dart';
-import 'package:{project_name}/{import_prefix}/model/i_{feature_name}_repository.dart';
-"""
-    
-    # Create repository implementation
-    generate_file(project_name, infra_dir, "feature/feature_repository_template.jinja", f"{feature_name}_repository.dart", {
-        "feature_name": feature_name,
-        "repo_import": repo_import
-    })
-    
-    # Application layer
-    app_dir = feature_dir / "application"
-    app_dir.mkdir(exist_ok=True)
-    
-    # Create BLoC files
-    generate_file(project_name, app_dir, "feature/feature_event_template.jinja", f"{feature_name}_event.dart", {"feature_name": feature_name})
-    generate_file(project_name, app_dir, "feature/feature_state_template.jinja", f"{feature_name}_state.dart", {"feature_name": feature_name})
-    generate_file(project_name, app_dir, "feature/feature_bloc_template.jinja", f"{feature_name}_bloc.dart", {
-        "feature_name": feature_name,
-        "feature_import_prefix": f"{project_name}/{import_prefix}"
-    })
-
-    # Presentation layer
-    presentation_dir = feature_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Create page
-    generate_file(project_name, presentation_dir, "feature/feature_page_template.jinja", f"{feature_name}_page.dart", {"feature_name": feature_name})
-
-def map_field_type(field_type):
-    """Map field type from string to Dart type"""
-    type_mapping = {
-        'string': 'String',
-        'int': 'int',
-        'double': 'double',
-        'bool': 'bool',
-        'date': 'DateTime',
-        'datetime': 'DateTime',
-    }
-    return type_mapping.get(field_type.lower(), 'String')
-
-def generate_value_objects_and_validators(import_prefix, field_list, model_dir, project_name):
-    """Generate consolidated value objects and validators"""
-    # Generate value objects (base + specific ones)
-    value_objects_content = generate_consolidated_value_objects(import_prefix, field_list, project_name)
-    (model_dir / "value_objects.dart").write_text(value_objects_content)
-    
-    # Generate validators
-    generate_value_validators(field_list, model_dir, project_name)
-
-def generate_consolidated_value_objects(import_prefix, field_list, project_name):
-    """Generate consolidated value objects file"""
-    # Base ValueObject class
-    base_vo = f"""import 'package:dartz/dartz.dart';
-import 'package:{project_name}/core/model/failures.dart';
-import 'package:{project_name}/core/model/value_objects.dart';
-import 'package:{project_name}/{import_prefix}/model/value_validators.dart';
-
-"""
-    
-    # Specific Value Objects for each field (excluding 'id' since we have UniqueId)
-    field_vos = []
-    for field in field_list:
-        field_name = field['name']
-        # Skip 'id' field since we have UniqueId
-        if field_name == 'id':
-            continue
-            
-        field_type = map_field_type(field['type'])
-        capitalized_name = field_name.capitalize()
-        
-        field_vo = f"""
-class {capitalized_name} extends ValueObject<{field_type}> {{
-  @override
-  final Either<ValueFailure<{field_type}>, {field_type}> value;
-
-  factory {capitalized_name}({field_type} input) {{
-    return {capitalized_name}._(validate{capitalized_name}(input));
-  }}
-
-  const {capitalized_name}._(this.value);
-}}
-"""
-        field_vos.append(field_vo)
-    
-    return base_vo + "\n".join(field_vos)
-
-def generate_value_validators(field_list, model_dir, project_name):
-    """Generate value validators file using Jinja template"""
-    generate_file(project_name, model_dir, "feature/value_validators_template.jinja", "value_validators.dart", {
-        "project_name": project_name,
-        "field_list": field_list
-    })
-
-def generate_extensions(feature_name, field_list, infra_dir, project_name, import_prefix):
-    """Generate DTO-Domain conversion extensions"""
-    
-    # Generate toDto() method
-    to_dto_fields = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name == 'id':
-            to_dto_fields.append(f"      id: id.getOrCrash()")
-        else:
-            to_dto_fields.append(f"      {field_name}: {field_name}.getOrCrash()")
-    
-    # Generate fromDto() method
-    from_dto_fields = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name == 'id':
-            from_dto_fields.append(f"      id: UniqueId.fromUniqueString(id)")
-        else:
-            capitalized_name = field_name.capitalize()
-            from_dto_fields.append(f"      {field_name}: {capitalized_name}({field_name})")
-    
-    extension_content = f"""import 'package:{project_name}/core/model/value_objects.dart';
-import 'package:{project_name}/{import_prefix}/model/{feature_name}.dart';
-import 'package:{project_name}/{import_prefix}/model/value_objects.dart';
-import 'package:{project_name}/{import_prefix}/infrastructure/{feature_name}_dto.dart';
-
-extension {feature_name.capitalize()}DtoX on {feature_name.capitalize()}Dto {{
-  {feature_name.capitalize()} toDomain() {{
-    return {feature_name.capitalize()}(
-{',\n'.join(from_dto_fields)}
-    );
-  }}
-}}
-
-extension {feature_name.capitalize()}DomainX on {feature_name.capitalize()} {{
-  {feature_name.capitalize()}Dto toDto() {{
-    return {feature_name.capitalize()}Dto(
-{',\n'.join(to_dto_fields)}
-    );
-  }}
-}}
-
-"""
-    (infra_dir / f"{feature_name}_extensions.dart").write_text(extension_content)
-
-def create_drawer_page(project_dir, drawer_item_name, project_name):
-    """Create a page for the drawer item"""
-    lib_path = project_dir / "lib"
-    
-    # Create page directory structure
-    page_dir = lib_path / drawer_item_name
-    page_dir.mkdir(exist_ok=True)
-    
-    # Create presentation layer
-    presentation_dir = page_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Generate page file
-    generate_page_file(drawer_item_name, presentation_dir, project_name)
-    
-    # Update router
-    update_router(project_dir, drawer_item_name, project_name)
-
-def update_home_screen_with_drawer(project_dir, project_name):
-    """Update the home screen to include a drawer"""
-    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
-    
-    if not home_screen_path.exists():
-        click.echo("⚠️ Home screen not found, creating basic drawer implementation")
-        return
-    
-    content = home_screen_path.read_text()
-    
-    # Check if drawer is already implemented
-    if "drawer:" in content:
-        click.echo("ℹ️ Drawer already exists in home screen")
-        return
-    
-    # Add drawer import if not present
-    drawer_import = f"import 'package:{project_name}/core/presentation/app_drawer.dart';"
-    if drawer_import not in content:
-        # Add import after existing imports
-        lines = content.split('\n')
-        insert_index = 0
-        for i, line in enumerate(lines):
-            if line.startswith('import'):
-                insert_index = i + 1
-            elif line.strip() and not line.startswith('//'):
-                break
-        
-        lines.insert(insert_index, drawer_import)
-        content = '\n'.join(lines)
-    
-    # Modify the Scaffold to include drawer
-    # Replace "return const Scaffold(" with "return Scaffold(" and add drawer
-    if "return const Scaffold(" in content:
-        content = content.replace(
-            "return const Scaffold(",
-            "return Scaffold(\n      drawer: const AppDrawer(),"
-        )
-    elif "return Scaffold(" in content:
-        # If it's already non-const, just add the drawer
-        if "drawer:" not in content:
-            content = content.replace(
-                "return Scaffold(",
-                "return Scaffold(\n      drawer: const AppDrawer(),"
-            )
-    
-    home_screen_path.write_text(content)
-
-def create_drawer_widget(project_dir, drawer_item_name, project_name):
-    """Create or update the drawer widget using Jinja template"""
-    core_presentation_dir = project_dir / "lib" / "core" / "presentation"
-    core_presentation_dir.mkdir(parents=True, exist_ok=True)
-    
-    drawer_path = core_presentation_dir / "app_drawer.dart"
-    
-    # Get all drawer items
-    drawer_items = []
-    
-    if drawer_path.exists():
-        # Read existing drawer to extract current items
-        content = drawer_path.read_text()
-        lines = content.split('\n')
-        
-        # Extract drawer items from import statements
-        for line in lines:
-            if f'package:{project_name}/' in line and '_page.dart' in line:
-                # Extract the drawer item name from import like:
-                # import 'package:test/profile/presentation/profile_page.dart';
-                import_match = line.strip()
-                if import_match.startswith("import 'package:") and import_match.endswith("_page.dart';"):
-                    # Extract the path between project_name/ and /presentation/
-                    start = import_match.find(f'package:{project_name}/') + len(f'package:{project_name}/')
-                    end = import_match.find('/presentation/', start)
-                    if start != -1 and end != -1:
-                        existing_item = import_match[start:end]
-                        if existing_item != 'home':  # Skip home as it's not a drawer item
-                            drawer_items.append({"name": existing_item})
-    
-    # Add the new drawer item if not already present
-    if not any(item["name"] == drawer_item_name for item in drawer_items):
-        drawer_items.append({"name": drawer_item_name})
-    
-    generate_file(project_name, core_presentation_dir, "core/presentation/app_drawer_template.jinja", "app_drawer.dart", {
-        "project_name": project_name,
-        "drawer_items": drawer_items
-    })
-
-def update_router_for_drawer_item(project_dir, drawer_item_name):
-    """Update router to include the drawer item route if needed"""
-    router_path = project_dir / "lib" / "router.dart"
-    
-    if not router_path.exists():
-        click.echo("⚠️ router.dart not found, skipping router update")
-        return
-    
-    content = router_path.read_text()
-    
-    # Check if route already exists
-    route_pattern = f"path: '/{drawer_item_name}'"
-    if route_pattern in content:
-        click.echo("ℹ️ Route already exists in router")
-        return
-    
-    # Add route for the drawer item
-    route_line = f"""GoRoute(
-      path: '/{drawer_item_name}',
-      builder: (BuildContext context, GoRouterState state) => const Placeholder(),
-    ),"""
-    
-    if route_line not in content:
-        # Find routes list and add the new route before the closing bracket
-        if 'routes: <RouteBase>[' in content:
-            content = content.replace('  ],', f'    {route_line}\n  ],')
-        elif 'routes: [' in content:
-            content = content.replace('  ],', f'    {route_line}\n  ],')
-        else:
-            click.echo("⚠️ Could not find routes list in router.dart")
-    
-    router_path.write_text(content)
-
-def create_bottom_nav_page(project_dir, bottom_nav_item_name):
-    """Create a screen for the bottom nav item in home/presentation"""
-    home_presentation_dir = project_dir / "lib" / "home" / "presentation"
-    home_presentation_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Generate screen file (not a full page with route)
-    screen_content = f"""import 'package:flutter/material.dart';
-
-class {bottom_nav_item_name.capitalize()}Screen extends StatelessWidget {{
-  const {bottom_nav_item_name.capitalize()}Screen({{super.key}});
-
-  @override
-  Widget build(BuildContext context) {{
-    return const Center(
-      child: Text('{bottom_nav_item_name.replace("_", " ").capitalize()} Page'),
-    );
-  }}
-}}
-"""
-    screen_path = home_presentation_dir / f"{bottom_nav_item_name}_screen.dart"
-    screen_path.write_text(screen_content)
-
-def update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name, project_name):
-    """Update the home screen to include bottom navigation"""
-    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
-    
-    if not home_screen_path.exists():
-        click.echo("⚠️ Home screen not found, creating basic bottom nav implementation")
-        return
-    
-    content = home_screen_path.read_text()
-    
-    # Check if bottom navigation is already implemented
-    if "BottomNavigationBar" in content or "BottomNavBar" in content:
-        # Update existing bottom navigation - add new screen to the list
-        class_name = bottom_nav_item_name.capitalize() + 'Screen'
-        
-        # Add import for the new screen
-        screen_import = f"import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"
-        if screen_import not in content:
-            # Add import after existing imports
-            lines = content.split('\n')
-            insert_index = 0
-            for i, line in enumerate(lines):
-                if line.startswith('import'):
-                    insert_index = i + 1
-                elif line.strip() and not line.startswith('//'):
-                    break
-            
-            lines.insert(insert_index, screen_import)
-            content = '\n'.join(lines)
-        
-        # Find the _pages list and add the new page
-        lines = content.split('\n')
-        pages_list_start = -1
-        for i, line in enumerate(lines):
-            if 'final List<Widget> _pages = [' in line or '_pages = [' in line:
-                pages_list_start = i
-                break
-        
-        if pages_list_start != -1:
-            # Find the closing bracket of the _pages list
-            bracket_count = 0
-            for j in range(pages_list_start, len(lines)):
-                bracket_count += lines[j].count('[')
-                bracket_count -= lines[j].count(']')
-                if bracket_count == 0 and '];' in lines[j]:
-                    # Insert the new page before the closing bracket
-                    lines.insert(j, f'    const {class_name}(),')
-                    break
-            
-            content = '\n'.join(lines)
-    else:
-        # Create new home screen with bottom navigation
-        project_name = project_dir.name
-        capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
-        class_name = bottom_nav_item_name.capitalize() + 'Screen'
-        
-        # Check if drawer exists in current home screen
-        existing_content = home_screen_path.read_text()
-        has_drawer = "drawer:" in existing_content
-        drawer_import_needed = "import 'package:" + project_name + "/core/presentation/app_drawer.dart';" in existing_content
-        
-        # Build imports
-        imports = f"""import 'package:flutter/material.dart';
-import 'package:{project_name}/core/presentation/bottom_nav_bar.dart';
-import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"""
-        
-        if drawer_import_needed:
-            imports += f"\nimport 'package:{project_name}/core/presentation/app_drawer.dart';"
-        
-        # Build drawer line if needed
-        drawer_line = ""
-        if has_drawer:
-            drawer_line = "      drawer: const AppDrawer(),"
-        
-        content = f"""{imports}
-
-class HomeScreen extends StatefulWidget {{
-  static const String routeName = '/home';
-
-  const HomeScreen({{super.key}});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}}
-
-class _HomeScreenState extends State<HomeScreen> {{
-  int _selectedIndex = 0;
-  
-  final List<Widget> _pages = [
-    const Center(child: Text('Home Content')),
-    const {class_name}(),
-  ];
-  
-  void _onItemTapped(int index) {{
-    setState(() {{
-      _selectedIndex = index;
-    }});
-  }}
-
-  @override
-  Widget build(BuildContext context) {{
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
-{drawer_line}
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-    );
-  }}
-}}
-"""
-    
-    home_screen_path.write_text(content)
-
-def create_bottom_nav_widget(project_dir, bottom_nav_item_name):
-    """Create or update the bottom navigation widget using Jinja template"""
-    core_presentation_dir = project_dir / "lib" / "core" / "presentation"
-    core_presentation_dir.mkdir(parents=True, exist_ok=True)
-    
-    bottom_nav_path = core_presentation_dir / "bottom_nav_bar.dart"
-    
-    if bottom_nav_path.exists():
-        # For now, recreate the entire bottom nav - in future we could make it incremental
-        pass
-    
-    # Create new bottom navigation widget
-    project_name = project_dir.name
-    
-    # Get all nav items (this is a simplified version - in practice we'd need to track all nav items)
-    nav_items = [{"name": bottom_nav_item_name}]
-    
-    generate_file(project_name, core_presentation_dir, "core/presentation/bottom_nav_bar_template.jinja", "bottom_nav_bar.dart", {
-        "nav_items": nav_items
-    })
-
-def create_component_form_layers(component_dir, component_name, field_list, project_name, folder):
-    """Create all layers for a component"""
-    # Build the import path prefix
-    if folder:
-        import_prefix = f"{folder.replace('/', '/')}/{component_name}"
-    else:
-        import_prefix = component_name
-    
-    # Model layer - only for non-form components
-    
-    # Application layer
-    app_dir = component_dir / "application"
-    app_dir.mkdir(exist_ok=True)
-    
-    # Create form-specific BLoC files using templates
-    generate_form_event_from_template(component_name, field_list, app_dir, project_name)
-    generate_form_state_from_template(component_name, field_list, app_dir, project_name)
-    generate_form_bloc_from_template(component_name, field_list, app_dir, project_name)
-    
-    # Presentation layer
-    presentation_dir = component_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Create component widget
-    generate_component_widget_from_template(component_name, presentation_dir, project_name, True, import_prefix)
-
-def create_component_layers(component_dir, component_name, project_name, folder):
-    """Create all layers for a component"""
-    # Build the import path prefix
-    if folder:
-        import_prefix = f"{folder.replace('/', '/')}/{component_name}"
-    else:
-        import_prefix = component_name
-    
-    # Application layer
-    app_dir = component_dir / "application"
-    app_dir.mkdir(exist_ok=True)
-    
-    # Create standard BLoC files
-    generate_file(project_name, app_dir, "component/component_event_template.jinja", f"{component_name}_event.dart", {"feature_name": component_name})
-    generate_file(project_name, app_dir, "component/component_state_template.jinja", f"{component_name}_state.dart", {"feature_name": component_name})
-    generate_file(project_name, app_dir, "component/component_bloc_template.jinja", f"{component_name}_bloc.dart", {
-        "feature_name": component_name,
-        "feature_import_prefix": f"{project_name}/{import_prefix}"
-    })
-    
-    # Presentation layer
-    presentation_dir = component_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Create component widget
-    generate_component_widget_from_template(component_name, presentation_dir, project_name, False, import_prefix)
-
-def generate_component_widget_from_template(component_name, presentation_dir, project_name, is_form, import_prefix):
-    """Generate component widget file using Jinja template"""
-    pascal_name = to_pascal_case(component_name)
-    
-    if is_form:
-        bloc_name = f"{pascal_name}FormBloc"
-        state_name = f"{pascal_name}FormState"
-        bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_bloc.dart';"
-        state_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_state.dart';"
-    else:
-        bloc_name = f"{pascal_name}Bloc"
-        state_name = f"{pascal_name}State"
-        bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_bloc.dart';"
-        state_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_state.dart';"
-    
-    generate_file(project_name, presentation_dir, "component/component_widget_template.jinja", f"{component_name}_component.dart", {
-        "component_name": component_name,
-        "pascal_name": pascal_name,
-        "is_form": is_form,
-        "bloc_name": bloc_name,
-        "state_name": state_name,
-        "bloc_import": bloc_import,
-        "state_import": state_import
-    })
-
-def to_pascal_case(snake_str):
-    """Convert snake_case to PascalCase"""
-    return ''.join(word.capitalize() for word in snake_str.split('_'))
-
-def generate_form_event_from_template(component_name, field_list, app_dir, project_name):
-    """Generate form event file using Jinja template"""
-    pascal_name = to_pascal_case(component_name)
-    
-    # Generate field change events
-    field_events = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for form events
-            capitalized_name = field_name.capitalize()
-            field_events.append(f"  const factory {pascal_name}FormEvent.{field_name}Changed(String {field_name}Str) = {capitalized_name}Changed;")
-    
-    field_events_str = "\n".join(field_events)
-    
-    generate_file(project_name, app_dir, "component/component_form_event_template.jinja", f"{component_name}_form_event.dart", {
-        "component_name": component_name,
-        "pascal_name": pascal_name,
-        "field_events": field_events_str
-    })
-
-def generate_form_state_from_template(component_name, field_list, app_dir, project_name):
-    """Generate form state file using Jinja template"""
-    pascal_name = to_pascal_case(component_name)
-    
-    # Generate field declarations
-    field_declarations = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for form state
-            capitalized_name = field_name.capitalize()
-            field_declarations.append(f"    required {capitalized_name} {field_name},")
-    
-    field_declarations_str = "\n".join(field_declarations)
-    
-    # Generate initial values
-    initial_values = []
-    for field in field_list:
-        field_name = field['name']
-        if field_name != 'id':  # Skip id field for initial values
-            capitalized_name = field_name.capitalize()
-            initial_values.append(f"        {field_name}: {capitalized_name}(''),")
-    
-    initial_values_str = "\n".join(initial_values)
-    
-    generate_file(project_name, app_dir, "component/component_form_state_template.jinja", f"{component_name}_form_state.dart", {
-        "component_name": component_name,
-        "pascal_name": pascal_name,
-        "field_declarations": field_declarations_str,
-        "initial_values": initial_values_str
-    })
-
-def generate_form_bloc_from_template(component_name, field_list, app_dir, project_name):
-    """Generate form bloc file using Jinja template"""
-    pascal_name = to_pascal_case(component_name)
-    
-    generate_file(project_name, app_dir, "component/component_form_bloc_template.jinja", f"{component_name}_form_bloc.dart", {
-        "component_name": component_name,
-        "pascal_name": pascal_name,
-        "field_list": field_list
-    })

@@ -1,11 +1,44 @@
-note.txt
-*.todo
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
 build/
+eggs/
+.eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
 .venv/
-flutterator.egg-info/
-dist/*
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Project specific
+*.todo
 netlify.toml
-venv
 website/
-convert_templates.py
+
+# Note
+note.txt

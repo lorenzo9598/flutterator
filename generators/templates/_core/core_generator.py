@@ -20,58 +20,10 @@ def generate_infrastructure(project_name: str, lib_path: Path):
 
 
 def generate_app_widget(project_name: str, lib_path: Path, has_login: bool):
-    content = "";
-
-    content = f"""
-import 'package:flutter/material.dart';
-import 'package:caravaggio_ui/caravaggio_ui.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-"""
-
-    if( has_login ):
-        content += f"""
-import 'package:{project_name}/auth/application/auth_bloc.dart';
-import 'package:{project_name}/injection.dart';
-"""
-
-    content += f"""
-import 'package:{project_name}/router.dart';
-
-class AppWidget extends StatelessWidget {{
-  const AppWidget({{super.key}});
-
-  @override
-  Widget build(BuildContext context) {{
-    return MultiBlocProvider(
-      // ignore: always_specify_types
-      providers: [""";
-    if has_login:
-        content += f"""
-        BlocProvider<AuthBloc>(create: (BuildContext context) => getIt<AuthBloc>()..add(const AuthCheckRequested())),
-"""
-    content += f"""
-        // Add blocs here if needed
-      ],
-      child: const _App(),
-    );
-  }}
-}}
-
-class _App extends StatelessWidget {{
-  const _App();
-
-  @override
-  Widget build(BuildContext context) {{
-    return MaterialApp.router(
-      title: '{project_name}',
-      theme: CUI.themeData,
-      routerConfig: router,
-    );
-  }}
-}}
-"""
-
-    (lib_path / "core/presentation/app_widget.dart").write_text(content)
+    """Generate app widget file using Jinja template"""
+    generate_file(project_name, lib_path, "core/presentation/app_widget_template.jinja", "core/presentation/app_widget.dart", {
+        "has_login": has_login
+    })
 
 def generate_common_interfaces(project_name: str, lib_path: Path):
     generate_file(project_name, lib_path, "core/model/common_interfaces_template.jinja", "core/model/common_interfaces.dart")

@@ -1,26 +1,26 @@
-/*
- * Router configuration template for Flutter application
- * Generates router.dart with GoRouter setup for navigation
- * Includes basic routes for Splash and Home screens
- * This is the standard routing configuration without authentication
- */
+{% if has_login %}
+import 'package:[[project_name]]/auth/presentation/login_screen.dart';
+{% endif %}
+import 'package:[[project_name]]/home/presentation/home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:[[project_name]]/splash/presentation/splash_screen.dart';
+import 'package:go_router/go_router.dart';
 
-// // ignore_for_file: always_specify_types
-
-// import __STRING_0__;
-// import __STRING_1__;
-// import __STRING_2__;
-// import __STRING_3__;
-
-// GoRouter router = GoRouter(
-//   routes: [
-//     GoRoute(
-//       path: SplashScreen.routeName,
-//       builder: (context, state) => const SplashScreen(),
-//     ),
-//     GoRoute(
-//       path: HomeScreen.routeName,
-//       builder: (context, state) => const HomeScreen(),
-//     ),
-//   ],
-// );
+final GoRouter router = GoRouter(
+  routes: <RouteBase>[
+{% if has_login %}
+    GoRoute(
+        path: LoginScreen.routeName,
+        builder: (BuildContext context, GoRouterState state) => const LoginScreen(),
+    ),
+{% endif %}
+    GoRoute(
+      path: HomeScreen.routeName,
+      builder: (BuildContext context, GoRouterState state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: SplashScreen.routeName,
+      builder: (BuildContext context, GoRouterState state) => const SplashScreen(),
+    ),
+  ],
+);

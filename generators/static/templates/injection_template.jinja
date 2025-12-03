@@ -1,15 +1,8 @@
-/*
- * Dependency injection configuration template
- * Generates injection.dart file with GetIt service locator setup
- * Uses Injectable package for automatic dependency registration
- * Supports environment-specific configurations (dev, prod, etc.)
- */
+import 'package:[[project_name]]/injection.config.dart';
+import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart';
 
-// import __STRING_0__;
-// import __STRING_1__;
-// import __STRING_2__;
+final GetIt getIt = GetIt.instance;
 
-// final GetIt getIt = GetIt.instance;
-
-// @InjectableInit()
-// Future<void> configureDependencies(String env) async => getIt.init(environment: env);
+@InjectableInit()
+Future<void> configureDependencies(String env) async => getIt.init(environment: env);
