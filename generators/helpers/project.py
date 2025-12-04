@@ -1,8 +1,10 @@
 """Project validation and utility functions"""
 
-import click
 import sys
 from pathlib import Path
+from rich.console import Console
+
+console = Console()
 
 
 def get_project_name(project_dir: Path) -> str:
@@ -19,12 +21,12 @@ def get_project_name(project_dir: Path) -> str:
 def validate_flutter_project(project_dir: Path) -> tuple[Path, str]:
     """Validate Flutter project and return lib_path and project_name"""
     if not (project_dir / "pubspec.yaml").exists():
-        click.echo("❌ Not a valid Flutter project. pubspec.yaml not found.")
+        console.print("[bold red]❌ Not a valid Flutter project. pubspec.yaml not found.[/bold red]")
         sys.exit(1)
     
     lib_path = project_dir / "lib"
     if not lib_path.exists():
-        click.echo("❌ lib directory not found.")
+        console.print("[bold red]❌ lib directory not found.[/bold red]")
         sys.exit(1)
     
     return lib_path, get_project_name(project_dir)

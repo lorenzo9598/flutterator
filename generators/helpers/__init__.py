@@ -26,4 +26,13 @@ from .navigation import (
     create_bottom_nav_widget,
 )
 from .page import generate_page_file, update_router
+from .config import (
+    FlutteratorConfig,
+    load_config,
+    apply_cli_overrides,
+    create_default_config,
+    show_config,
+    PROJECT_CONFIG_FILE,
+    GLOBAL_CONFIG_FILE,
+)
 
