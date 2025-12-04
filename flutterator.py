@@ -446,7 +446,8 @@ def add_feature(name, folder, fields, project_path, dry_run, no_build):
     if dry_run:
         print_dry_run_header()
         console.print(f"[bold]🔧 Would add feature:[/bold] [cyan]{feature_name}[/cyan]")
-        console.print(f"   [dim]Fields:[/dim] {', '.join([f'[green]{f['name']}[/green]:[magenta]{f['type']}[/magenta]' for f in field_list])}")
+        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+        console.print(f"   [dim]Fields:[/dim] {fields_str}")
         if folder:
             console.print(f"   [dim]Folder:[/dim] [blue]{folder}[/blue]")
         console.print()
@@ -478,7 +479,8 @@ def add_feature(name, folder, fields, project_path, dry_run, no_build):
         return
     
     console.print(f"[bold cyan]🔧 Adding feature: {feature_name}[/bold cyan]")
-    console.print(f"   [dim]Fields:[/dim] {', '.join([f'[green]{f['name']}[/green]:[magenta]{f['type']}[/magenta]' for f in field_list])}")
+    fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+    console.print(f"   [dim]Fields:[/dim] {fields_str}")
     
     if folder:
         console.print(f"   [dim]Folder:[/dim] [blue]{folder}[/blue]")
@@ -818,7 +820,8 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
             sys.exit(1)
 
         console.print(f"[bold cyan]🔧 Adding form component: {component_name}[/bold cyan]")
-        console.print(f"   [dim]Fields:[/dim] {', '.join([f'[green]{f['name']}[/green]:[magenta]{f['type']}[/magenta]' for f in field_list])}")
+        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+        console.print(f"   [dim]Fields:[/dim] {fields_str}")
     else:
         console.print(f"[bold cyan]🔧 Adding component: {component_name}[/bold cyan]")
     
