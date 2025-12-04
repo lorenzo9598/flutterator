@@ -261,8 +261,8 @@ CLI per creare e gestire progetti Flutter con architettura DDD (Domain-Driven De
 
 ```bash
 # 1. Estrai l'archivio
-unzip flutterator-v1.0.0.zip
-cd flutterator-v1.0.0
+unzip flutterator-v2.0.0.zip
+cd flutterator-v2.0.0
 
 # 2. Esegui l'installer
 chmod +x install.sh
@@ -311,7 +311,7 @@ flutterator --help
 ## 📁 Struttura
 
 ```
-flutterator-v1.0.0/
+flutterator-v2.0.0/
 ├── bin/
 │   ├── flutterator        # Eseguibile Unix/Mac
 │   └── flutterator.bat    # Eseguibile Windows
