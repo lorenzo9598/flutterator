@@ -12,7 +12,7 @@ echo "🚀 Creando distribuzione Flutterator..."
 # -----------------------------------------------------------------------------
 # Configurazione
 # -----------------------------------------------------------------------------
-VERSION="v2.0.0"
+VERSION="v2.0.1"
 DIST_NAME="flutterator-${VERSION}"
 DIST_DIR="dist/${DIST_NAME}"
 
