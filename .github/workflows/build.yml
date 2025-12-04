@@ -92,14 +92,14 @@ jobs:
 
             This release always points to the latest stable version.
 
-            ## 🔗 Direct download:
+            ## 🔗 Direct download (link fisso):
             ```
-            https://github.com/${{ github.repository }}/releases/download/latest/flutterator-${{ steps.version.outputs.version }}.zip
+            https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip
             ```
 
             ## 📦 Quick install (Unix/Mac):
             ```bash
-            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator-${{ steps.version.outputs.version }}.zip"
+            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip"
             unzip flutterator.zip
             cd flutterator-${{ steps.version.outputs.version }}
             ./install.sh
@@ -107,15 +107,16 @@ jobs:
 
             ## 📦 Quick install (Windows):
             ```cmd
-            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator-${{ steps.version.outputs.version }}.zip"
+            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip"
             REM Extract manually, then run install.bat
             ```
 
             ---
+            Version: ${{ steps.version.outputs.version }}
             Updated: ${{ steps.date.outputs.date }}
             Commit: ${{ github.sha }}
           draft: false
           prerelease: false
-          files: dist/flutterator-${{ steps.version.outputs.version }}.zip
+          files: dist/flutterator.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

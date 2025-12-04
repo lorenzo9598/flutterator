@@ -335,9 +335,15 @@ README
 # -----------------------------------------------------------------------------
 # Crea archivio ZIP
 # -----------------------------------------------------------------------------
-echo "📁 Creando archivio ZIP..."
+echo "📁 Creando archivi ZIP..."
 cd dist/
+
+# Crea ZIP con versione (es: flutterator-v2.0.0.zip)
 zip -r "${DIST_NAME}.zip" "${DIST_NAME}/"
+
+# Crea copia con nome fisso per link statici (flutterator.zip)
+cp "${DIST_NAME}.zip" "flutterator.zip"
+
 cd ..
 
 # -----------------------------------------------------------------------------
@@ -345,10 +351,14 @@ cd ..
 # -----------------------------------------------------------------------------
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ Distribuzione creata: dist/${DIST_NAME}.zip"
+echo "✅ Distribuzione creata!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📁 Struttura:"
+echo "📦 File generati:"
+echo "   dist/${DIST_NAME}.zip       # Con versione"
+echo "   dist/flutterator.zip  # Per link statici"
+echo ""
+echo "📁 Struttura interna:"
 echo "   ${DIST_NAME}/"
 echo "   ├── bin/"
 echo "   │   ├── flutterator        # Eseguibile Unix/Mac"
@@ -360,10 +370,6 @@ echo "   ├── install.sh             # Installer Unix/Mac"
 echo "   ├── install.bat            # Installer Windows"
 echo "   └── README.md"
 echo ""
-echo "🚀 Per testare localmente:"
-echo "   cd dist/${DIST_NAME}"
-echo "   ./install.sh"
-echo ""
-echo "📤 Per distribuire:"
-echo "   Carica dist/${DIST_NAME}.zip su GitHub Releases"
+echo "🔗 Link statico:"
+echo "   https://github.com/lorenzobusi9595/flutterator/releases/download/latest/flutterator.zip"
 echo ""
