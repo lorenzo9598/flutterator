@@ -50,7 +50,7 @@ jobs:
             ## 📦 How to install:
             ```bash
             # 1. Download and extract
-            unzip flutterator-${{ steps.version.outputs.version }}.zip
+            unzip flutterator.zip
             cd flutterator-${{ steps.version.outputs.version }}
 
             # 2. Run installer
@@ -78,7 +78,7 @@ jobs:
             - `config` - Manage configuration
           draft: false
           prerelease: false
-          files: dist/flutterator-${{ steps.version.outputs.version }}.zip
+          files: dist/flutterator.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
