@@ -56,17 +56,42 @@ EOF
 echo "🔧 Creando wrapper eseguibili..."
 cat > "${DIST_DIR}/bin/flutterator" << 'WRAPPER'
 #!/bin/bash
-# Flutterator CLI Wrapper
+# Flutterator CLI Wrapper (Auto-install dependencies)
 
 # Trova la directory di installazione
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLUTTERATOR_ROOT="$(dirname "$SCRIPT_DIR")"
+MARKER_FILE="$FLUTTERATOR_ROOT/.deps_installed"
 
 # Controlla se Python3 è disponibile
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 is required but not installed."
     echo "   Install it from https://www.python.org/downloads/"
     exit 1
+fi
+
+# Auto-install dipendenze al primo avvio
+if [[ ! -f "$MARKER_FILE" ]]; then
+    echo "🔧 First run - installing dependencies..."
+    
+    # Trova pip
+    if command -v pip3 &> /dev/null; then
+        PIP_CMD="pip3"
+    else
+        PIP_CMD="python3 -m pip"
+    fi
+    
+    # Installa dipendenze (silenzioso, con fallback)
+    if $PIP_CMD install --user -q click jinja2 rich pyyaml 2>/dev/null || \
+       $PIP_CMD install --break-system-packages -q click jinja2 rich pyyaml 2>/dev/null || \
+       $PIP_CMD install -q click jinja2 rich pyyaml 2>/dev/null; then
+        echo "✅ Dependencies installed!"
+        touch "$MARKER_FILE"
+    else
+        echo "⚠️  Could not auto-install dependencies."
+        echo "   Please run: pip3 install click jinja2 rich pyyaml"
+        exit 1
+    fi
 fi
 
 # Esegui flutterator.py dalla directory root
