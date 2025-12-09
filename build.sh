@@ -94,9 +94,10 @@ if [[ ! -f "$MARKER_FILE" ]]; then
     fi
 fi
 
-# Esegui flutterator.py dalla directory root
-cd "$FLUTTERATOR_ROOT"
-exec python3 flutterator.py "$@"
+# Esegui flutterator.py nella directory corrente dell'utente
+# Aggiungi FLUTTERATOR_ROOT al PYTHONPATH per trovare i moduli
+export PYTHONPATH="$FLUTTERATOR_ROOT:$PYTHONPATH"
+exec python3 "$FLUTTERATOR_ROOT/flutterator.py" "$@"
 WRAPPER
 
 chmod +x "${DIST_DIR}/bin/flutterator"
