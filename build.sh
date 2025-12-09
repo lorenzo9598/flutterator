@@ -95,7 +95,7 @@ if [[ ! -f "$MARKER_FILE" ]]; then
 fi
 
 # Esegui flutterator.py nella directory corrente dell'utente
-# Aggiungi FLUTTERATOR_ROOT al PYTHONPATH per trovare i moduli
+# Aggiungi FLUTTERATOR_ROOT al PYTHONPATH per trovare i moduli 'generators'
 export PYTHONPATH="$FLUTTERATOR_ROOT:$PYTHONPATH"
 exec python3 "$FLUTTERATOR_ROOT/flutterator.py" "$@"
 WRAPPER
