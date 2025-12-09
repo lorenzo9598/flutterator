@@ -1165,3 +1165,7 @@ def _list_routes(project_dir: Path, project_name: str) -> None:
     else:
         console.print()
         console.print("[dim]🛤️  No routes found in router.dart[/dim]")
+
+
+if __name__ == "__main__":
+    cli()
