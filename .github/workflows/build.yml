@@ -8,17 +8,76 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # ===========================================================================
+  # Build standalone executables for each platform
+  # ===========================================================================
+  build-standalone:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: flutterator
+            asset_name: flutterator-linux
+          - os: macos-latest
+            artifact_name: flutterator
+            asset_name: flutterator-macos
+          - os: windows-latest
+            artifact_name: flutterator.exe
+            asset_name: flutterator-windows.exe
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Make build script executable
-        run: chmod +x build.sh
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-      - name: Run build script
-        run: ./build.sh
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller click jinja2 rich pyyaml
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --name flutterator --clean --noconfirm --add-data "generators:generators" --hidden-import click --hidden-import jinja2 --hidden-import rich --hidden-import rich.console --hidden-import rich.panel --hidden-import rich.tree --hidden-import rich.text --hidden-import yaml flutterator.py
+        shell: bash
+
+      - name: Build with PyInstaller (Windows fix)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller --onefile --name flutterator --clean --noconfirm --add-data "generators;generators" --hidden-import click --hidden-import jinja2 --hidden-import rich --hidden-import rich.console --hidden-import rich.panel --hidden-import rich.tree --hidden-import rich.text --hidden-import yaml flutterator.py
+        shell: cmd
+
+      - name: Rename artifact
+        run: |
+          mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
+        shell: bash
+        if: matrix.os != 'windows-latest'
+
+      - name: Rename artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          move dist\${{ matrix.artifact_name }} dist\${{ matrix.asset_name }}
+        shell: cmd
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.asset_name }}
+
+  # ===========================================================================
+  # Create release with all artifacts
+  # ===========================================================================
+  release:
+    needs: build-standalone
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Get version from build.sh
         id: version
@@ -27,15 +86,30 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected version: $VERSION"
 
-      - name: Upload distribution artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutterator-distribution
-          path: dist/flutterator-*.zip
-
       - name: Get current date
         id: date
         run: echo "date=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: List artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find dist/ -type f
+          ls -la dist/
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          # Move executables to release folder with correct names
+          mv dist/flutterator-linux/flutterator-linux release/
+          mv dist/flutterator-macos/flutterator-macos release/
+          mv dist/flutterator-windows.exe/flutterator-windows.exe release/
+          chmod +x release/flutterator-linux release/flutterator-macos
+          ls -la release/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -43,22 +117,43 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: Flutterator ${{ steps.version.outputs.version }}
           body: |
-            🚀 **Flutterator ${{ steps.version.outputs.version }}**
+            🚀 **Flutterator ${{ steps.version.outputs.version }}** - Standalone Executables
 
-            Release generated from commit: ${{ github.sha }}
+            **No Python or dependencies required!** Just download and run.
 
-            ## 📦 How to install:
+            ## 📥 Download for your platform:
+
+            | Platform | File | 
+            |----------|------|
+            | 🍎 macOS | `flutterator-macos` |
+            | 🐧 Linux | `flutterator-linux` |
+            | 🪟 Windows | `flutterator-windows.exe` |
+
+            ## 🚀 Quick Start:
+
+            **macOS/Linux:**
             ```bash
-            # 1. Download and extract
-            unzip flutterator.zip
-            cd flutterator-${{ steps.version.outputs.version }}
+            # Download
+            curl -L -o flutterator "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/flutterator-macos"
+            # or flutterator-linux for Linux
 
-            # 2. Run installer
-            ./install.sh  # Unix/Mac
-            # or install.bat for Windows
+            # Make executable
+            chmod +x flutterator
 
-            # 3. Use anywhere
+            # Move to PATH (optional)
+            sudo mv flutterator /usr/local/bin/
+
+            # Use!
+            flutterator --help
             flutterator create --name myapp
+            ```
+
+            **Windows:**
+            ```cmd
+            REM Download flutterator-windows.exe
+            REM Rename to flutterator.exe (optional)
+            REM Add to PATH or run directly
+            flutterator-windows.exe --help
             ```
 
             ## 🎯 Features:
@@ -66,7 +161,7 @@ jobs:
             - ✅ Complete feature generation (BLoC + Freezed + Injectable)
             - ✅ Rich CLI output with colors
             - ✅ Configuration via `flutterator.yaml`
-            - ✅ Cross-platform (Windows, macOS, Linux)
+            - ✅ **Zero dependencies** - single file executable
 
             ## 📋 Commands:
             - `create` - New Flutter project
@@ -78,7 +173,10 @@ jobs:
             - `config` - Manage configuration
           draft: false
           prerelease: false
-          files: dist/flutterator.zip
+          files: |
+            release/flutterator-macos
+            release/flutterator-linux
+            release/flutterator-windows.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,35 +186,31 @@ jobs:
           tag_name: latest
           name: Flutterator Latest (${{ steps.version.outputs.version }})
           body: |
-            🚀 **Flutterator - Latest Version (${{ steps.version.outputs.version }})**
+            🚀 **Flutterator - Latest Stable (${{ steps.version.outputs.version }})**
 
-            This release always points to the latest stable version.
+            **No Python required!** Standalone executables for all platforms.
 
-            ## 🔗 Direct download (link fisso):
-            ```
-            https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip
-            ```
+            ## 📥 Direct Download Links (always latest):
 
-            ## 📦 Quick install (Unix/Mac):
+            | Platform | Download |
+            |----------|----------|
+            | 🍎 macOS | [flutterator-macos](https://github.com/${{ github.repository }}/releases/download/latest/flutterator-macos) |
+            | 🐧 Linux | [flutterator-linux](https://github.com/${{ github.repository }}/releases/download/latest/flutterator-linux) |
+            | 🪟 Windows | [flutterator-windows.exe](https://github.com/${{ github.repository }}/releases/download/latest/flutterator-windows.exe) |
+
+            ## 🚀 One-liner install (macOS/Linux):
             ```bash
-            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip"
-            unzip flutterator.zip
-            cd flutterator-${{ steps.version.outputs.version }}
-            ./install.sh
-            ```
-
-            ## 📦 Quick install (Windows):
-            ```cmd
-            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip"
-            REM Extract manually, then run install.bat
+            curl -L -o flutterator "https://github.com/${{ github.repository }}/releases/download/latest/flutterator-$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/macos/')" && chmod +x flutterator && sudo mv flutterator /usr/local/bin/
             ```
 
             ---
             Version: ${{ steps.version.outputs.version }}
             Updated: ${{ steps.date.outputs.date }}
-            Commit: ${{ github.sha }}
           draft: false
           prerelease: false
-          files: dist/flutterator.zip
+          files: |
+            release/flutterator-macos
+            release/flutterator-linux
+            release/flutterator-windows.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
