@@ -42,3 +42,6 @@ website/
 
 # Note
 note.txt
+
+# Cursor
+.cursor/

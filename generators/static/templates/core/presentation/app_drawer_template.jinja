@@ -29,19 +29,19 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.home),
             title: const Text('Home'),
-            onTap: () {{
+            onTap: () {
               Navigator.of(context).pop(); // Close drawer
               context.go(HomeScreen.routeName);
-            }},
+            },
           ),
 {% for drawer_item in drawer_items %}
           ListTile(
             leading: const Icon(Icons.star),
             title: const Text('[[drawer_item.name|replace("_", " ")|title]]'),
-            onTap: () {{
+            onTap: () {
               Navigator.of(context).pop(); // Close drawer
               context.go([[drawer_item.name|title]]Page.routeName);
-            }},
+            },
           ),
 {% endfor %}
         ],

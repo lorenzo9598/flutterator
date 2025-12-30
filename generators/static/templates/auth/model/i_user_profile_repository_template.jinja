@@ -1,0 +1,29 @@
+/*
+ * UserProfile repository interface
+ * Defines the contract for UserProfile data operations:
+ * - Get user profile by ID (authId)
+ * - Create or update user profile
+ * - Uses Either type for error handling (Left = AuthFailure, Right = UserProfile)
+ * 
+ * This interface allows different implementations (API, local storage, etc.)
+ * while keeping the business logic independent of data source
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/user_profile.dart';
+
+abstract class IUserProfileRepository {
+  /// Get user profile by ID (authId)
+  /// Returns the UserProfile if found, otherwise returns AuthFailure
+  Future<Either<AuthFailure, UserProfile>> getById(String id);
+
+  /// Get user profile by auth ID (alias for getById)
+  /// This method provides semantic clarity when querying by authentication ID
+  Future<Either<AuthFailure, UserProfile>> getByAuthId(String authId);
+
+  /// Create or update user profile
+  /// If the profile exists, it will be updated; otherwise, it will be created
+  /// Returns the created/updated UserProfile or AuthFailure if operation fails
+  Future<Either<AuthFailure, UserProfile>> createOrUpdate(UserProfile userProfile);
+}

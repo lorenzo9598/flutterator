@@ -3,10 +3,11 @@ import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:[[project_name]]/auth/application/auth_bloc.dart';
-import 'package:[[project_name]]/auth/sign_in_form/application/sign_in_form_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
+import 'package:[[project_name]]/features/auth/sign_in_form/application/sign_in_form_bloc.dart';
 import 'package:[[project_name]]/home/presentation/home_screen.dart';
-import 'package:[[project_name]]/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
 import 'package:go_router/go_router.dart';
 import 'package:[[project_name]]/core/model/failures.dart';
 import 'package:dartz/dartz.dart' as dz;
@@ -141,6 +142,49 @@ class SignInForm extends StatelessWidget {
                         }
                       },
                       child: state.signInAction == SignInAction.signIn ? CText.label('SIGN IN') : CText.label('REGISTER'),
+                    ),
+                    const SizedBox(height: 16),
+                    CButton.outlined(
+                      onPressed: () {
+                        if (state.signInAction == SignInAction.signIn) {
+                          context.read<SignInFormBloc>().add(const SignInFormEvent.signInWithGooglePressed());
+                        } else {
+                          context.read<SignInFormBloc>().add(const SignInFormEvent.registerWithGooglePressed());
+                        }
+                      },
+                      radius: AppRadius.s,
+                      color: Colors.grey,
+                      suffixIcon: SvgPicture.asset(
+                        'assets/svgs/google.svg',
+                        semanticsLabel: 'Google logo',
+                        width: 24,
+                        height: 24,
+                      ),
+                      child: CText.label(
+                        'Continue with Google',
+                      ).bold,
+                    ),
+                    const SizedBox(height: 8),
+                    CButton.elevated(
+                      onPressed: () {
+                        if (state.signInAction == SignInAction.signIn) {
+                          context.read<SignInFormBloc>().add(const SignInFormEvent.signInWithApplePressed());
+                        } else {
+                          context.read<SignInFormBloc>().add(const SignInFormEvent.registerWithApplePressed());
+                        }
+                      },
+                      color: Colors.black,
+                      radius: AppRadius.s,
+                      suffixIcon: SvgPicture.asset(
+                        'assets/svgs/apple.svg',
+                        semanticsLabel: 'Apple logo',
+                        color: Colors.white,
+                        width: 24,
+                        height: 24,
+                      ),
+                      child: CText.label(
+                        'Continue with Apple',
+                      ).white.bold,
                     ),
                     const SizedBox(height: 16),
                     Row(

@@ -1,0 +1,72 @@
+/*
+ * UserProfile repository implementation
+ * Provides concrete implementation of IUserProfileRepository
+ * 
+ * NOTE: This is a skeleton implementation. Uncomment and implement
+ * the necessary parts to integrate with your backend API or local storage.
+ * 
+ * Implementation options:
+ * 1. API integration: Use Retrofit/Dio to call backend endpoints
+ * 2. Local storage: Use Hive/SharedPreferences/SQLite for offline support
+ * 3. Hybrid: Combine API calls with local caching
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/user_profile.dart';
+import 'package:[[project_name]]/domain/auth/model/i_user_profile_repository.dart';
+// import 'package:[[project_name]]/domain/auth/infrastructure/user_profile_dto.dart';
+// import 'package:[[project_name]]/apis/common/constants.dart';
+// import 'package:dio/dio.dart';
+
+@Injectable(as: IUserProfileRepository)
+class UserProfileRepository implements IUserProfileRepository {
+  // Uncomment and inject your API service or storage when implementing
+  // final UserProfileRemoteService _remoteService;
+  // final Dio _dio;
+
+  UserProfileRepository(
+    // this._remoteService, // Uncomment when implementing API integration
+    // this._dio, // Uncomment when implementing API integration
+  );
+
+  @override
+  Future<Either<AuthFailure, UserProfile>> getById(String id) async {
+    // TODO: Implement API call or local storage lookup
+    // Example API implementation:
+    // try {
+    //   final dto = await _remoteService.getByIdDto(id);
+    //   final userProfile = dto.toDomain();
+    //   return right(userProfile);
+    // } catch (e) {
+    //   return left(const AuthFailure.serverError());
+    // }
+
+    // Stub implementation - replace with actual implementation
+    return left(const AuthFailure.serverError());
+  }
+
+  @override
+  Future<Either<AuthFailure, UserProfile>> getByAuthId(String authId) async {
+    // Alias for getById - uses the same authId as the ID
+    return getById(authId);
+  }
+
+  @override
+  Future<Either<AuthFailure, UserProfile>> createOrUpdate(UserProfile userProfile) async {
+    // TODO: Implement API call or local storage save
+    // Example API implementation:
+    // try {
+    //   final dto = userProfile.toDto();
+    //   final savedDto = await _remoteService.createOrUpdateDto(dto);
+    //   final savedUserProfile = savedDto.toDomain();
+    //   return right(savedUserProfile);
+    // } catch (e) {
+    //   return left(const AuthFailure.serverError());
+    // }
+
+    // Stub implementation - replace with actual implementation
+    return left(const AuthFailure.serverError());
+  }
+}

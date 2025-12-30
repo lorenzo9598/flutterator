@@ -1,9 +1,9 @@
 """Feature generation functions"""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from generators.templates.copier import generate_file
-from .utils import map_field_type
+from .utils import map_field_type, to_pascal_case, to_pascal_case_preserve
 
 
 def create_feature_layers(feature_dir: Path, feature_name: str, field_list: list[dict], project_name: str, folder: Optional[str]) -> None:
@@ -28,7 +28,7 @@ def create_feature_layers(feature_dir: Path, feature_name: str, field_list: list
         if field_name == 'id':
             entity_fields.append(f"  required UniqueId id,")
         else:
-            entity_fields.append(f"  required {field_name.capitalize()} {field_name},")
+            entity_fields.append(f"  required {to_pascal_case_preserve(field_name)} {field_name},")
     
     entity_import = f"import 'package:{project_name}/{import_prefix}/model/value_objects.dart';"
     
@@ -125,7 +125,7 @@ import 'package:{project_name}/{import_prefix}/model/value_validators.dart';
             continue
             
         field_type = map_field_type(field['type'])
-        capitalized_name = field_name.capitalize()
+        capitalized_name = to_pascal_case_preserve(field_name)
         
         field_vo = f"""
 class {capitalized_name} extends ValueObject<{field_type}> {{
@@ -146,9 +146,16 @@ class {capitalized_name} extends ValueObject<{field_type}> {{
 
 def generate_value_validators(field_list: list[dict], model_dir: Path, project_name: str) -> None:
     """Generate value validators file using Jinja template"""
+    # Pre-process field_list to add pascal_name field
+    processed_field_list = []
+    for field in field_list:
+        field_dict = dict(field)  # Create a copy
+        field_dict['pascal_name'] = to_pascal_case_preserve(field['name'])
+        processed_field_list.append(field_dict)
+    
     generate_file(project_name, model_dir, "feature/value_validators_template.jinja", "value_validators.dart", {
         "project_name": project_name,
-        "field_list": field_list
+        "field_list": processed_field_list
     })
 
 
@@ -171,7 +178,7 @@ def generate_extensions(feature_name: str, field_list: list[dict], infra_dir: Pa
         if field_name == 'id':
             from_dto_fields.append(f"      id: UniqueId.fromUniqueString(id)")
         else:
-            capitalized_name = field_name.capitalize()
+            capitalized_name = to_pascal_case_preserve(field_name)
             from_dto_fields.append(f"      {field_name}: {capitalized_name}({field_name})")
     
     extension_content = f"""import 'package:{project_name}/core/model/value_objects.dart';
@@ -197,4 +204,163 @@ extension {feature_name.capitalize()}DomainX on {feature_name.capitalize()} {{
 
 """
     (infra_dir / f"{feature_name}_extensions.dart").write_text(extension_content)
+
+
+def find_domain_models(lib_path: Path, domain_folder: str) -> List[str]:
+    """Find all available domain models in the domain folder.
+    
+    Scans lib/{domain_folder}/ directory for subdirectories that contain
+    model/ folders with .dart entity files.
+    
+    Args:
+        lib_path: Path to lib/ directory
+        domain_folder: Name of domain folder (e.g., 'domain')
+    
+    Returns:
+        List of model names (e.g., ['user', 'note', 'product'])
+    """
+    domain_path = lib_path / domain_folder
+    
+    if not domain_path.exists():
+        return []
+    
+    models = []
+    for item in domain_path.iterdir():
+        if item.is_dir():
+            model_dir = item / "model"
+            if model_dir.exists() and model_dir.is_dir():
+                # Check if there's an entity file (same name as directory)
+                entity_file = model_dir / f"{item.name}.dart"
+                if entity_file.exists():
+                    models.append(item.name)
+    
+    return sorted(models)
+
+
+def create_presentation_feature_layers(feature_dir: Path, feature_name: str, domain_model_name: str, domain_folder: str, project_name: str, folder: Optional[str]) -> None:
+    """Create only application and presentation layers for a feature.
+    
+    This function creates a feature that uses an existing domain model.
+    It does NOT create model or infrastructure layers - those should
+    already exist in the domain folder.
+    
+    Args:
+        feature_dir: Path to feature directory
+        feature_name: Name of the feature
+        domain_model_name: Name of the domain model to use
+        domain_folder: Name of domain folder (e.g., 'domain')
+        project_name: Name of the project
+        folder: Optional folder path for the feature
+    """
+    # Build import paths
+    if folder:
+        feature_import_prefix = f"{folder.replace('/', '/')}/{feature_name}"
+    else:
+        feature_import_prefix = feature_name
+    
+    domain_import_prefix = f"{domain_folder}/{domain_model_name}"
+    
+    # Application layer
+    app_dir = feature_dir / "application"
+    app_dir.mkdir(exist_ok=True)
+    
+    # Create BLoC files that import from domain
+    generate_file(project_name, app_dir, "feature/feature_event_template.jinja", f"{feature_name}_event.dart", {
+        "feature_name": feature_name
+    })
+    generate_file(project_name, app_dir, "feature/feature_state_template.jinja", f"{feature_name}_state.dart", {
+        "feature_name": feature_name
+    })
+    
+    # Create BLoC that uses domain repository
+    # We need to customize the bloc template to import from domain
+    bloc_content = f"""import 'dart:async';
+
+import 'package:bloc/bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:injectable/injectable.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}_failure.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/i_{domain_model_name}_repository.dart';
+
+part '{feature_name}_bloc.freezed.dart';
+part '{feature_name}_event.dart';
+part '{feature_name}_state.dart';
+
+@injectable
+class {to_pascal_case(feature_name)}Bloc extends Bloc<{to_pascal_case(feature_name)}Event, {to_pascal_case(feature_name)}State> {{
+  final I{to_pascal_case(domain_model_name)}Repository _repository;
+
+  {to_pascal_case(feature_name)}Bloc(this._repository) : super(const {to_pascal_case(feature_name)}State.initial()) {{
+    on<LoadRequested>(_onLoadRequested);
+    on<CreateRequested>(_onCreateRequested);
+    on<UpdateRequested>(_onUpdateRequested);
+    on<DeleteRequested>(_onDeleteRequested);
+  }}
+
+  void _onLoadRequested(LoadRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
+    emit(const {to_pascal_case(feature_name)}State.loading());
+    final result = await _repository.getAll();
+    result.fold(
+      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+    );
+  }}
+
+  void _onCreateRequested(CreateRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
+    emit(const {to_pascal_case(feature_name)}State.loading());
+    final result = await _repository.create(event.item);
+    result.fold(
+      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+
+  void _onUpdateRequested(UpdateRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
+    emit(const {to_pascal_case(feature_name)}State.loading());
+    final result = await _repository.update(event.item);
+    result.fold(
+      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+
+  void _onDeleteRequested(DeleteRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
+    emit(const {to_pascal_case(feature_name)}State.loading());
+    final result = await _repository.delete(event.id);
+    result.fold(
+      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+}}
+"""
+    (app_dir / f"{feature_name}_bloc.dart").write_text(bloc_content)
+
+    # Presentation layer
+    presentation_dir = feature_dir / "presentation"
+    presentation_dir.mkdir(exist_ok=True)
+    
+    # Create page
+    generate_file(project_name, presentation_dir, "feature/feature_page_template.jinja", f"{feature_name}_page.dart", {
+        "feature_name": feature_name
+    })
 

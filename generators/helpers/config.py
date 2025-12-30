@@ -20,6 +20,7 @@ console = Console()
 # Default configuration values
 DEFAULTS = {
     "feature_folder": "",  # Empty means root of lib/
+    "domain_folder": "domain",  # Domain entities folder
     "component_folder": "",
     "page_folder": "",
     "use_bloc": True,
@@ -41,6 +42,7 @@ class FlutteratorConfig:
     
     # Folder defaults
     feature_folder: str = ""
+    domain_folder: str = "domain"
     component_folder: str = ""
     page_folder: str = ""
     
@@ -75,6 +77,8 @@ class FlutteratorConfig:
             defaults = data["defaults"]
             if "feature_folder" in defaults:
                 config.feature_folder = defaults["feature_folder"]
+            if "domain_folder" in defaults:
+                config.domain_folder = defaults["domain_folder"]
             if "component_folder" in defaults:
                 config.component_folder = defaults["component_folder"]
             if "page_folder" in defaults:
@@ -105,7 +109,7 @@ class FlutteratorConfig:
             config.extra_dependencies = data["dependencies"]
         
         # Also support flat structure (for simple configs)
-        for key in ["feature_folder", "component_folder", "page_folder", 
+        for key in ["feature_folder", "domain_folder", "component_folder", "page_folder", 
                     "use_bloc", "use_freezed", "auto_run_build_runner",
                     "ui_library", "primary_color", "secondary_color"]:
             if key in data:
@@ -124,6 +128,9 @@ class FlutteratorConfig:
             self_val = getattr(self, key)
             # Empty string is the default, so non-empty takes precedence
             setattr(result, key, other_val if other_val else self_val)
+        
+        # Domain folder has default "domain", so use other's if set
+        result.domain_folder = other.domain_folder if other.domain_folder != "domain" else self.domain_folder
         
         for key in ["use_bloc", "use_freezed", "auto_run_build_runner"]:
             # Booleans: use other's value (it's explicitly set)
@@ -223,6 +230,7 @@ def create_default_config(project_dir: Path, project_name: str) -> Path:
 # Default folders for generated code
 defaults:
   feature_folder: ""         # e.g., "features" - leave empty for lib root
+  domain_folder: "domain"   # Domain entities folder (shared entities)
   component_folder: ""       # e.g., "components"
   page_folder: ""            # e.g., "pages"
   use_bloc: true             # Use BLoC pattern for state management
@@ -262,6 +270,7 @@ def show_config(config: FlutteratorConfig) -> None:
     table.add_column("Value")
     
     table.add_row("Feature Folder", config.feature_folder or "(root)")
+    table.add_row("Domain Folder", config.domain_folder)
     table.add_row("Component Folder", config.component_folder or "(root)")
     table.add_row("Page Folder", config.page_folder or "(root)")
     table.add_row("Use BLoC", "✅" if config.use_bloc else "❌")

@@ -1,0 +1,286 @@
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/storage/storage_repository.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/domain/auth/model/user.dart' as auth_user;
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
+import 'package:[[project_name]]/domain/auth/model/i_user_profile_repository.dart';
+
+/// NOTE: This class is currently a skeleton implementation. Uncomment and implement
+/// the necessary parts to enable authentication functionality.
+///
+/// This facade supports multiple authentication providers (Firebase, Google, Apple, etc.).
+/// Implement the specific authentication logic for your chosen provider(s).
+
+@Singleton(as: IAuthFacade)
+class AuthFacade implements IAuthFacade {
+  // final FirebaseAuth _firebaseAuth; // Uncomment the following line to use Firebase Authentication
+  // final FirebaseUserMapper _firebaseUserMapper; // Uncomment the following line to use Firebase Authentication
+  final StorageRepository _storageRepository;
+  final IUserProfileRepository _userProfileRepository;
+
+  AuthFacade(
+    // this._firebaseAuth, // Uncomment the following line to use Firebase Authentication
+    // this._firebaseUserMapper, // Uncomment the following line to use Firebase Authentication
+    this._storageRepository,
+    this._userProfileRepository,
+  );
+
+  @override
+  Future<Option<auth_user.User>> getSignedInUser() async {
+    // Step 1: Get auth user from authentication provider
+    // Uncomment the following lines to use Firebase Authentication
+    // final firebaseUser = _firebaseAuth.currentUser;
+    // if (firebaseUser == null) {
+    //   return none();
+    // }
+    // final authUser = _firebaseUserMapper.toDomain(firebaseUser);
+    // if (authUser == null) {
+    //   return none();
+    // }
+
+    // Stub: For now, return none() until authentication provider is implemented
+    // TODO: Replace with actual authentication provider user retrieval
+    // final authUser = ...;
+
+    // Step 2: Get or create UserProfile using authId
+    // The UserProfile is synced with the authentication User
+    // Both use the same ID (authId) for correlation
+    // try {
+    //   final authId = authUser.id.getOrCrash();
+    //   final userProfileResult = await _userProfileRepository.getByAuthId(authId);
+    //   
+    //   final UserProfile userProfile = userProfileResult.fold(
+    //     (failure) {
+    //       // UserProfile doesn't exist, create it from auth User
+    //       final newUserProfile = authUser.toUserProfile();
+    //       return newUserProfile;
+    //     },
+    //     (existingProfile) {
+    //       // UserProfile exists, update it with latest auth data if needed
+    //       // Check if name or email changed
+    //       if (existingProfile.name.getOrCrash() != authUser.name.getOrCrash() ||
+    //           existingProfile.emailAddress.getOrCrash() != authUser.emailAddress.getOrCrash()) {
+    //         final updatedProfile = authUser.toUserProfileWithTimestamps(
+    //           createdAt: existingProfile.createdAt,
+    //           updatedAt: DateTime.now(),
+    //           avatarUrl: existingProfile.avatarUrl,
+    //         );
+    //         return updatedProfile;
+    //       }
+    //       return existingProfile;
+    //     },
+    //   );
+    //
+    //   // Save/update UserProfile if it was created or updated
+    //   if (userProfileResult.isLeft()) {
+    //     await _userProfileRepository.createOrUpdate(userProfile);
+    //   } else {
+    //     // Check if update is needed
+    //     final needsUpdate = userProfile.name.getOrCrash() != authUser.name.getOrCrash() ||
+    //                         userProfile.emailAddress.getOrCrash() != authUser.emailAddress.getOrCrash();
+    //     if (needsUpdate) {
+    //       await _userProfileRepository.createOrUpdate(userProfile);
+    //     }
+    //   }
+    //
+    //   // Step 3: Return UserProfile mapped to User (for AuthBloc compatibility)
+    //   return optionOf(userProfile.toUser());
+    // } catch (e) {
+    //   // If UserProfile sync fails, fall back to auth User
+    //   return optionOf(authUser);
+    // }
+
+    return none();
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithEmailAndPassword({
+    required EmailAddress emailAddress,
+    required Password password,
+  }) async {
+    final String emailAddressStr = emailAddress.value.getOrElse(() => throw 'INVALID EMAIL');
+    final String passwordStr = password.value.getOrElse(() => throw 'INVALID PASSWORD');
+
+    // Uncomment the following code to implement Email/Password Registration with Firebase Authentication
+
+    // try {
+    //   final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+    //     email: emailAddressStr,
+    //     password: passwordStr,
+    //   );
+
+    //   // Uncomment to save the token if needed
+
+    //   // // User registered and logged
+    //   // final user = userCredential.user;
+
+    //   // // Get ID token (JWT)
+    //   // final idToken = await user?.getIdToken();
+
+    //   // if (idToken != null) {
+    //   //   await _storageRepository.saveToken(idToken);
+    //   // }
+
+    //   // Create UserProfile after successful registration
+    //   // The UserProfile is automatically synced with the authentication User
+    //   // Both use the same ID (authId) for correlation
+    //   // if (user != null) {
+    //   //   final authUser = _firebaseUserMapper.toDomain(user);
+    //   //   if (authUser != null) {
+    //   //     final userProfile = authUser.toUserProfile();
+    //   //     await _userProfileRepository.createOrUpdate(userProfile);
+    //   //   }
+    //   // }
+
+    //   return right(unit);
+    // } on PlatformException catch (e) {
+    //   if (e.code == __STRING_12__) {
+    //     return left(const AuthFailure.emailAlreadyInUse());
+    //   } else {
+    //     return left(const AuthFailure.serverError());
+    //   }
+    // }
+
+    return right(unit);
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithEmailAndPassword({
+    required EmailAddress emailAddress,
+    required Password password,
+  }) async {
+    final String emailAddressStr = emailAddress.value.getOrElse(() => throw 'INVALID EMAIL');
+    final String passwordStr = password.value.getOrElse(() => throw 'INVALID PASSWORD');
+
+    // Uncomment the following code to implement Email/Password Sign-In with Firebase Authentication
+
+    // try {
+    //   final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+    //     email: emailAddressStr,
+    //     password: passwordStr,
+    //   );
+
+    //   // Uncomment to save the token if needed
+
+    //   // // User logged
+    //   // final user = userCredential.user;
+
+    //   // // Get ID token (JWT)
+    //   // final idToken = await user?.getIdToken();
+
+    //   // if (idToken != null) {
+    //   //   await _storageRepository.saveToken(idToken);
+    //   // }
+
+    //   // Sync UserProfile after successful sign-in
+    //   // The UserProfile is automatically synced with the authentication User
+    //   // Both use the same ID (authId) for correlation
+    //   // if (user != null) {
+    //   //   final authUser = _firebaseUserMapper.toDomain(user);
+    //   //   if (authUser != null) {
+    //   //     final authId = authUser.id.getOrCrash();
+    //   //     final userProfileResult = await _userProfileRepository.getByAuthId(authId);
+    //   //     
+    //   //     final UserProfile userProfile = userProfileResult.fold(
+    //   //       (failure) {
+    //   //         // UserProfile doesn't exist, create it from auth User
+    //   //         return authUser.toUserProfile();
+    //   //       },
+    //   //       (existingProfile) {
+    //   //         // UserProfile exists, update it with latest auth data if needed
+    //   //         if (existingProfile.name.getOrCrash() != authUser.name.getOrCrash() ||
+    //   //             existingProfile.emailAddress.getOrCrash() != authUser.emailAddress.getOrCrash()) {
+    //   //           return authUser.toUserProfileWithTimestamps(
+    //   //             createdAt: existingProfile.createdAt,
+    //   //             updatedAt: DateTime.now(),
+    //   //             avatarUrl: existingProfile.avatarUrl,
+    //   //           );
+    //   //         }
+    //   //         return existingProfile;
+    //   //       },
+    //   //     );
+    //   //
+    //   //     // Save/update UserProfile
+    //   //     await _userProfileRepository.createOrUpdate(userProfile);
+    //   //   }
+    //   // }
+
+    //   return right(unit);
+    // } on PlatformException catch (e) {
+    //   if (e.code == __STRING_15__ || e.code == __STRING_16__) {
+    //     return left(const AuthFailure.invalidEmailAndPasswordCombination());
+    //   }
+    //   return left(const AuthFailure.serverError());
+    // }
+
+    return right(unit);
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithGoogle() async {
+    // TODO: Implement Google Sign-In
+    // Example implementation with Firebase:
+    // try {
+    //   final GoogleSignIn googleSignIn = GoogleSignIn();
+    //   final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    //   if (googleUser == null) {
+    //     return left(const AuthFailure.cancelledByUser());
+    //   }
+    //   final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    //   final credential = GoogleAuthProvider.credential(
+    //     accessToken: googleAuth.accessToken,
+    //     idToken: googleAuth.idToken,
+    //   );
+    //   await _firebaseAuth.signInWithCredential(credential);
+    //   // Sync UserProfile similar to signInWithEmailAndPassword
+    //   return right(unit);
+    // } catch (e) {
+    //   return left(const AuthFailure.serverError());
+    // }
+    return right(unit);
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithApple() async {
+    // TODO: Implement Apple Sign-In
+    // Example implementation with Firebase:
+    // try {
+    //   final appleProvider = AppleAuthProvider();
+    //   final userCredential = await _firebaseAuth.signInWithProvider(appleProvider);
+    //   // Sync UserProfile similar to signInWithEmailAndPassword
+    //   return right(unit);
+    // } catch (e) {
+    //   if (e.code == 'sign_in_canceled') {
+    //     return left(const AuthFailure.cancelledByUser());
+    //   }
+    //   return left(const AuthFailure.serverError());
+    // }
+    return right(unit);
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithGoogle() async {
+    // TODO: Implement Google Registration
+    // For Google Sign-In, registration and sign-in are typically the same flow
+    // You can reuse the signInWithGoogle implementation or create a unified method
+    return await signInWithGoogle();
+  }
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithApple() async {
+    // TODO: Implement Apple Registration
+    // For Apple Sign-In, registration and sign-in are typically the same flow
+    // You can reuse the signInWithApple implementation or create a unified method
+    return await signInWithApple();
+  }
+
+  @override
+  Future<void> signOut() async {
+    await Future.wait(<Future<void>>[
+      // _firebaseAuth.signOut(), // Uncomment the following line to use Firebase Authentication
+      _storageRepository.removeToken(),
+    ]);
+  }
+}

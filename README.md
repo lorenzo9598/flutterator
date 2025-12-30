@@ -154,17 +154,17 @@ flutterator add-feature --name product --fields "name:string,price:double" --dry
 
 ## 📋 Comandi Disponibili
 
-| Comando | Descrizione | Uso Tipico |
-|---------|-------------|------------|
-| `create` | Crea nuovo progetto Flutter DDD | Inizio progetto |
-| `add-feature` | Aggiunge feature completa (model, bloc, repo, page) | Nuova funzionalità |
-| `add-page` | Aggiunge pagina semplice | Pagine statiche |
-| `add-component` | Aggiunge componente riutilizzabile | Widget condivisi |
-| `add-drawer-item` | Aggiunge item al drawer | Menu laterale |
-| `add-bottom-nav-item` | Aggiunge tab alla bottom nav | Tab navigation |
-| `init` | Inizializza Flutterator in progetto esistente | Adozione graduale |
-| `list` | Elenca risorse del progetto | Panoramica |
-| `config` | Gestisce configurazione | Personalizzazione |
+| Comando               | Descrizione                                         | Uso Tipico         |
+| --------------------- | --------------------------------------------------- | ------------------ |
+| `create`              | Crea nuovo progetto Flutter DDD                     | Inizio progetto    |
+| `add-feature`         | Aggiunge feature completa (model, bloc, repo, page) | Nuova funzionalità |
+| `add-page`            | Aggiunge pagina semplice                            | Pagine statiche    |
+| `add-component`       | Aggiunge componente riutilizzabile                  | Widget condivisi   |
+| `add-drawer-item`     | Aggiunge item al drawer                             | Menu laterale      |
+| `add-bottom-nav-item` | Aggiunge tab alla bottom nav                        | Tab navigation     |
+| `init`                | Inizializza Flutterator in progetto esistente       | Adozione graduale  |
+| `list`                | Elenca risorse del progetto                         | Panoramica         |
+| `config`              | Gestisce configurazione                             | Personalizzazione  |
 
 ---
 
@@ -182,10 +182,10 @@ flutterator create [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ❌ | - | Nome del progetto (snake_case) |
-| `--login` | flag | ❌ | `false` | Include autenticazione |
+| Opzione   | Tipo   | Obbligatorio | Default | Descrizione                    |
+| --------- | ------ | ------------ | ------- | ------------------------------ |
+| `--name`  | string | ❌            | -       | Nome del progetto (snake_case) |
+| `--login` | flag   | ❌            | `false` | Include autenticazione         |
 
 #### Modalità di Utilizzo
 
@@ -252,9 +252,13 @@ my_app/
 
 ### `flutterator add-feature`
 
-**Aggiunge una feature DDD completa con tutti i layer (model, infrastructure, application, presentation).**
+**Aggiunge una feature DDD completa con tutti i layer (model, infrastructure, application, presentation) oppure una domain entity condivisa (solo model e infrastructure).**
 
 Questo è il comando più potente: genera entity, repository, BLoC, page e tutto il boilerplate necessario.
+
+**Tipi:**
+- **Feature** (default): Use case completo con UI e BLoC
+- **Domain Entity** (`--domain`): Entità condivisa tra più feature (solo model + infrastructure)
 
 #### Sintassi
 
@@ -264,26 +268,27 @@ flutterator add-feature [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ✅ | - | Nome della feature (es: todo, user, product) |
-| `--fields` | string | ❌ | `"id:string"` | Campi del modello: `nome:tipo,nome:tipo` |
-| `--folder` | string | ❌ | da config | Cartella di destinazione (es: features) |
-| `--dry-run` | flag | ❌ | `false` | Preview senza creare file |
-| `--no-build` | flag | ❌ | `false` | Salta `flutter pub get` e `build_runner` |
-| `--project-path` | string | ❌ | `.` | Path al progetto Flutter |
+| Opzione          | Tipo   | Obbligatorio | Default       | Descrizione                                                         |
+| ---------------- | ------ | ------------ | ------------- | ------------------------------------------------------------------- |
+| `--name`         | string | ✅            | -             | Nome della feature/entity (es: todo, user, product)                 |
+| `--fields`       | string | ❌            | `"id:string"` | Campi del modello: `nome:tipo,nome:tipo`                            |
+| `--domain`       | flag   | ❌            | `false`       | Crea come domain entity (condivisa, senza application/presentation) |
+| `--folder`       | string | ❌            | da config     | Cartella di destinazione (es: features)                             |
+| `--dry-run`      | flag   | ❌            | `false`       | Preview senza creare file                                           |
+| `--no-build`     | flag   | ❌            | `false`       | Salta `flutter pub get` e `build_runner`                            |
+| `--project-path` | string | ❌            | `.`           | Path al progetto Flutter                                            |
 
 #### Tipi di Campo Supportati
 
-| Tipo | Dart Type | Esempio |
-|------|-----------|---------|
-| `string` | `String` | `name:string` |
-| `int` | `int` | `age:int` |
-| `double` | `double` | `price:double` |
-| `bool` | `bool` | `active:bool` |
-| `datetime` | `DateTime` | `created_at:datetime` |
-| `list` | `List<dynamic>` | `tags:list` |
-| `map` | `Map<String, dynamic>` | `metadata:map` |
+| Tipo       | Dart Type              | Esempio               |
+| ---------- | ---------------------- | --------------------- |
+| `string`   | `String`               | `name:string`         |
+| `int`      | `int`                  | `age:int`             |
+| `double`   | `double`               | `price:double`        |
+| `bool`     | `bool`                 | `active:bool`         |
+| `datetime` | `DateTime`             | `created_at:datetime` |
+| `list`     | `List<dynamic>`        | `tags:list`           |
+| `map`      | `Map<String, dynamic>` | `metadata:map`        |
 
 #### Modalità di Utilizzo
 
@@ -311,8 +316,11 @@ Field name (or 'done'): done
 #### Esempi
 
 ```bash
-# Feature con campi inline
+# Feature con campi inline (use case completo)
 flutterator add-feature --name todo --fields "title:string,done:bool,priority:int"
+
+# Domain entity condivisa (senza application/presentation)
+flutterator add-feature --name note --domain --fields "title:string,content:string"
 
 # Feature in cartella specifica
 flutterator add-feature --name user --folder features --fields "name:string,email:string"
@@ -371,13 +379,13 @@ flutterator add-page [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ✅ | - | Nome della pagina |
-| `--folder` | string | ❌ | da config | Cartella di destinazione |
-| `--dry-run` | flag | ❌ | `false` | Preview senza creare |
-| `--no-build` | flag | ❌ | `false` | Salta flutter pub get |
-| `--project-path` | string | ❌ | `.` | Path al progetto |
+| Opzione          | Tipo   | Obbligatorio | Default   | Descrizione              |
+| ---------------- | ------ | ------------ | --------- | ------------------------ |
+| `--name`         | string | ✅            | -         | Nome della pagina        |
+| `--folder`       | string | ❌            | da config | Cartella di destinazione |
+| `--dry-run`      | flag   | ❌            | `false`   | Preview senza creare     |
+| `--no-build`     | flag   | ❌            | `false`   | Salta flutter pub get    |
+| `--project-path` | string | ❌            | `.`       | Path al progetto         |
 
 #### Modalità di Utilizzo
 
@@ -437,14 +445,14 @@ flutterator add-component [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ✅ | - | Nome del componente |
-| `--form` | flag | ❌ | `false` | Crea come form component |
-| `--fields` | string | ❌ | - | Campi del form (richiede `--form`) |
-| `--folder` | string | ❌ | da config | Cartella di destinazione |
-| `--dry-run` | flag | ❌ | `false` | Preview senza creare |
-| `--no-build` | flag | ❌ | `false` | Salta flutter pub get |
+| Opzione      | Tipo   | Obbligatorio | Default   | Descrizione                        |
+| ------------ | ------ | ------------ | --------- | ---------------------------------- |
+| `--name`     | string | ✅            | -         | Nome del componente                |
+| `--form`     | flag   | ❌            | `false`   | Crea come form component           |
+| `--fields`   | string | ❌            | -         | Campi del form (richiede `--form`) |
+| `--folder`   | string | ❌            | da config | Cartella di destinazione           |
+| `--dry-run`  | flag   | ❌            | `false`   | Preview senza creare               |
+| `--no-build` | flag   | ❌            | `false`   | Salta flutter pub get              |
 
 #### Due Tipi di Componente
 
@@ -538,12 +546,12 @@ flutterator add-drawer-item [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ✅ | - | Nome dell'item |
-| `--dry-run` | flag | ❌ | `false` | Preview senza creare |
-| `--no-build` | flag | ❌ | `false` | Salta flutter pub get |
-| `--project-path` | string | ❌ | `.` | Path al progetto |
+| Opzione          | Tipo   | Obbligatorio | Default | Descrizione           |
+| ---------------- | ------ | ------------ | ------- | --------------------- |
+| `--name`         | string | ✅            | -       | Nome dell'item        |
+| `--dry-run`      | flag   | ❌            | `false` | Preview senza creare  |
+| `--no-build`     | flag   | ❌            | `false` | Salta flutter pub get |
+| `--project-path` | string | ❌            | `.`     | Path al progetto      |
 
 #### Modalità di Utilizzo
 
@@ -599,12 +607,12 @@ flutterator add-bottom-nav-item [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--name` | string | ✅ | - | Nome del tab |
-| `--dry-run` | flag | ❌ | `false` | Preview senza creare |
-| `--no-build` | flag | ❌ | `false` | Salta flutter pub get |
-| `--project-path` | string | ❌ | `.` | Path al progetto |
+| Opzione          | Tipo   | Obbligatorio | Default | Descrizione           |
+| ---------------- | ------ | ------------ | ------- | --------------------- |
+| `--name`         | string | ✅            | -       | Nome del tab          |
+| `--dry-run`      | flag   | ❌            | `false` | Preview senza creare  |
+| `--no-build`     | flag   | ❌            | `false` | Salta flutter pub get |
+| `--project-path` | string | ❌            | `.`     | Path al progetto      |
 
 #### Modalità di Utilizzo
 
@@ -659,10 +667,10 @@ flutterator init [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--project-path` | string | ❌ | `.` | Path al progetto Flutter |
-| `--force` | flag | ❌ | `false` | Sovrascrive config esistente |
+| Opzione          | Tipo   | Obbligatorio | Default | Descrizione                  |
+| ---------------- | ------ | ------------ | ------- | ---------------------------- |
+| `--project-path` | string | ❌            | `.`     | Path al progetto Flutter     |
+| `--force`        | flag   | ❌            | `false` | Sovrascrive config esistente |
 
 #### Esempi
 
@@ -721,15 +729,15 @@ flutterator list [TIPO] [OPTIONS]
 
 #### Argomenti
 
-| Argomento | Valori | Default | Descrizione |
-|-----------|--------|---------|-------------|
-| `TIPO` | `all`, `features`, `pages`, `components`, `routes` | `all` | Tipo di risorse da listare |
+| Argomento | Valori                                             | Default | Descrizione                |
+| --------- | -------------------------------------------------- | ------- | -------------------------- |
+| `TIPO`    | `all`, `features`, `pages`, `components`, `routes` | `all`   | Tipo di risorse da listare |
 
 #### Opzioni
 
-| Opzione | Tipo | Obbligatorio | Default | Descrizione |
-|---------|------|--------------|---------|-------------|
-| `--project-path` | string | ❌ | `.` | Path al progetto |
+| Opzione          | Tipo   | Obbligatorio | Default | Descrizione      |
+| ---------------- | ------ | ------------ | ------- | ---------------- |
+| `--project-path` | string | ❌            | `.`     | Path al progetto |
 
 #### Esempi
 
@@ -804,11 +812,11 @@ flutterator config [OPTIONS]
 
 #### Opzioni
 
-| Opzione | Tipo | Descrizione |
-|---------|------|-------------|
-| `--show` | flag | Mostra configurazione attuale |
-| `--init` | flag | Crea file di configurazione |
-| `--project-path` | string | Path al progetto |
+| Opzione          | Tipo   | Descrizione                   |
+| ---------------- | ------ | ----------------------------- |
+| `--show`         | flag   | Mostra configurazione attuale |
+| `--init`         | flag   | Crea file di configurazione   |
+| `--project-path` | string | Path al progetto              |
 
 #### Esempi
 
@@ -845,11 +853,11 @@ flutterator config --init
 
 Questi flag sono disponibili per tutti i comandi `add-*`:
 
-| Flag | Descrizione | Esempio |
-|------|-------------|---------|
-| `--dry-run` | Preview senza creare file | `--dry-run` |
-| `--no-build` | Salta `flutter pub get` e `build_runner` | `--no-build` |
-| `--project-path` | Specifica il path al progetto | `--project-path ../app` |
+| Flag             | Descrizione                              | Esempio                 |
+| ---------------- | ---------------------------------------- | ----------------------- |
+| `--dry-run`      | Preview senza creare file                | `--dry-run`             |
+| `--no-build`     | Salta `flutter pub get` e `build_runner` | `--no-build`            |
+| `--project-path` | Specifica il path al progetto            | `--project-path ../app` |
 
 ### Esempio --dry-run
 
@@ -927,6 +935,7 @@ flutterator config --init
 # 📁 Cartelle default per il codice generato
 defaults:
   feature_folder: "features"     # lib/features/todo/
+  domain_folder: "domain"         # lib/domain/note/ (entità condivise)
   component_folder: "components" # lib/components/user_card/
   page_folder: ""                # lib/profile/ (root di lib/)
   use_bloc: true                 # Usa BLoC pattern
@@ -968,26 +977,41 @@ lib/
 │   └── presentation/            # Widget comuni
 │       └── app_widget.dart
 │
-├── features/                    # 📦 FEATURES (opzionale)
-│   └── todo/                    # Esempio feature "todo"
-│       │
-│       ├── model/               # 📋 DOMAIN LAYER
-│       │   ├── todo.dart              # Entity (cosa)
-│       │   ├── todo_failure.dart      # Failures (errori)
-│       │   ├── i_todo_repository.dart # Interface (contratto)
-│       │   └── value_objects.dart     # Value Objects
-│       │
-│       ├── infrastructure/      # 🔌 DATA LAYER
-│       │   ├── todo_dto.dart          # DTO (serializzazione)
-│       │   └── todo_repository.dart   # Implementation
-│       │
+├── domain/                      # 🏛️ DOMAIN ENTITIES - Entità condivise
+│   ├── auth/                    # Entità Auth (condivisa)
+│   │   ├── model/               # Entity, failures, repository interface
+│   │   │   ├── user.dart
+│   │   │   ├── user_profile.dart
+│   │   │   └── i_auth_facade.dart
+│   │   └── infrastructure/      # Repository implementation, DTOs
+│   │       ├── firebase_auth_facade.dart
+│   │       └── user_profile_repository.dart
+│   │
+│   └── note/                    # Esempio: entità Note (condivisa)
+│       ├── model/
+│       │   ├── note.dart
+│       │   └── i_note_repository.dart
+│       └── infrastructure/
+│           └── note_repository.dart
+│
+├── features/                    # 📦 FEATURES - Use cases specifici
+│   ├── auth/                    # Feature Auth (use case completo)
+│   │   ├── application/         # ⚙️ APPLICATION LAYER
+│   │   │   ├── auth_bloc.dart
+│   │   │   ├── auth_event.dart
+│   │   │   └── auth_state.dart
+│   │   └── presentation/        # 🎨 PRESENTATION LAYER
+│   │       └── login_screen.dart
+│   │
+│   └── notes/                    # Esempio feature "gestione note"
+│       │                          # (usa domain/note)
 │       ├── application/         # ⚙️ APPLICATION LAYER
-│       │   ├── todo_bloc.dart         # BLoC (logica)
-│       │   ├── todo_event.dart        # Events
-│       │   └── todo_state.dart        # States
+│       │   ├── notes_bloc.dart      # BLoC (logica)
+│       │   ├── notes_event.dart     # Events
+│       │   └── notes_state.dart     # States
 │       │
 │       └── presentation/        # 🎨 PRESENTATION LAYER
-│           └── todo_page.dart         # UI
+│           └── notes_page.dart      # UI
 │
 ├── shared/                      # 🧩 SHARED - Componenti condivisi
 │   └── widgets/
@@ -999,12 +1023,12 @@ lib/
 
 ### Perché DDD?
 
-| Beneficio | Descrizione |
-|-----------|-------------|
-| **Testabilità** | Ogni layer è isolato e testabile |
-| **Manutenibilità** | Codice organizzato e prevedibile |
-| **Scalabilità** | Facile aggiungere nuove feature |
-| **Team** | Più sviluppatori possono lavorare in parallelo |
+| Beneficio          | Descrizione                                    |
+| ------------------ | ---------------------------------------------- |
+| **Testabilità**    | Ogni layer è isolato e testabile               |
+| **Manutenibilità** | Codice organizzato e prevedibile               |
+| **Scalabilità**    | Facile aggiungere nuove feature                |
+| **Team**           | Più sviluppatori possono lavorare in parallelo |
 
 ---
 
@@ -1012,14 +1036,14 @@ lib/
 
 I progetti generati usano queste dipendenze Flutter standard:
 
-| Pacchetto | Scopo | Link |
-|-----------|-------|------|
-| `flutter_bloc` | State management | [pub.dev](https://pub.dev/packages/flutter_bloc) |
-| `freezed` | Immutable classes | [pub.dev](https://pub.dev/packages/freezed) |
-| `injectable` | Dependency injection | [pub.dev](https://pub.dev/packages/injectable) |
-| `auto_route` | Routing declarativo | [pub.dev](https://pub.dev/packages/auto_route) |
-| `dartz` | Functional programming | [pub.dev](https://pub.dev/packages/dartz) |
-| `json_annotation` | JSON serialization | [pub.dev](https://pub.dev/packages/json_annotation) |
+| Pacchetto         | Scopo                  | Link                                                |
+| ----------------- | ---------------------- | --------------------------------------------------- |
+| `flutter_bloc`    | State management       | [pub.dev](https://pub.dev/packages/flutter_bloc)    |
+| `freezed`         | Immutable classes      | [pub.dev](https://pub.dev/packages/freezed)         |
+| `injectable`      | Dependency injection   | [pub.dev](https://pub.dev/packages/injectable)      |
+| `auto_route`      | Routing declarativo    | [pub.dev](https://pub.dev/packages/auto_route)      |
+| `dartz`           | Functional programming | [pub.dev](https://pub.dev/packages/dartz)           |
+| `json_annotation` | JSON serialization     | [pub.dev](https://pub.dev/packages/json_annotation) |
 
 ---
 

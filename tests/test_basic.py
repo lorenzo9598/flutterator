@@ -82,6 +82,30 @@ def test_to_pascal_case():
     assert to_pascal_case("api") == "Api"
 
 
+def test_to_pascal_case_preserve():
+    """Test camelCase/snake_case to PascalCase conversion preserving internal capitals"""
+    from generators.helpers import to_pascal_case_preserve
+    
+    # camelCase to PascalCase
+    assert to_pascal_case_preserve("inviteCode") == "InviteCode"
+    assert to_pascal_case_preserve("userName") == "UserName"
+    assert to_pascal_case_preserve("apiKey") == "ApiKey"
+    assert to_pascal_case_preserve("httpStatusCode") == "HttpStatusCode"
+    
+    # snake_case to PascalCase (uses existing to_pascal_case)
+    assert to_pascal_case_preserve("invite_code") == "InviteCode"
+    assert to_pascal_case_preserve("user_name") == "UserName"
+    
+    # Already PascalCase - returns as-is
+    assert to_pascal_case_preserve("InviteCode") == "InviteCode"
+    assert to_pascal_case_preserve("UserName") == "UserName"
+    
+    # Edge cases
+    assert to_pascal_case_preserve("") == ""
+    assert to_pascal_case_preserve("a") == "A"
+    assert to_pascal_case_preserve("A") == "A"
+
+
 def test_map_field_type():
     """Test field type mapping"""
     from generators.helpers import map_field_type

@@ -1,0 +1,83 @@
+/*
+ * Repository implementation template
+ * Provides concrete implementation of repository interface with:
+ * - Service for API calls
+ * - Mapper for DTO-Domain conversions
+ * - Error handling with Either types
+ * - Injectable dependency registration
+ * 
+ * This repository acts as a bridge between the domain layer and the API layer
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]].dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]]_failure.dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/i_[[entity_name]]_repository.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_service.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_mapper.dart';
+
+@Injectable(as: I[[entity_name.capitalize()]]Repository)
+class [[entity_name.capitalize()]]Repository implements I[[entity_name.capitalize()]]Repository {
+  final [[entity_name.capitalize()]]Service _service;
+  final [[entity_name.capitalize()]]Mapper _mapper;
+
+  [[entity_name.capitalize()]]Repository(
+    this._service,
+    this._mapper,
+  );
+
+  @override
+  Future<Either<[[entity_name.capitalize()]]Failure, List<[[entity_name.capitalize()]]>>> getAll() async {
+    try {
+      final dtos = await _service.getAll();
+      final domain = _mapper.toDomainList(dtos);
+      return right(domain);
+    } catch (e) {
+      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[entity_name.capitalize()]]Failure, [[entity_name.capitalize()]]>> getById(String id) async {
+    try {
+      final dto = await _service.getById(id);
+      final domain = _mapper.toDomain(dto);
+      return right(domain);
+    } catch (e) {
+      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> create([[entity_name.capitalize()]] item) async {
+    try {
+      final dto = _mapper.toDto(item);
+      await _service.create(dto);
+      return right(unit);
+    } catch (e) {
+      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> update([[entity_name.capitalize()]] item) async {
+    try {
+      final dto = _mapper.toDto(item);
+      await _service.update(item.id.getOrCrash(), dto);
+      return right(unit);
+    } catch (e) {
+      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+    }
+  }
+
+  @override
+  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> delete(String id) async {
+    try {
+      await _service.delete(id);
+      return right(unit);
+    } catch (e) {
+      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+    }
+  }
+}

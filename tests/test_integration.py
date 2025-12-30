@@ -10,6 +10,10 @@ from generators.helpers import (
     generate_page_file,
     update_router,
     create_feature_layers,
+    create_presentation_feature_layers,
+    create_domain_entity_layers,
+    find_domain_models,
+    get_model_fields_from_domain,
     create_drawer_widget,
     update_home_screen_with_drawer,
     create_drawer_page,
@@ -991,3 +995,397 @@ AutoRoute(page: SettingsPage, path: '/settings')
             
             assert result.exit_code != 0
             assert "Not a Flutter project" in result.output
+
+
+class TestFeatureModes:
+    """Test the three modes of add-feature command"""
+
+    def test_find_domain_models(self, sample_project_structure):
+        """Test finding domain models in domain folder"""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        # Create domain folder with models
+        domain_dir = lib_path / "domain"
+        domain_dir.mkdir(exist_ok=True)
+        
+        # Create first domain model
+        model1_dir = domain_dir / "user"
+        model1_dir.mkdir()
+        (model1_dir / "model").mkdir()
+        (model1_dir / "model" / "user.dart").write_text("class User {}")
+        
+        # Create second domain model
+        model2_dir = domain_dir / "note"
+        model2_dir.mkdir()
+        (model2_dir / "model").mkdir()
+        (model2_dir / "model" / "note.dart").write_text("class Note {}")
+        
+        models = find_domain_models(lib_path, "domain")
+        
+        assert len(models) == 2
+        assert "user" in models
+        assert "note" in models
+
+    def test_find_domain_models_empty(self, sample_project_structure):
+        """Test finding domain models when domain folder doesn't exist"""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        models = find_domain_models(lib_path, "domain")
+        
+        assert models == []
+
+    def test_create_domain_entity_only(self, sample_project_structure):
+        """Test creating only domain entity with --domain flag"""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        domain_dir = lib_path / "domain" / "product"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "name", "type": "string"},
+            {"name": "price", "type": "double"}
+        ]
+        
+        create_domain_entity_layers(domain_dir, "product", field_list, "test_project", "domain")
+        
+        # Should have model and infrastructure
+        assert (domain_dir / "model" / "product.dart").exists()
+        assert (domain_dir / "model" / "product_failure.dart").exists()
+        assert (domain_dir / "model" / "i_product_repository.dart").exists()
+        assert (domain_dir / "infrastructure" / "product_repository.dart").exists()
+        
+        # Should NOT have application or presentation
+        assert not (domain_dir / "application").exists()
+        assert not (domain_dir / "presentation").exists()
+
+    def test_create_presentation_feature_layers(self, sample_project_structure):
+        """Test creating only presentation feature layers"""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        # First create a domain model
+        domain_dir = lib_path / "domain" / "todo"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "title", "type": "string"}
+        ]
+        
+        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
+        
+        # Now create feature that uses this domain model
+        feature_dir = lib_path / "features" / "todo"
+        feature_dir.mkdir(parents=True, exist_ok=True)
+        
+        create_presentation_feature_layers(
+            feature_dir, "todo", "todo", "domain", "test_project", "features"
+        )
+        
+        # Should have application and presentation
+        assert (feature_dir / "application" / "todo_bloc.dart").exists()
+        assert (feature_dir / "application" / "todo_event.dart").exists()
+        assert (feature_dir / "application" / "todo_state.dart").exists()
+        assert (feature_dir / "presentation" / "todo_page.dart").exists()
+        
+        # Should NOT have model or infrastructure
+        assert not (feature_dir / "model").exists()
+        assert not (feature_dir / "infrastructure").exists()
+        
+        # Check that bloc imports from domain
+        bloc_content = (feature_dir / "application" / "todo_bloc.dart").read_text()
+        assert "domain/todo" in bloc_content
+        assert "ITodoRepository" in bloc_content
+
+    def test_add_feature_default_mode(self, sample_project_structure):
+        """Test add-feature default mode creates both domain and feature"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-feature",
+                "--name", "product",
+                "--fields", "name:string,price:double",
+                "--project-path", "test_project",
+                "--no-build"
+            ])
+            
+            assert result.exit_code == 0
+            
+            # Should create domain entity
+            domain_dir = Path("test_project/lib/domain/product")
+            assert (domain_dir / "model" / "product.dart").exists()
+            assert (domain_dir / "infrastructure" / "product_repository.dart").exists()
+            
+            # Should create feature
+            feature_dir = Path("test_project/lib/features/product")
+            assert (feature_dir / "application" / "product_bloc.dart").exists()
+            assert (feature_dir / "presentation" / "product_page.dart").exists()
+
+    def test_add_feature_domain_mode(self, sample_project_structure):
+        """Test add-feature --domain creates only domain entity"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-feature",
+                "--name", "category",
+                "--domain",
+                "--fields", "name:string",
+                "--project-path", "test_project",
+                "--no-build"
+            ])
+            
+            assert result.exit_code == 0
+            
+            # Should create domain entity
+            domain_dir = Path("test_project/lib/domain/category")
+            assert (domain_dir / "model" / "category.dart").exists()
+            assert (domain_dir / "infrastructure" / "category_repository.dart").exists()
+            
+            # Should NOT create feature
+            feature_dir = Path("test_project/lib/features/category")
+            assert not feature_dir.exists()
+
+    def test_add_feature_presentation_mode(self, sample_project_structure):
+        """Test add-feature --presentation creates only feature using domain model"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        
+        # First create a domain model
+        lib_path = project_dir / "lib"
+        domain_dir = lib_path / "domain" / "user"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "name", "type": "string"},
+            {"name": "email", "type": "string"}
+        ]
+        
+        from generators.helpers import create_domain_entity_layers
+        create_domain_entity_layers(domain_dir, "user", field_list, "test_project", "domain")
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            # Use input to select the first model (user)
+            result = runner.invoke(cli, [
+                "add-feature",
+                "--name", "user_profile",
+                "--presentation",
+                "--project-path", "test_project",
+                "--no-build"
+            ], input="1\n")  # Select first model
+            
+            assert result.exit_code == 0
+            
+            # Should create feature
+            feature_dir = Path("test_project/lib/features/user_profile")
+            assert (feature_dir / "application" / "user_profile_bloc.dart").exists()
+            assert (feature_dir / "presentation" / "user_profile_page.dart").exists()
+            
+            # Should NOT create domain (already exists)
+            # Check that bloc imports from domain
+            bloc_content = (feature_dir / "application" / "user_profile_bloc.dart").read_text()
+            assert "domain/user" in bloc_content
+            assert "IUserRepository" in bloc_content
+
+    def test_add_feature_presentation_no_domain_models(self, sample_project_structure):
+        """Test add-feature --presentation fails when no domain models exist"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-feature",
+                "--name", "test_feature",
+                "--presentation",
+                "--project-path", "test_project",
+                "--no-build"
+            ])
+            
+            assert result.exit_code != 0
+            assert "No domain models found" in result.output
+
+
+class TestComponentWithDomainModels:
+    """Test component generation with domain model selection"""
+
+    def test_get_model_fields_from_domain(self, sample_project_structure):
+        """Test extracting fields from domain model entity file"""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        # Create domain model
+        domain_dir = lib_path / "domain" / "product"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create entity file
+        model_dir = domain_dir / "model"
+        model_dir.mkdir()
+        entity_content = """@freezed
+abstract class Product with _$Product {
+  const factory Product({
+    required UniqueId id,
+    required Title title,
+    required Description description,
+  }) = _Product;
+}
+"""
+        (model_dir / "product.dart").write_text(entity_content)
+        
+        fields = get_model_fields_from_domain(lib_path, "domain", "product")
+        
+        assert len(fields) == 3
+        assert fields[0]["name"] == "id"
+        assert fields[1]["name"] == "title"
+        assert fields[2]["name"] == "description"
+
+    def test_add_component_with_domain_model(self, sample_project_structure):
+        """Test add-component selects and uses domain model"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        # Create domain model
+        domain_dir = lib_path / "domain" / "user"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "name", "type": "string"},
+            {"name": "email", "type": "string"}
+        ]
+        
+        from generators.helpers import create_domain_entity_layers
+        create_domain_entity_layers(domain_dir, "user", field_list, "test_project", "domain")
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-component",
+                "--name", "user_card",
+                "--project-path", "test_project",
+                "--no-build"
+            ], input="1\n")  # Select first model
+            
+            assert result.exit_code == 0
+            
+            # Should create component
+            component_dir = Path("test_project/lib/user_card")
+            assert (component_dir / "application" / "user_card_bloc.dart").exists()
+            assert (component_dir / "presentation" / "user_card_component.dart").exists()
+            
+            # Check that bloc imports from domain
+            bloc_content = (component_dir / "application" / "user_card_bloc.dart").read_text()
+            assert "domain/user" in bloc_content
+            assert "IUserRepository" in bloc_content
+
+    def test_add_component_form_with_domain_model(self, sample_project_structure):
+        """Test add-component --form uses fields from domain model"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        
+        # Create domain model
+        domain_dir = lib_path / "domain" / "todo"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+        
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "title", "type": "string"},
+            {"name": "completed", "type": "bool"}
+        ]
+        
+        from generators.helpers import create_domain_entity_layers
+        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
+        
+        # Create entity file with proper structure
+        model_dir = domain_dir / "model"
+        entity_content = """@freezed
+abstract class Todo with _$Todo {
+  const factory Todo({
+    required UniqueId id,
+    required Title title,
+    required Completed completed,
+  }) = _Todo;
+}
+"""
+        (model_dir / "todo.dart").write_text(entity_content)
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-component",
+                "--name", "todo_form",
+                "--form",
+                "--project-path", "test_project",
+                "--no-build"
+            ], input="1\n")  # Select first model
+            
+            assert result.exit_code == 0
+            
+            # Should create form component
+            component_dir = Path("test_project/lib/todo_form")
+            assert (component_dir / "application" / "todo_form_form_bloc.dart").exists()
+            assert (component_dir / "application" / "todo_form_form_event.dart").exists()
+            assert (component_dir / "application" / "todo_form_form_state.dart").exists()
+            assert (component_dir / "presentation" / "todo_form_component.dart").exists()
+            
+            # Check form state has fields from domain model
+            state_content = (component_dir / "application" / "todo_form_form_state.dart").read_text()
+            # Should have title field (id is typically skipped in forms)
+            assert "title" in state_content.lower() or "Title" in state_content
+
+    def test_add_component_no_domain_models(self, sample_project_structure):
+        """Test add-component fails when no domain models exist"""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+        
+        project_dir = sample_project_structure
+        
+        with runner.isolated_filesystem():
+            import shutil
+            shutil.copytree(project_dir, "test_project")
+            
+            result = runner.invoke(cli, [
+                "add-component",
+                "--name", "test_component",
+                "--project-path", "test_project",
+                "--no-build"
+            ])
+            
+            assert result.exit_code != 0
+            assert "No domain models found" in result.output

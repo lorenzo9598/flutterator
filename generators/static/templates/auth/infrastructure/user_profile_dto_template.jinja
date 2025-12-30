@@ -1,0 +1,58 @@
+/*
+ * UserProfile DTO (Data Transfer Object)
+ * Used for API communication when syncing UserProfile with backend
+ * 
+ * DTOs represent the data structure expected by the API
+ * and are mapped to/from domain entities in repositories
+ */
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:[[project_name]]/domain/auth/model/user_profile.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+
+part 'user_profile_dto.freezed.dart';
+part 'user_profile_dto.g.dart';
+
+@freezed
+abstract class UserProfileDto with _$UserProfileDto {
+  const factory UserProfileDto({
+    required String id,
+    required String name,
+    required String emailAddress,
+    String? avatarUrl,
+    required String createdAt,
+    required String updatedAt,
+  }) = _UserProfileDto;
+
+  factory UserProfileDto.fromJson(Map<String, dynamic> json) =>
+      _$UserProfileDtoFromJson(json);
+}
+
+extension UserProfileDtoX on UserProfileDto {
+  /// Converts DTO to domain UserProfile entity
+  UserProfile toDomain() {
+    return UserProfile(
+      id: UniqueId.fromUniqueString(id),
+      name: StringSingleLine(name),
+      emailAddress: EmailAddress(emailAddress),
+      avatarUrl: avatarUrl,
+      createdAt: DateTime.parse(createdAt),
+      updatedAt: DateTime.parse(updatedAt),
+    );
+  }
+}
+
+extension UserProfileX on UserProfile {
+  /// Converts domain UserProfile entity to DTO
+  UserProfileDto toDto() {
+    return UserProfileDto(
+      id: id.getOrCrash(),
+      name: name.getOrCrash(),
+      emailAddress: emailAddress.getOrCrash(),
+      avatarUrl: avatarUrl,
+      createdAt: createdAt.toIso8601String(),
+      updatedAt: updatedAt.toIso8601String(),
+    );
+  }
+}

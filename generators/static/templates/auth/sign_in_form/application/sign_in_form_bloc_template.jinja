@@ -4,10 +4,10 @@ import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:[[project_name]]/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
 import 'package:flutter/foundation.dart';
-import 'package:[[project_name]]/auth/model/value_objects.dart';
-import 'package:[[project_name]]/auth/model/i_auth_facade.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
 
 part 'sign_in_form_event.dart';
 part 'sign_in_form_state.dart';
@@ -25,6 +25,10 @@ class SignInFormBloc extends Bloc<SignInFormEvent, SignInFormState> {
     on<ToggleSignInAction>(_onToggleSignInAction);
     on<RegisterWithEmailAndPasswordPressed>(_onRegisterWithEmailAndPasswordPressed);
     on<SignInWithEmailAndPasswordPressed>(_onSignInWithEmailAndPasswordPressed);
+    on<SignInWithGooglePressed>(_onSignInWithGooglePressed);
+    on<SignInWithApplePressed>(_onSignInWithApplePressed);
+    on<RegisterWithGooglePressed>(_onRegisterWithGooglePressed);
+    on<RegisterWithApplePressed>(_onRegisterWithApplePressed);
   }
 
   void _onEmailChanged(EmailChanged event, Emitter<SignInFormState> emit) {
@@ -65,6 +69,42 @@ class SignInFormBloc extends Bloc<SignInFormEvent, SignInFormState> {
 
   void _onSignInWithEmailAndPasswordPressed(SignInWithEmailAndPasswordPressed event, Emitter<SignInFormState> emit) async {
     await _performActionOnAuthFacadeWithEmailAndPassword(_authFacade.signInWithEmailAndPassword, emit);
+  }
+
+  void _onSignInWithGooglePressed(SignInWithGooglePressed event, Emitter<SignInFormState> emit) async {
+    await _performActionOnAuthFacade(_authFacade.signInWithGoogle, emit);
+  }
+
+  void _onSignInWithApplePressed(SignInWithApplePressed event, Emitter<SignInFormState> emit) async {
+    await _performActionOnAuthFacade(_authFacade.signInWithApple, emit);
+  }
+
+  void _onRegisterWithGooglePressed(RegisterWithGooglePressed event, Emitter<SignInFormState> emit) async {
+    await _performActionOnAuthFacade(_authFacade.registerWithGoogle, emit);
+  }
+
+  void _onRegisterWithApplePressed(RegisterWithApplePressed event, Emitter<SignInFormState> emit) async {
+    await _performActionOnAuthFacade(_authFacade.registerWithApple, emit);
+  }
+
+  Future<void> _performActionOnAuthFacade(
+    Future<Either<AuthFailure, Unit>> Function() forwardedCall,
+    Emitter<SignInFormState> emit,
+  ) async {
+    Either<AuthFailure, Unit>? failureOrSuccess;
+
+    emit(state.copyWith(
+      isSubmitting: true,
+      authFailureOrSuccessOption: none(),
+    ));
+
+    failureOrSuccess = await forwardedCall();
+
+    emit(state.copyWith(
+      isSubmitting: false,
+      showErrorMessages: true,
+      authFailureOrSuccessOption: optionOf(failureOrSuccess),
+    ));
   }
 
   Future<void> _performActionOnAuthFacadeWithEmailAndPassword(

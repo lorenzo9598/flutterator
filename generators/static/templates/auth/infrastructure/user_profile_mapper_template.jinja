@@ -1,0 +1,61 @@
+/*
+ * UserProfile mapper
+ * Maps between User (auth) and UserProfile (database) entities
+ * 
+ * Flow:
+ * - Auth → UserProfile: When user authenticates, create/update UserProfile
+ * - UserProfile → User: When AuthBloc needs User, map from UserProfile
+ * 
+ * Both entities use the same ID (authId) for correlation.
+ */
+
+import 'package:[[project_name]]/domain/auth/model/user.dart' as auth_user;
+import 'package:[[project_name]]/domain/auth/model/user_profile.dart';
+
+/// Maps UserProfile (database) to User (auth) for AuthBloc compatibility
+extension UserProfileToUser on UserProfile {
+  /// Converts UserProfile to User entity
+  /// This allows AuthBloc to work with User while the database stores UserProfile
+  auth_user.User toUser() {
+    return auth_user.User(
+      id: id,
+      name: name,
+      emailAddress: emailAddress,
+    );
+  }
+}
+
+/// Maps User (auth) to UserProfile (database) for database sync
+extension UserToUserProfile on auth_user.User {
+  /// Converts User to UserProfile entity
+  /// Creates a new UserProfile with current timestamp
+  /// Used when syncing authentication User to database UserProfile
+  UserProfile toUserProfile({String? avatarUrl}) {
+    final now = DateTime.now();
+    return UserProfile(
+      id: id,
+      name: name,
+      emailAddress: emailAddress,
+      avatarUrl: avatarUrl,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  /// Converts User to UserProfile with existing timestamps
+  /// Used when updating an existing UserProfile
+  UserProfile toUserProfileWithTimestamps({
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    String? avatarUrl,
+  }) {
+    return UserProfile(
+      id: id,
+      name: name,
+      emailAddress: emailAddress,
+      avatarUrl: avatarUrl,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}

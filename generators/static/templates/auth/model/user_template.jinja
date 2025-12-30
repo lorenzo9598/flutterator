@@ -1,7 +1,17 @@
+/*
+ * User entity (authentication)
+ * 
+ * NOTE: This entity is used by AuthBloc and the authentication flow.
+ * It is mapped from UserProfile (database entity) which contains additional fields.
+ * 
+ * Flow: Auth → UserProfile sync → User (mapped)
+ * Both entities use the same ID (authId) for correlation.
+ */
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:[[project_name]]/auth/model/value_objects.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
 import 'package:[[project_name]]/core/model/entity.dart';
 import 'package:[[project_name]]/core/model/failures.dart';
 import 'package:[[project_name]]/core/model/value_objects.dart';

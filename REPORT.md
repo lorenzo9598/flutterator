@@ -12,6 +12,7 @@ Flutterator è una **CLI Python** per generare e gestire progetti Flutter con ar
 
 - Struttura progetto completa
 - Feature con tutti i layer (model, infrastructure, application, presentation)
+- Domain entities condivise (solo model + infrastructure)
 - Componenti riutilizzabili con BLoC
 - Navigazione (drawer, bottom nav)
 - Pagine semplici
@@ -37,6 +38,7 @@ flutterator/
 │   │   ├── project.py      # Validazione progetto Flutter
 │   │   ├── utils.py        # Utility (to_pascal_case, map_field_type)
 │   │   ├── feature.py      # Generazione feature DDD
+│   │   ├── domain.py       # Generazione domain entities
 │   │   ├── component.py    # Generazione componenti
 │   │   ├── page.py         # Generazione pagine
 │   │   └── navigation.py   # Drawer e bottom nav
@@ -48,7 +50,7 @@ flutterator/
 │   │       ├── component/  # Template per componenti
 │   │       ├── core/       # Template core (app_widget, etc.)
 │   │       ├── home/       # Template home screen
-│   │       ├── auth/       # Template autenticazione
+│   │       ├── auth/       # Template autenticazione (generati in domain/auth/)
 │   │       └── ...
 │   │
 │   ├── templates/          # Generatori Python per template
@@ -79,32 +81,33 @@ flutterator/
 
 ### Comandi Principali
 
-| Comando | Descrizione |
-|---------|-------------|
-| `flutterator create` | Crea nuovo progetto Flutter con struttura DDD |
-| `flutterator add-feature` | Aggiunge feature completa (model, bloc, repo, page) |
-| `flutterator add-page` | Aggiunge pagina semplice |
-| `flutterator add-component` | Aggiunge componente riutilizzabile |
-| `flutterator add-drawer-item` | Aggiunge item al drawer navigation |
-| `flutterator add-bottom-nav-item` | Aggiunge tab alla bottom navigation |
+| Comando                            | Descrizione                                                    |
+| ---------------------------------- | -------------------------------------------------------------- |
+| `flutterator create`               | Crea nuovo progetto Flutter con struttura DDD                  |
+| `flutterator add-feature`          | Aggiunge feature completa (model, bloc, repo, page)            |
+| `flutterator add-feature --domain` | Aggiunge domain entity condivisa (solo model + infrastructure) |
+| `flutterator add-page`             | Aggiunge pagina semplice                                       |
+| `flutterator add-component`        | Aggiunge componente riutilizzabile                             |
+| `flutterator add-drawer-item`      | Aggiunge item al drawer navigation                             |
+| `flutterator add-bottom-nav-item`  | Aggiunge tab alla bottom navigation                            |
 
 ### Comandi Utility
 
-| Comando | Descrizione |
-|---------|-------------|
-| `flutterator init` | Inizializza Flutterator in progetto esistente |
-| `flutterator list [type]` | Lista risorse (features, pages, components, routes) |
-| `flutterator config --show` | Mostra configurazione attuale |
-| `flutterator config --init` | Crea flutterator.yaml |
+| Comando                     | Descrizione                                         |
+| --------------------------- | --------------------------------------------------- |
+| `flutterator init`          | Inizializza Flutterator in progetto esistente       |
+| `flutterator list [type]`   | Lista risorse (features, pages, components, routes) |
+| `flutterator config --show` | Mostra configurazione attuale                       |
+| `flutterator config --init` | Crea flutterator.yaml                               |
 
 ### Flag Globali
 
-| Flag | Descrizione |
-|------|-------------|
-| `--dry-run` | Preview senza creare file |
-| `--no-build` | Salta flutter pub get e build_runner |
-| `--project-path` | Path al progetto Flutter |
-| `--help` | Mostra aiuto con esempi |
+| Flag             | Descrizione                          |
+| ---------------- | ------------------------------------ |
+| `--dry-run`      | Preview senza creare file            |
+| `--no-build`     | Salta flutter pub get e build_runner |
+| `--project-path` | Path al progetto Flutter             |
+| `--help`         | Mostra aiuto con esempi              |
 
 ---
 
@@ -186,35 +189,35 @@ pytest tests/ --cov=. --cov-report=html
 
 ## ✅ Feature Implementate (v0.2.0)
 
-| Feature | Stato | File Principale |
-|---------|-------|-----------------|
-| Creazione progetto | ✅ | `generators/initializator.py` |
-| Add feature DDD | ✅ | `generators/helpers/feature.py` |
-| Add page semplice | ✅ | `generators/helpers/page.py` |
-| Add component | ✅ | `generators/helpers/component.py` |
-| Add drawer item | ✅ | `generators/helpers/navigation.py` |
-| Add bottom nav item | ✅ | `generators/helpers/navigation.py` |
-| Flag --dry-run | ✅ | `flutterator.py` |
-| Flag --no-build | ✅ | `flutterator.py` |
-| Output colorato (rich) | ✅ | `flutterator.py` |
-| Help con esempi | ✅ | `flutterator.py` |
-| Config flutterator.yaml | ✅ | `generators/helpers/config.py` |
-| Config globale ~/.flutteratorrc | ✅ | `generators/helpers/config.py` |
-| Comando init | ✅ | `flutterator.py` |
-| Comando list | ✅ | `flutterator.py` |
-| Comando config | ✅ | `flutterator.py` |
+| Feature                         | Stato | File Principale                    |
+| ------------------------------- | ----- | ---------------------------------- |
+| Creazione progetto              | ✅     | `generators/initializator.py`      |
+| Add feature DDD                 | ✅     | `generators/helpers/feature.py`    |
+| Add page semplice               | ✅     | `generators/helpers/page.py`       |
+| Add component                   | ✅     | `generators/helpers/component.py`  |
+| Add drawer item                 | ✅     | `generators/helpers/navigation.py` |
+| Add bottom nav item             | ✅     | `generators/helpers/navigation.py` |
+| Flag --dry-run                  | ✅     | `flutterator.py`                   |
+| Flag --no-build                 | ✅     | `flutterator.py`                   |
+| Output colorato (rich)          | ✅     | `flutterator.py`                   |
+| Help con esempi                 | ✅     | `flutterator.py`                   |
+| Config flutterator.yaml         | ✅     | `generators/helpers/config.py`     |
+| Config globale ~/.flutteratorrc | ✅     | `generators/helpers/config.py`     |
+| Comando init                    | ✅     | `flutterator.py`                   |
+| Comando list                    | ✅     | `flutterator.py`                   |
+| Comando config                  | ✅     | `flutterator.py`                   |
 
 ---
 
 ## ❌ Feature da Implementare
 
-| Feature | Priorità | Descrizione |
-|---------|----------|-------------|
-| Schema YAML | 🟢 Bassa | Definire feature via file YAML |
-| Preset architetture | 🟢 Bassa | --preset clean/mvvm/minimal |
-| Snippets IDE | 🟢 Bassa | VS Code / Android Studio |
-| Comando remove | 🔵 Futura | Rimuovere feature/component |
-| Comando rename | 🔵 Futura | Rinominare risorse |
+| Feature             | Priorità | Descrizione                    |
+| ------------------- | -------- | ------------------------------ |
+| Schema YAML         | 🟢 Bassa  | Definire feature via file YAML |
+| Preset architetture | 🟢 Bassa  | --preset clean/mvvm/minimal    |
+| Snippets IDE        | 🟢 Bassa  | VS Code / Android Studio       |
+| Comando remove      | 🔵 Futura | Rimuovere feature/component    |
+| Comando rename      | 🔵 Futura | Rinominare risorse             |
 
 ---
 
@@ -314,14 +317,14 @@ def nuovo_comando(name, project_path, dry_run):
 
 ## 📊 Metriche Progetto
 
-| Metrica | Valore |
-|---------|--------|
-| Righe di codice (flutterator.py) | ~1165 |
-| Numero comandi CLI | 9 |
-| Template Jinja2 | 50+ |
-| Test totali | 30 |
-| Test passati | 100% |
-| Dipendenze Python | 4 |
+| Metrica                          | Valore |
+| -------------------------------- | ------ |
+| Righe di codice (flutterator.py) | ~1165  |
+| Numero comandi CLI               | 9      |
+| Template Jinja2                  | 50+    |
+| Test totali                      | 30     |
+| Test passati                     | 100%   |
+| Dipendenze Python                | 4      |
 
 ---
 

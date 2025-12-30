@@ -15,8 +15,8 @@ def generate_model(project_name: str, lib_path: Path):
     generate_value_validators(project_name, lib_path)
 
 def generate_infrastructure(project_name: str, lib_path: Path):
-    generate_firebase_injectable_module(project_name, lib_path)
-    generate_firestore_helpers(project_name, lib_path)
+    # No infrastructure files to generate
+    pass
 
 
 def generate_app_widget(project_name: str, lib_path: Path, has_login: bool):
@@ -42,9 +42,3 @@ def generate_value_objects(project_name: str, lib_path: Path):
 
 def generate_value_validators(project_name: str, lib_path: Path):
     generate_file(project_name, lib_path, "core/model/value_validators_template.jinja", "core/model/value_validators.dart")
-
-def generate_firebase_injectable_module(project_name: str, lib_path: Path):
-    generate_file(project_name, lib_path, "core/infrastructure/firebase_injectable_module_template.jinja", "core/infrastructure/firebase_injectable_module.dart")
-
-def generate_firestore_helpers(project_name: str, lib_path: Path):
-    generate_file(project_name, lib_path, "core/infrastructure/firestore_helpers_template.jinja", "core/infrastructure/firestore_helpers.dart")

@@ -1,0 +1,42 @@
+/*
+ * Mapper template for DTO-Domain conversions
+ * Maps between DTO (API layer) and Domain Entity (business layer)
+ * 
+ * This mapper ensures proper conversion between:
+ * - DTO (from/to API)
+ * - Domain Entity (business logic)
+ */
+
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]].dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/value_objects.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_dto.dart';
+
+/// Mapper for converting between [[entity_name.capitalize()]] DTO and Domain Entity
+@lazySingleton
+class [[entity_name.capitalize()]]Mapper {
+  /// Converts DTO to Domain Entity
+  [[entity_name.capitalize()]] toDomain([[entity_name.capitalize()]]Dto dto) {
+    return [[entity_name.capitalize()]](
+[[from_dto_fields]]
+    );
+  }
+
+  /// Converts Domain Entity to DTO
+  [[entity_name.capitalize()]]Dto toDto([[entity_name.capitalize()]] entity) {
+    return [[entity_name.capitalize()]]Dto(
+[[to_dto_fields]]
+    );
+  }
+
+  /// Converts list of DTOs to list of Domain Entities
+  List<[[entity_name.capitalize()]]> toDomainList(List<[[entity_name.capitalize()]]Dto> dtos) {
+    return dtos.map((dto) => toDomain(dto)).toList();
+  }
+
+  /// Converts list of Domain Entities to list of DTOs
+  List<[[entity_name.capitalize()]]Dto> toDtoList(List<[[entity_name.capitalize()]]> entities) {
+    return entities.map((entity) => toDto(entity)).toList();
+  }
+}

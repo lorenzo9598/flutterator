@@ -1,0 +1,45 @@
+/*
+ * Remote Service template for API communication
+ * Uses Retrofit to define REST API endpoints
+ * 
+ * This service handles all HTTP calls to the backend API
+ * and returns DTOs that will be mapped to domain entities
+ */
+
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+import 'package:retrofit/retrofit.dart';
+import 'package:[[project_name]]/apis/common/constants.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_dto.dart';
+
+part '[[entity_name]]_service.g.dart';
+
+@module
+abstract class [[entity_name.capitalize()]]RemoteModule {
+  @preResolve
+  @LazySingleton()
+  Future<[[entity_name.capitalize()]]Service> [[entity_name]]Service(Dio dio) async {
+    return [[entity_name.capitalize()]]Service(dio, baseUrl: Constants.apiUrl);
+  }
+}
+
+@RestApi()
+abstract class [[entity_name.capitalize()]]Service {
+  @factoryMethod
+  factory [[entity_name.capitalize()]]Service(Dio dio, {String baseUrl}) = _[[entity_name.capitalize()]]Service;
+
+  @GET('/[[entity_name]]s')
+  Future<List<[[entity_name.capitalize()]]Dto>> getAll();
+
+  @GET('/[[entity_name]]s/{id}')
+  Future<[[entity_name.capitalize()]]Dto> getById(@Path('id') String id);
+
+  @POST('/[[entity_name]]s')
+  Future<[[entity_name.capitalize()]]Dto> create(@Body() [[entity_name.capitalize()]]Dto [[entity_name]]Dto);
+
+  @PUT('/[[entity_name]]s/{id}')
+  Future<[[entity_name.capitalize()]]Dto> update(@Path('id') String id, @Body() [[entity_name.capitalize()]]Dto [[entity_name]]Dto);
+
+  @DELETE('/[[entity_name]]s/{id}')
+  Future<void> delete(@Path('id') String id);
+}

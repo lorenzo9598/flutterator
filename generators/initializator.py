@@ -35,6 +35,7 @@ def create_folder_structure(lib_path, login):
         "core/infrastructure",
         "core/presentation",
         "core/model",
+        "domain",  # Domain entities folder
         "home",
         "home/presentation",
         "splash",
@@ -44,16 +45,21 @@ def create_folder_structure(lib_path, login):
     ]
 
     # Add auth folders if login is enabled
+    # Domain entities (shared): model + infrastructure only
+    # Feature (use case): application + presentation
     if login:
         folders.extend([
-            "auth",
-            "auth/application",
-            "auth/infrastructure",
-            "auth/presentation",
-            "auth/model",
-            "auth/sign_in_form",
-            "auth/sign_in_form/application",
-            "auth/sign_in_form/presentation",
+            # Domain entities (shared)
+            "domain/auth",
+            "domain/auth/infrastructure",
+            "domain/auth/model",
+            # Feature (use case with UI)
+            "features/auth",
+            "features/auth/application",
+            "features/auth/presentation",
+            "features/auth/sign_in_form",
+            "features/auth/sign_in_form/application",
+            "features/auth/sign_in_form/presentation",
         ])
 
     # Create all folders

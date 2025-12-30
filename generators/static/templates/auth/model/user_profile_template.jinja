@@ -1,0 +1,42 @@
+/*
+ * UserProfile entity template
+ * Represents the user profile stored in the application database
+ * 
+ * This entity is separate from the authentication User entity:
+ * - User (auth): Used by AuthBloc and authentication flow
+ * - UserProfile (database): Extended profile with additional fields
+ * 
+ * Both entities use the same ID (authId) to correlate them.
+ * The UserProfile is automatically created/updated when a user authenticates.
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/core/model/entity.dart';
+import 'package:[[project_name]]/core/model/failures.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+
+part 'user_profile.freezed.dart';
+
+@freezed
+abstract class UserProfile with _$UserProfile implements IEntity {
+  const factory UserProfile({
+    required UniqueId id,
+    required StringSingleLine name,
+    required EmailAddress emailAddress,
+    String? avatarUrl,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) = _UserProfile;
+}
+
+extension UserProfileX on UserProfile {
+  Option<ValueFailure<dynamic>> get failureOption {
+    return name.failureOrUnit.andThen(emailAddress.failureOrUnit).fold(
+      (ValueFailure<dynamic> l) => some(l),
+      (Unit r) => none(),
+    );
+  }
+}
