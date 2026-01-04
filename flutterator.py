@@ -292,7 +292,7 @@ def add_page(name, project_path, dry_run, no_build):
     
     \b
     Creates:
-      • lib/features/<name>/<name>_page.dart
+      • lib/<feature_folder>/<name>/<name>_page.dart (feature_folder from config, default: "features")
       • Updates lib/router.dart with new route
     
     \b
@@ -319,12 +319,20 @@ def add_page(name, project_path, dry_run, no_build):
     # Convert name to appropriate format
     page_name = name.lower().replace(' ', '_')
     
+    # Determine feature folder path (use config, default to "features")
+    feature_folder = cfg.feature_folder if cfg.feature_folder else ""
+    
     # Dry-run mode: show what would be created
     if dry_run:
         print_dry_run_header()
         console.print(f"[bold]📄 Would add page:[/bold] [cyan]{page_name}[/cyan]")
         console.print()
-        print_dry_run_tree(f"lib/features/{page_name}", [
+        # Build path for dry-run display
+        if feature_folder:
+            dry_run_path = f"lib/{feature_folder}/{page_name}"
+        else:
+            dry_run_path = f"lib/{page_name}"
+        print_dry_run_tree(dry_run_path, [
             ("", [f"{page_name}_page.dart"])
         ])
         console.print()
@@ -334,17 +342,20 @@ def add_page(name, project_path, dry_run, no_build):
     
     console.print(f"[bold cyan]📄 Adding page: {page_name}[/bold cyan]")
     
-    # Create page directory structure inside features folder
-    features_dir = lib_path / "features"
-    features_dir.mkdir(exist_ok=True)
+    # Create page directory structure inside feature folder (from config)
+    if feature_folder:
+        features_dir = lib_path / feature_folder
+    else:
+        features_dir = lib_path
+    features_dir.mkdir(exist_ok=True, parents=True)
     page_dir = features_dir / page_name
     page_dir.mkdir(exist_ok=True)
     
     # Generate page file directly in page directory (no presentation folder)
     generate_page_file(page_name, page_dir, project_name)
     
-    # Update router with features folder
-    update_router(project_dir, page_name, project_name, folder="features")
+    # Update router with feature folder (from config)
+    update_router(project_dir, page_name, project_name, folder=feature_folder if feature_folder else None)
     
     # Show created structure
     print_created_structure(page_name, [

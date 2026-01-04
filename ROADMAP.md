@@ -8,24 +8,24 @@ Proposte di miglioramento per rendere Flutterator più utile, intuitivo e pratic
 
 ### ✅ Punti di Forza
 
-| Aspetto | Descrizione |
-|---------|-------------|
-| Architettura DDD | Struttura professionale con layer ben separati |
-| CLI con Click | Framework robusto e ben documentato |
-| Template Jinja | Separazione codice/template |
-| Comandi specifici | Un comando per ogni caso d'uso |
+| Aspetto           | Descrizione                                    |
+| ----------------- | ---------------------------------------------- |
+| Architettura DDD  | Struttura professionale con layer ben separati |
+| CLI con Click     | Framework robusto e ben documentato            |
+| Template Jinja    | Separazione codice/template                    |
+| Comandi specifici | Un comando per ogni caso d'uso                 |
 
 ### ⚠️ Aree di Miglioramento
 
-| Problema | Impatto |
-|----------|---------|
-| Troppi prompt interattivi | Rallenta il workflow |
-| Nessuna configurazione per progetto | Ogni progetto ha le stesse impostazioni |
-| Template hardcoded (CaravaggioUI, bloc) | Difficile adattare ad altri stack |
-| Manca dry-run mode | Non si può prevedere cosa farà |
-| Manca comando per progetti esistenti | Solo `create` per nuovi progetti |
-| Manca comando `list`/`remove` | Non si può ispezionare o rimuovere |
-| Output poco informativo | Difficile capire cosa sta succedendo |
+| Problema                                | Impatto                                 |
+| --------------------------------------- | --------------------------------------- |
+| Troppi prompt interattivi               | Rallenta il workflow                    |
+| Nessuna configurazione per progetto     | Ogni progetto ha le stesse impostazioni |
+| Template hardcoded (CaravaggioUI, bloc) | Difficile adattare ad altri stack       |
+| Manca dry-run mode                      | Non si può prevedere cosa farà          |
+| Manca comando per progetti esistenti    | Solo `create` per nuovi progetti        |
+| Manca comando `list`/`remove`           | Non si può ispezionare o rimuovere      |
+| Output poco informativo                 | Difficile capire cosa sta succedendo    |
 
 ---
 
@@ -42,8 +42,6 @@ Creare supporto per file `flutterator.yaml`:
 defaults:
   feature_folder: "features"      # Cartella default per le feature
   component_folder: "components"  # Cartella default per i componenti
-  use_bloc: true                  # Usa BLoC pattern
-  use_freezed: true               # Usa Freezed per le classi
   auto_run_build_runner: true     # Esegui build_runner automaticamente
 
 # Override template
@@ -555,22 +553,22 @@ def add_feature(...):
 
 ### ✅ Completate
 
-| Priorità | Feature | Stato | Note |
-|----------|---------|-------|------|
-| 🔴 Alta | `--dry-run` flag | ✅ Fatto | Preview modifiche senza creare file |
-| 🔴 Alta | Output con `rich` | ✅ Fatto | Panel, Tree, colori, tabelle |
-| 🔴 Alta | Help con esempi | ✅ Fatto | Docstring migliorate con esempi pratici |
-| 🟡 Media | `flutterator.yaml` | ✅ Fatto | Config per progetto + ~/.flutteratorrc globale |
-| 🟡 Media | Comando `list` | ✅ Fatto | Lista features, pages, components, routes |
-| 🟡 Media | Comando `init` | ✅ Fatto | Inizializza Flutterator in progetto esistente |
+| Priorità | Feature            | Stato   | Note                                           |
+| -------- | ------------------ | ------- | ---------------------------------------------- |
+| 🔴 Alta   | `--dry-run` flag   | ✅ Fatto | Preview modifiche senza creare file            |
+| 🔴 Alta   | Output con `rich`  | ✅ Fatto | Panel, Tree, colori, tabelle                   |
+| 🔴 Alta   | Help con esempi    | ✅ Fatto | Docstring migliorate con esempi pratici        |
+| 🟡 Media  | `flutterator.yaml` | ✅ Fatto | Config per progetto + ~/.flutteratorrc globale |
+| 🟡 Media  | Comando `list`     | ✅ Fatto | Lista features, pages, components, routes      |
+| 🟡 Media  | Comando `init`     | ✅ Fatto | Inizializza Flutterator in progetto esistente  |
 
 ### ❌ Da Fare
 
-| Priorità | Feature | Effort | Impatto | Descrizione |
-|----------|---------|--------|---------|-------------|
-| 🟢 Bassa | Schema YAML | Alto | Medio | Definire feature via file YAML con campi, relazioni, validazioni |
-| 🟢 Bassa | Preset architetture | Alto | Medio | `--preset clean/mvvm/minimal` per strutture diverse |
-| 🟢 Bassa | Snippets IDE | Basso | Basso | Generazione snippet per VS Code/Android Studio |
+| Priorità | Feature             | Effort | Impatto | Descrizione                                                      |
+| -------- | ------------------- | ------ | ------- | ---------------------------------------------------------------- |
+| 🟢 Bassa  | Schema YAML         | Alto   | Medio   | Definire feature via file YAML con campi, relazioni, validazioni |
+| 🟢 Bassa  | Preset architetture | Alto   | Medio   | `--preset clean/mvvm/minimal` per strutture diverse              |
+| 🟢 Bassa  | Snippets IDE        | Basso  | Basso   | Generazione snippet per VS Code/Android Studio                   |
 
 ---
 

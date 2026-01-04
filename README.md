@@ -784,15 +784,11 @@ flutterator config --init
 defaults:
   feature_folder: "features"     # lib/features/todo/
   domain_folder: "domain"         # lib/domain/note/ (entità condivise)
-  component_folder: "components" # lib/components/user_card/
-  page_folder: ""                # lib/profile/ (root di lib/)
-  use_bloc: true                 # Usa BLoC pattern
-  use_freezed: true              # Usa Freezed per immutabilità
+  component_folder: "features/components" # lib/features/components/user_card/
   auto_run_build_runner: true    # Esegue build_runner dopo generazione
 
 # 🎨 Configurazione UI (per riferimento futuro)
 styling:
-  ui_library: "material"         # material, cupertino
   primary_color: "#2196F3"
   secondary_color: "#FF9800"
 ```
@@ -803,7 +799,6 @@ styling:
 # Configurazione globale per tutti i progetti
 defaults:
   feature_folder: "features"
-  use_bloc: true
   auto_run_build_runner: false  # Disabilita per tutti i progetti
 ```
 

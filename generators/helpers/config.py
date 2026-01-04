@@ -19,14 +19,10 @@ console = Console()
 
 # Default configuration values
 DEFAULTS = {
-    "feature_folder": "",  # Empty means root of lib/
+    "feature_folder": "features",  # Default features folder
     "domain_folder": "domain",  # Domain entities folder
-    "component_folder": "",
-    "page_folder": "",
-    "use_bloc": True,
-    "use_freezed": True,
+    "component_folder": "features/components",  # Default components folder
     "auto_run_build_runner": True,
-    "ui_library": "caravaggio_ui",  # caravaggio_ui, material, cupertino
     "primary_color": "#2196F3",
     "secondary_color": "#FF9800",
 }
@@ -41,20 +37,14 @@ class FlutteratorConfig:
     """Configuration class for Flutterator."""
     
     # Folder defaults
-    feature_folder: str = ""
+    feature_folder: str = "features"
     domain_folder: str = "domain"
-    component_folder: str = ""
-    page_folder: str = ""
-    
-    # Pattern options
-    use_bloc: bool = True
-    use_freezed: bool = True
+    component_folder: str = "features/components"
     
     # Automation
     auto_run_build_runner: bool = True
     
     # UI/Styling
-    ui_library: str = "caravaggio_ui"
     primary_color: str = "#2196F3"
     secondary_color: str = "#FF9800"
     
@@ -81,20 +71,12 @@ class FlutteratorConfig:
                 config.domain_folder = defaults["domain_folder"]
             if "component_folder" in defaults:
                 config.component_folder = defaults["component_folder"]
-            if "page_folder" in defaults:
-                config.page_folder = defaults["page_folder"]
-            if "use_bloc" in defaults:
-                config.use_bloc = defaults["use_bloc"]
-            if "use_freezed" in defaults:
-                config.use_freezed = defaults["use_freezed"]
             if "auto_run_build_runner" in defaults:
                 config.auto_run_build_runner = defaults["auto_run_build_runner"]
         
         # Map 'styling' section
         if "styling" in data:
             styling = data["styling"]
-            if "ui_library" in styling:
-                config.ui_library = styling["ui_library"]
             if "primary_color" in styling:
                 config.primary_color = styling["primary_color"]
             if "secondary_color" in styling:
@@ -109,9 +91,9 @@ class FlutteratorConfig:
             config.extra_dependencies = data["dependencies"]
         
         # Also support flat structure (for simple configs)
-        for key in ["feature_folder", "domain_folder", "component_folder", "page_folder", 
-                    "use_bloc", "use_freezed", "auto_run_build_runner",
-                    "ui_library", "primary_color", "secondary_color"]:
+        for key in ["feature_folder", "domain_folder", "component_folder", 
+                    "auto_run_build_runner",
+                    "primary_color", "secondary_color"]:
             if key in data:
                 setattr(config, key, data[key])
         
@@ -122,21 +104,19 @@ class FlutteratorConfig:
         """Merge this config with another, other takes precedence for non-default values."""
         result = FlutteratorConfig()
         
-        # For each field, use other's value if it's not default, else use self's
-        for key in ["feature_folder", "component_folder", "page_folder"]:
-            other_val = getattr(other, key)
-            self_val = getattr(self, key)
-            # Empty string is the default, so non-empty takes precedence
-            setattr(result, key, other_val if other_val else self_val)
+        # Feature folder: use other's if set (default is "features")
+        result.feature_folder = other.feature_folder if other.feature_folder != "features" else self.feature_folder
+        
+        # Component folder: use other's if set (default is "features/components")
+        result.component_folder = other.component_folder if other.component_folder != "features/components" else self.component_folder
         
         # Domain folder has default "domain", so use other's if set
         result.domain_folder = other.domain_folder if other.domain_folder != "domain" else self.domain_folder
         
-        for key in ["use_bloc", "use_freezed", "auto_run_build_runner"]:
-            # Booleans: use other's value (it's explicitly set)
-            setattr(result, key, getattr(other, key))
+        # Automation: use other's value (it's explicitly set)
+        result.auto_run_build_runner = other.auto_run_build_runner
         
-        for key in ["ui_library", "primary_color", "secondary_color"]:
+        for key in ["primary_color", "secondary_color"]:
             setattr(result, key, getattr(other, key))
         
         # Merge dictionaries and lists
@@ -229,17 +209,13 @@ def create_default_config(project_dir: Path, project_name: str) -> Path:
 
 # Default folders for generated code
 defaults:
-  feature_folder: ""         # e.g., "features" - leave empty for lib root
-  domain_folder: "domain"   # Domain entities folder (shared entities)
-  component_folder: ""       # e.g., "components"
-  page_folder: ""            # e.g., "pages"
-  use_bloc: true             # Use BLoC pattern for state management
-  use_freezed: true          # Use Freezed for immutable classes
-  auto_run_build_runner: true  # Run build_runner after generation
+  feature_folder: "features"         # Features folder
+  domain_folder: "domain"           # Domain entities folder (shared entities)
+  component_folder: "features/components"  # Components folder
+  auto_run_build_runner: true       # Run build_runner after generation
 
 # UI/Styling configuration
 styling:
-  ui_library: caravaggio_ui  # Options: caravaggio_ui, material, cupertino
   primary_color: "#2196F3"
   secondary_color: "#FF9800"
 
@@ -269,16 +245,11 @@ def show_config(config: FlutteratorConfig) -> None:
     table.add_column("Setting", style="dim")
     table.add_column("Value")
     
-    table.add_row("Feature Folder", config.feature_folder or "(root)")
+    table.add_row("Feature Folder", config.feature_folder)
     table.add_row("Domain Folder", config.domain_folder)
-    table.add_row("Component Folder", config.component_folder or "(root)")
-    table.add_row("Page Folder", config.page_folder or "(root)")
-    table.add_row("Use BLoC", "✅" if config.use_bloc else "❌")
-    table.add_row("Use Freezed", "✅" if config.use_freezed else "❌")
+    table.add_row("Component Folder", config.component_folder)
     table.add_row("Auto Build Runner", "✅" if config.auto_run_build_runner else "❌")
-    table.add_row("UI Library", config.ui_library)
     table.add_row("Primary Color", config.primary_color)
     table.add_row("Secondary Color", config.secondary_color)
     
     console.print(Panel(table, title=f"⚙️  Configuration ({config._source})", border_style="blue"))
-

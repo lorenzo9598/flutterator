@@ -125,14 +125,10 @@ flutterator/
 ```yaml
 defaults:
   feature_folder: "features"     # lib/features/todo/
-  component_folder: "components" # lib/components/user_card/
-  page_folder: ""                # lib/profile/ (root)
-  use_bloc: true
-  use_freezed: true
+  component_folder: "features/components" # lib/features/components/user_card/
   auto_run_build_runner: true    # false = salta flutter pub get
 
 styling:
-  ui_library: caravaggio_ui      # material, cupertino
   primary_color: "#2196F3"
   secondary_color: "#FF9800"
 ```
