@@ -329,14 +329,14 @@ flutterator add-component [OPTIONS]
 
 #### Opzioni
 
-| Opzione      | Tipo   | Obbligatorio | Default   | Descrizione                             |
-| ------------ | ------ | ------------ | --------- | --------------------------------------- |
-| `--name`     | string | ✅            | -         | Nome del componente                     |
-| `--type`     | choice | ❌            | -         | Tipo: `form`, `list`, o `single`        |
-| `--fields`   | string | ❌            | -         | Campi del form (richiede `--type form`) |
-| `--folder`   | string | ❌            | da config | Cartella di destinazione                |
-| `--dry-run`  | flag   | ❌            | `false`   | Preview senza creare                    |
-| `--no-build` | flag   | ❌            | `false`   | Salta flutter pub get                   |
+| Opzione      | Tipo   | Obbligatorio | Default               | Descrizione                             |
+| ------------ | ------ | ------------ | --------------------- | --------------------------------------- |
+| `--name`     | string | ✅            | -                     | Nome del componente                     |
+| `--type`     | choice | ❌            | -                     | Tipo: `form`, `list`, o `single`        |
+| `--fields`   | string | ❌            | -                     | Campi del form (richiede `--type form`) |
+| `--folder`   | string | ❌            | `features/components` | Cartella di destinazione                |
+| `--dry-run`  | flag   | ❌            | `false`               | Preview senza creare                    |
+| `--no-build` | flag   | ❌            | `false`               | Salta flutter pub get                   |
 
 #### Tre Tipi di Componente
 
@@ -383,7 +383,6 @@ flutterator add-component
 
 ```
 Component name: todo_list
-Folder (leave empty for root) []: components
 Select component type:
   1. Single item (loads one item by ID)
   2. List (shows all items with CRUD operations)

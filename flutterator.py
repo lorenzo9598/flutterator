@@ -729,16 +729,14 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
       flutterator add-component --name login --type form \\
         --fields "email:string,password:string"
     
-      # Component in specific folder
+      # Component in specific folder (default is features/components)
       flutterator add-component --name search_bar --folder shared/widgets
     
       # Preview component
       flutterator add-component --name register --type list --dry-run
     
     \b
-    Configure default folder in flutterator.yaml:
-      defaults:
-        component_folder: "components"
+    Default folder: features/components (can be overridden with --folder or flutterator.yaml)
     """
     project_dir = Path(project_path)
     lib_path, project_name = validate_flutter_project(project_dir)
@@ -760,12 +758,13 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     
     component_name = name.lower().replace(' ', '_')
 
-    # Use folder from CLI, config, or prompt
+    # Use folder from CLI, config, or default to features/components
     if folder is None:
         if cfg.component_folder:
             folder = cfg.component_folder
-        elif not dry_run:
-            folder = click.prompt("Folder (leave empty for root)", default="")
+        else:
+            # Default to features/components if not specified
+            folder = "features/components"
     
     # Determine component type - use parameter if provided via CLI, otherwise ask interactively
     if type:
