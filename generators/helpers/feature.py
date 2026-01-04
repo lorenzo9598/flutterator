@@ -264,19 +264,65 @@ def create_presentation_feature_layers(feature_dir: Path, feature_name: str, dom
     app_dir = feature_dir / "application"
     app_dir.mkdir(exist_ok=True)
     
-    # Create BLoC files that import from domain
-    generate_file(project_name, app_dir, "feature/feature_event_template.jinja", f"{feature_name}_event.dart", {
-        "feature_name": feature_name
-    })
-    generate_file(project_name, app_dir, "feature/feature_state_template.jinja", f"{feature_name}_state.dart", {
-        "feature_name": feature_name
-    })
+    # Get PascalCase names
+    # Use to_pascal_case_preserve to handle camelCase names like "todoPage" -> "TodoPage"
+    feature_pascal = to_pascal_case_preserve(feature_name)
+    domain_model_pascal = to_pascal_case_preserve(domain_model_name)
+    
+    # Build Freezed mixin names correctly (e.g., _$TodoPageEvent)
+    freezed_mixin_event = "_$" + feature_pascal + "Event"
+    freezed_mixin_state = "_$" + feature_pascal + "State"
+    
+    # Create event file that uses domain model for item types
+    event_content = f"""/*
+ * BLoC events template for feature operations
+ * Defines immutable events using Freezed that trigger BLoC actions:
+ * - LoadRequested: Fetch all items
+ * - CreateRequested: Create new item
+ * - UpdateRequested: Update existing item
+ * - DeleteRequested: Remove item by ID
+ * 
+ * Events represent user intentions and trigger state changes
+ */
+
+part of '{feature_name}_bloc.dart';
+
+@freezed
+abstract class {feature_pascal}Event with {freezed_mixin_event} {{
+  const factory {feature_pascal}Event.loadRequested() = LoadRequested;
+  const factory {feature_pascal}Event.createRequested({domain_model_pascal} item) = CreateRequested;
+  const factory {feature_pascal}Event.updateRequested({domain_model_pascal} item) = UpdateRequested;
+  const factory {feature_pascal}Event.deleteRequested(String id) = DeleteRequested;
+}}
+"""
+    (app_dir / f"{feature_name}_event.dart").write_text(event_content)
+    
+    # Create state file that uses domain model for list types
+    state_content = f"""/*
+ * BLoC states template for feature UI representation
+ * Defines immutable states using Freezed for different UI states:
+ * - Initial: App just started, no data loaded
+ * - Loading: Data is being fetched/processed
+ * - Loaded: Data successfully retrieved with items list
+ * - Error: Something went wrong with error message
+ * 
+ * States represent the current condition of the feature
+ */
+
+part of '{feature_name}_bloc.dart';
+
+@freezed
+abstract class {feature_pascal}State with {freezed_mixin_state} {{
+  const factory {feature_pascal}State.initial() = Initial;
+  const factory {feature_pascal}State.loading() = Loading;
+  const factory {feature_pascal}State.loaded(List<{domain_model_pascal}> items) = Loaded;
+  const factory {feature_pascal}State.error(String message) = Error;
+}}
+"""
+    (app_dir / f"{feature_name}_state.dart").write_text(state_content)
     
     # Create BLoC that uses domain repository
-    # We need to customize the bloc template to import from domain
-    bloc_content = f"""import 'dart:async';
-
-import 'package:bloc/bloc.dart';
+    bloc_content = f"""import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}.dart';
@@ -288,65 +334,65 @@ part '{feature_name}_event.dart';
 part '{feature_name}_state.dart';
 
 @injectable
-class {to_pascal_case(feature_name)}Bloc extends Bloc<{to_pascal_case(feature_name)}Event, {to_pascal_case(feature_name)}State> {{
-  final I{to_pascal_case(domain_model_name)}Repository _repository;
+class {feature_pascal}Bloc extends Bloc<{feature_pascal}Event, {feature_pascal}State> {{
+  final I{domain_model_pascal}Repository _repository;
 
-  {to_pascal_case(feature_name)}Bloc(this._repository) : super(const {to_pascal_case(feature_name)}State.initial()) {{
+  {feature_pascal}Bloc(this._repository) : super(const {feature_pascal}State.initial()) {{
     on<LoadRequested>(_onLoadRequested);
     on<CreateRequested>(_onCreateRequested);
     on<UpdateRequested>(_onUpdateRequested);
     on<DeleteRequested>(_onDeleteRequested);
   }}
 
-  void _onLoadRequested(LoadRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
-    emit(const {to_pascal_case(feature_name)}State.loading());
+  void _onLoadRequested(LoadRequested event, Emitter<{feature_pascal}State> emit) async {{
+    emit(const {feature_pascal}State.loading());
     final result = await _repository.getAll();
     result.fold(
-      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
-      (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+      ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
+      (items) => emit({feature_pascal}State.loaded(items)),
     );
   }}
 
-  void _onCreateRequested(CreateRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
-    emit(const {to_pascal_case(feature_name)}State.loading());
+  void _onCreateRequested(CreateRequested event, Emitter<{feature_pascal}State> emit) async {{
+    emit(const {feature_pascal}State.loading());
     final result = await _repository.create(event.item);
     result.fold(
-      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
       (_) async {{
         final itemsResult = await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
-          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+          ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
+          (items) => emit({feature_pascal}State.loaded(items)),
         );
       }},
     );
   }}
 
-  void _onUpdateRequested(UpdateRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
-    emit(const {to_pascal_case(feature_name)}State.loading());
+  void _onUpdateRequested(UpdateRequested event, Emitter<{feature_pascal}State> emit) async {{
+    emit(const {feature_pascal}State.loading());
     final result = await _repository.update(event.item);
     result.fold(
-      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
       (_) async {{
         final itemsResult = await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
-          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+          ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
+          (items) => emit({feature_pascal}State.loaded(items)),
         );
       }},
     );
   }}
 
-  void _onDeleteRequested(DeleteRequested event, Emitter<{to_pascal_case(feature_name)}State> emit) async {{
-    emit(const {to_pascal_case(feature_name)}State.loading());
+  void _onDeleteRequested(DeleteRequested event, Emitter<{feature_pascal}State> emit) async {{
+    emit(const {feature_pascal}State.loading());
     final result = await _repository.delete(event.id);
     result.fold(
-      (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
+      ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
       (_) async {{
         final itemsResult = await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit({to_pascal_case(feature_name)}State.error(failure.toString())),
-          (items) => emit({to_pascal_case(feature_name)}State.loaded(items)),
+          ({domain_model_pascal}Failure failure) => emit({feature_pascal}State.error(failure.toString())),
+          (items) => emit({feature_pascal}State.loaded(items)),
         );
       }},
     );

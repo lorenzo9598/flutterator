@@ -53,7 +53,7 @@ class TestPageGeneration:
         # Initial router content
         initial_router = """import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_project/home/presentation/home_screen.dart';
+import 'package:test_project/features/home/presentation/home_screen.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -313,7 +313,8 @@ class TestCLICommands:
         assert "Flutterator" in result.output
         assert "create" in result.output
         assert "add-page" in result.output
-        assert "add-feature" in result.output
+        assert "add-component" in result.output
+        assert "add-domain" in result.output
 
     def test_create_valid_name(self):
         """Test create command with valid name"""
@@ -348,7 +349,7 @@ class TestCLICommands:
         assert "--name" in result.output
         assert "--dry-run" in result.output
 
-    def test_add_feature_help(self):
+    # def test_add_feature_help(self):  # DISABLED: add-feature command removed
         """Test add-feature command help"""
         from flutterator import cli
         runner = click.testing.CliRunner()
@@ -391,36 +392,9 @@ class TestDryRunMode:
             settings_dir = Path("test_project/lib/settings")
             assert not settings_dir.exists()
 
-    def test_add_feature_dry_run(self, sample_project_structure):
-        """Test add-feature with --dry-run doesn't create files"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
-            
-            result = runner.invoke(cli, [
-                "add-feature",
-                "--name", "todo",
-                "--fields", "title:string,done:bool",
-                "--project-path", "test_project",
-                "--dry-run"
-            ])
-            
-            assert result.exit_code == 0
-            assert "DRY-RUN MODE" in result.output
-            assert "todo" in result.output
-            assert "model" in result.output
-            assert "infrastructure" in result.output
-            assert "application" in result.output
-            assert "presentation" in result.output
-            
-            # Verify no files were created
-            todo_dir = Path("test_project/lib/todo")
-            assert not todo_dir.exists()
+    # def test_add_feature_dry_run(self, sample_project_structure):
+    #     """Test add-feature with --dry-run - DISABLED: add-feature command removed"""
+    #     pass
 
     def test_add_component_dry_run(self, sample_project_structure):
         """Test add-component with --dry-run doesn't create files"""
@@ -750,7 +724,7 @@ class TestErrorHandling:
             result = runner.invoke(cli, [
                 "add-component",
                 "--name", "test_form",
-                "--form",
+                "--type", "form",
                 "--fields", "invalid_field_no_type"
             ])
             
@@ -785,82 +759,7 @@ class TestFeatureBehavior:
 
 
 class TestNewCommands:
-    """Test new commands: init, list, config"""
-
-    def test_init_command_creates_config(self, sample_project_structure):
-        """Test init command creates flutterator.yaml"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
-            
-            result = runner.invoke(cli, [
-                "init",
-                "--project-path", "test_project"
-            ])
-            
-            assert result.exit_code == 0
-            assert "Flutterator initialized" in result.output
-            
-            # Verify config file was created
-            config_file = Path("test_project/flutterator.yaml")
-            assert config_file.exists()
-            
-            # Verify content has expected sections
-            content = config_file.read_text()
-            assert "defaults:" in content
-            assert "feature_folder" in content
-
-    def test_init_command_creates_directories(self, sample_project_structure):
-        """Test init command creates directory structure"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        with runner.isolated_filesystem():
-            # Create minimal project
-            Path("pubspec.yaml").write_text("name: my_app\n")
-            Path("lib").mkdir()
-            
-            result = runner.invoke(cli, ["init"])
-            
-            assert result.exit_code == 0
-            
-            # Verify directories were created
-            assert Path("lib/core").exists()
-            assert Path("lib/features").exists()
-            assert Path("lib/shared").exists()
-
-    def test_init_command_force_flag(self, sample_project_structure):
-        """Test init --force overwrites existing config"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
-            
-            # Create existing config
-            config_file = Path("test_project/flutterator.yaml")
-            config_file.write_text("# old config\n")
-            
-            result = runner.invoke(cli, [
-                "init",
-                "--project-path", "test_project",
-                "--force"
-            ])
-            
-            assert result.exit_code == 0
-            
-            # Verify config was overwritten
-            content = config_file.read_text()
-            assert "defaults:" in content  # New config format
-            assert "# old config" not in content
+    """Test new commands: list, config"""
 
     def test_list_command_all(self, sample_project_structure):
         """Test list command shows all resources"""
@@ -1100,70 +999,24 @@ class TestFeatureModes:
         assert "domain/todo" in bloc_content
         assert "ITodoRepository" in bloc_content
 
-    def test_add_feature_default_mode(self, sample_project_structure):
-        """Test add-feature default mode creates both domain and feature"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
-            
-            result = runner.invoke(cli, [
-                "add-feature",
-                "--name", "product",
-                "--fields", "name:string,price:double",
-                "--project-path", "test_project",
-                "--no-build"
-            ])
-            
-            assert result.exit_code == 0
-            
-            # Should create domain entity
-            domain_dir = Path("test_project/lib/domain/product")
-            assert (domain_dir / "model" / "product.dart").exists()
-            assert (domain_dir / "infrastructure" / "product_repository.dart").exists()
-            
-            # Should create feature
-            feature_dir = Path("test_project/lib/features/product")
-            assert (feature_dir / "application" / "product_bloc.dart").exists()
-            assert (feature_dir / "presentation" / "product_page.dart").exists()
+    # def test_add_feature_default_mode(self, sample_project_structure):
+    #     """Test add-feature default mode creates both domain and feature - DISABLED: command removed"""
+    #     pass
 
-    def test_add_feature_domain_mode(self, sample_project_structure):
-        """Test add-feature --domain creates only domain entity"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
-            
-            result = runner.invoke(cli, [
-                "add-feature",
-                "--name", "category",
-                "--domain",
-                "--fields", "name:string",
-                "--project-path", "test_project",
-                "--no-build"
-            ])
-            
-            assert result.exit_code == 0
-            
-            # Should create domain entity
-            domain_dir = Path("test_project/lib/domain/category")
-            assert (domain_dir / "model" / "category.dart").exists()
-            assert (domain_dir / "infrastructure" / "category_repository.dart").exists()
-            
-            # Should NOT create feature
-            feature_dir = Path("test_project/lib/features/category")
-            assert not feature_dir.exists()
+    # def test_add_feature_domain_mode(self, sample_project_structure):
+    #     """Test add-feature --domain creates only domain entity - DISABLED: command removed"""
+    #     pass
 
-    def test_add_feature_presentation_mode(self, sample_project_structure):
-        """Test add-feature --presentation creates only feature using domain model"""
+    # def test_add_feature_presentation_mode(self, sample_project_structure):
+    #     """Test add-feature --presentation creates only feature - DISABLED: command removed"""
+    #     pass
+
+    # def test_add_feature_presentation_no_domain_models(self, sample_project_structure):
+    #     """Test add-feature --presentation fails when no domain models exist - DISABLED: command removed"""
+    #     pass
+
+    def test_add_component_list_type(self, sample_project_structure):
+        """Test add-component --type list creates list component with CRUD operations"""
         from flutterator import cli
         runner = click.testing.CliRunner()
         
@@ -1171,65 +1024,58 @@ class TestFeatureModes:
         
         # First create a domain model
         lib_path = project_dir / "lib"
-        domain_dir = lib_path / "domain" / "user"
+        domain_dir = lib_path / "domain" / "todo"
         domain_dir.mkdir(parents=True, exist_ok=True)
         
         field_list = [
             {"name": "id", "type": "string"},
-            {"name": "name", "type": "string"},
-            {"name": "email", "type": "string"}
+            {"name": "title", "type": "string"},
+            {"name": "done", "type": "bool"}
         ]
         
         from generators.helpers import create_domain_entity_layers
-        create_domain_entity_layers(domain_dir, "user", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
         
         with runner.isolated_filesystem():
             import shutil
             shutil.copytree(project_dir, "test_project")
             
-            # Use input to select the first model (user)
+            # Use input to select the first model (todo)
             result = runner.invoke(cli, [
-                "add-feature",
-                "--name", "user_profile",
-                "--presentation",
+                "add-component",
+                "--name", "todo_list",
+                "--type", "list",
                 "--project-path", "test_project",
                 "--no-build"
             ], input="1\n")  # Select first model
             
             assert result.exit_code == 0
             
-            # Should create feature
-            feature_dir = Path("test_project/lib/features/user_profile")
-            assert (feature_dir / "application" / "user_profile_bloc.dart").exists()
-            assert (feature_dir / "presentation" / "user_profile_page.dart").exists()
+            # Should create component with list functionality
+            component_dir = Path("test_project/lib/todo_list")
+            assert (component_dir / "application" / "todo_list_bloc.dart").exists()
+            assert (component_dir / "application" / "todo_list_event.dart").exists()
+            assert (component_dir / "application" / "todo_list_state.dart").exists()
+            assert (component_dir / "presentation" / "todo_list_component.dart").exists()
             
-            # Should NOT create domain (already exists)
-            # Check that bloc imports from domain
-            bloc_content = (feature_dir / "application" / "user_profile_bloc.dart").read_text()
-            assert "domain/user" in bloc_content
-            assert "IUserRepository" in bloc_content
-
-    def test_add_feature_presentation_no_domain_models(self, sample_project_structure):
-        """Test add-feature --presentation fails when no domain models exist"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        project_dir = sample_project_structure
-        
-        with runner.isolated_filesystem():
-            import shutil
-            shutil.copytree(project_dir, "test_project")
+            # Check that bloc has list operations (getAll, create, update, delete)
+            bloc_content = (component_dir / "application" / "todo_list_bloc.dart").read_text()
+            assert "_repository.getAll()" in bloc_content
+            assert "_repository.create(" in bloc_content
+            assert "_repository.update(" in bloc_content
+            assert "_repository.delete(" in bloc_content
             
-            result = runner.invoke(cli, [
-                "add-feature",
-                "--name", "test_feature",
-                "--presentation",
-                "--project-path", "test_project",
-                "--no-build"
-            ])
+            # Check that state has List<Model> items
+            state_content = (component_dir / "application" / "todo_list_state.dart").read_text()
+            assert "List<Todo>" in state_content or "List<todo>" in state_content
+            assert "loaded(List<" in state_content
             
-            assert result.exit_code != 0
-            assert "No domain models found" in result.output
+            # Check that event has loadRequested, createRequested, updateRequested, deleteRequested
+            event_content = (component_dir / "application" / "todo_list_event.dart").read_text()
+            assert "loadRequested()" in event_content
+            assert "createRequested(" in event_content
+            assert "updateRequested(" in event_content
+            assert "deleteRequested(" in event_content
 
 
 class TestComponentWithDomainModels:
@@ -1350,7 +1196,7 @@ abstract class Todo with _$Todo {
             result = runner.invoke(cli, [
                 "add-component",
                 "--name", "todo_form",
-                "--form",
+                "--type", "form",
                 "--project-path", "test_project",
                 "--no-build"
             ], input="1\n")  # Select first model

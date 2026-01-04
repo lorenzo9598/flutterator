@@ -36,6 +36,7 @@ from generators.helpers import (
     create_bottom_nav_widget,
     create_component_layers,
     create_component_form_layers,
+    create_component_list_layers,
     # Configuration
     FlutteratorConfig,
     load_config,
@@ -150,14 +151,15 @@ def cli():
     Quick Start:
       flutterator create --name my_app
       cd my_app
-      flutterator add-feature --name todo --fields "title:string,done:bool"
+      flutterator add-domain --name todo --fields "title:string,done:bool"
+      flutterator add-component --name todo_list --type list
     
     \b
     Available Commands:
       create              Create a new Flutter project
       add-page            Add a simple page
-      add-feature         Add a complete DDD feature (model, bloc, repository)
-      add-component       Add a reusable component
+      add-domain          Add a domain entity (model + infrastructure only)
+      add-component       Add a reusable component (form, list, or single)
       add-drawer-item     Add drawer navigation item
       add-bottom-nav-item Add bottom navigation item
       config              Manage configuration
@@ -290,21 +292,21 @@ def add_page(name, project_path, dry_run, no_build):
     
     \b
     Creates:
-      • lib/<name>/presentation/<name>_page.dart
+      • lib/features/<name>/presentation/<name>_page.dart
       • Updates lib/router.dart with new route
     
     \b
     Use this for simple pages without business logic.
-    For pages with state management, use add-feature instead.
+    For pages with state management, use add-component --type list instead.
     
     \b
     Examples:
       # Add a profile page
       flutterator add-page --name profile
-    
+      
       # Preview what will be created
       flutterator add-page --name settings --dry-run
-    
+      
       # Skip flutter pub get
       flutterator add-page --name about --no-build
     """
@@ -322,7 +324,7 @@ def add_page(name, project_path, dry_run, no_build):
         print_dry_run_header()
         console.print(f"[bold]📄 Would add page:[/bold] [cyan]{page_name}[/cyan]")
         console.print()
-        print_dry_run_tree(f"lib/{page_name}", [
+        print_dry_run_tree(f"lib/features/{page_name}", [
             ("presentation", [f"{page_name}_page.dart"])
         ])
         console.print()
@@ -332,8 +334,10 @@ def add_page(name, project_path, dry_run, no_build):
     
     console.print(f"[bold cyan]📄 Adding page: {page_name}[/bold cyan]")
     
-    # Create page directory structure
-    page_dir = lib_path / page_name
+    # Create page directory structure inside features folder
+    features_dir = lib_path / "features"
+    features_dir.mkdir(exist_ok=True)
+    page_dir = features_dir / page_name
     page_dir.mkdir(exist_ok=True)
     
     # Create presentation layer
@@ -343,8 +347,8 @@ def add_page(name, project_path, dry_run, no_build):
     # Generate page file
     generate_page_file(page_name, presentation_dir, project_name)
     
-    # Update router
-    update_router(project_dir, page_name, project_name)
+    # Update router with features folder
+    update_router(project_dir, page_name, project_name, folder="features")
     
     # Show created structure
     print_created_structure(page_name, [
@@ -360,305 +364,26 @@ def add_page(name, project_path, dry_run, no_build):
     print_success(f"Page '{page_name}' added successfully!")
 
 
-@cli.command()
-@click.option('--name', prompt='Feature name', help='Feature name (e.g., todo, user, product)')
-@click.option('--folder', help='Target folder (e.g., features, modules)')
-@click.option('--fields', help='Model fields as name:type,name:type')
-@click.option('--domain', is_flag=True, help='Create only domain entity (model + infrastructure, no application/presentation)')
-@click.option('--presentation', is_flag=True, help='Create only feature (application + presentation, requires existing domain model)')
-@click.option('--project-path', default='.', help='Path to Flutter project')
-@click.option('--dry-run', is_flag=True, help='Preview without creating files')
-@click.option('--no-build', is_flag=True, help='Skip flutter pub get')
-def add_feature(name, folder, fields, project_path, dry_run, no_build, domain, presentation):
+# @cli.command()  # Disabled - use add-domain + add-component --type list instead
+def add_feature(name=None, folder=None, fields=None, project_path='.', dry_run=False, no_build=False, domain=False, presentation=False):
     """
-    Add a complete DDD feature with all layers, or a domain entity (shared entity).
+    [DEPRECATED] This command has been removed.
     
-    \b
-    Three modes available:
+    Use the following instead:
+    - For domain entities: `flutterator add-domain --name <model_name>`
+    - For list components: `flutterator add-component --name <name> --type list`
+    - For single components: `flutterator add-component --name <name> --type single`
+    - For form components: `flutterator add-component --name <name> --type form`
     
-    1. DEFAULT (no flags): Creates both domain entity AND feature
-       • domain/{name}/     - Model + infrastructure
-       • features/{name}/    - Application + presentation
-    
-    2. --domain: Creates only domain entity (shared across features)
-       • domain/{name}/      - Model + infrastructure only
-       (NO application/presentation)
-    
-    3. --presentation: Creates only feature (uses existing domain model)
-       • features/{name}/    - Application + presentation only
-       (Requires selecting existing domain model)
-    
-    \b
-    Field Types:
-      string, int, double, bool, datetime, list, map
-    
-    \b
-    Examples:
-      # Create both domain and feature (default)
-      flutterator add-feature --name todo --fields "title:string,done:bool"
-      
-      # Create only domain entity
-      flutterator add-feature --name note --domain --fields "title:string,content:string"
-      
-      # Create only feature (uses existing domain model)
-      flutterator add-feature --name todo --presentation
-      
-      # Preview without creating
-      flutterator add-feature --name product --dry-run
-      
-      # Interactive mode (prompts for fields)
-      flutterator add-feature --name order
-    
-    \b
-    Configure default folders in flutterator.yaml:
-      defaults:
-        feature_folder: "features"
-        domain_folder: "domain"
+    This function is kept for backward compatibility only.
     """
-    project_dir = Path(project_path)
-    lib_path, project_name = validate_flutter_project(project_dir)
-    
-    # Load configuration
-    cfg = load_config(project_dir)
-    
-    # Validate flags
-    if domain and presentation:
-        print_error("Cannot use both --domain and --presentation flags together.")
-        sys.exit(1)
-    
-    # Convert name to appropriate format
-    feature_name = name.lower().replace(' ', '_')
-    
-    # Determine mode: 'both', 'domain', or 'presentation'
-    if domain:
-        mode = 'domain'
-    elif presentation:
-        mode = 'presentation'
-    else:
-        mode = 'both'  # Default: create both domain and feature
-
-    # Handle presentation mode: requires selecting existing domain model
-    domain_model_name = None
-    if mode == 'presentation':
-        available_models = find_domain_models(lib_path, cfg.domain_folder)
-        if not available_models:
-            print_error(f"No domain models found in {cfg.domain_folder}/ folder.")
-            print_error("Create a domain model first using: flutterator add-feature --domain --name <model_name>")
-            sys.exit(1)
-        
-        if not dry_run:
-            console.print(f"[bold cyan]Available domain models:[/bold cyan]")
-            for i, model in enumerate(available_models, 1):
-                console.print(f"  {i}. {model}")
-            console.print()
-            
-            while True:
-                choice = click.prompt(f"Select domain model (1-{len(available_models)})", type=int)
-                if 1 <= choice <= len(available_models):
-                    domain_model_name = available_models[choice - 1]
-                    break
-                console.print("[red]Invalid choice. Please try again.[/red]")
-        else:
-            # Dry run: use first available model
-            domain_model_name = available_models[0]
-    
-    # Parse fields (not needed for presentation mode)
-    field_list = []
-    if mode != 'presentation':
-        if not fields and not dry_run:
-            console.print("[bold cyan]🔧 Adding fields interactively.[/bold cyan] Type 'done' when finished.")
-            while True:
-                field_name = click.prompt("Field name (or 'done')")
-                if field_name.lower() == 'done':
-                    break
-                field_type = click.prompt("Field type", default='String')
-                field_list.append({'name': field_name.strip(), 'type': field_type.strip()})
-        elif fields:
-            for field in fields.split(','):
-                field_name, field_type = field.split(':')
-                field_list.append({'name': field_name.strip(), 'type': field_type.strip()})
-        
-        # Automatically add 'id' field as the first field
-        field_list.insert(0, {'name': 'id', 'type': 'string'})
-        
-        if not field_list or len(field_list) == 1:  # Only 'id' field
-            if dry_run:
-                field_list.append({'name': 'example_field', 'type': 'string'})
-            else:
-                print_error("No fields specified. Use --fields or --interactive")
-                sys.exit(1)
-    
-    # Build base paths for display
-    if mode == 'both':
-        domain_base_path = f"lib/{cfg.domain_folder}/{feature_name}"
-        feature_base_path = f"lib/{cfg.feature_folder}/{feature_name}" if cfg.feature_folder else f"lib/{feature_name}"
-    elif mode == 'domain':
-        base_path = f"lib/{cfg.domain_folder}/{feature_name}"
-    else:  # presentation
-        feature_base_path = f"lib/{cfg.feature_folder}/{feature_name}" if cfg.feature_folder else f"lib/{feature_name}"
-    
-    # Dry-run mode: show what would be created
-    if dry_run:
-        print_dry_run_header()
-        
-        if mode == 'both':
-            console.print(f"[bold]🔧 Would add domain entity and feature:[/bold] [cyan]{feature_name}[/cyan]")
-            fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-            console.print(f"   [dim]Fields:[/dim] {fields_str}")
-            console.print()
-            console.print(f"[bold]Domain entity:[/bold]")
-            print_dry_run_tree(domain_base_path, [
-                ("model", [
-                    f"{feature_name}.dart",
-                    f"{feature_name}_failure.dart",
-                    f"i_{feature_name}_repository.dart",
-                    "value_objects.dart",
-                    "value_validators.dart"
-                ]),
-                ("infrastructure", [
-                    f"{feature_name}_dto.dart",
-                    f"{feature_name}_extensions.dart",
-                    f"{feature_name}_repository.dart"
-                ])
-            ])
-            console.print()
-            console.print(f"[bold]Feature:[/bold]")
-            print_dry_run_tree(feature_base_path, [
-                ("application", [
-                    f"{feature_name}_bloc.dart",
-                    f"{feature_name}_event.dart",
-                    f"{feature_name}_state.dart"
-                ]),
-                ("presentation", [
-                    f"{feature_name}_page.dart"
-                ])
-            ])
-        elif mode == 'domain':
-            console.print(f"[bold]🔧 Would add domain entity:[/bold] [cyan]{feature_name}[/cyan]")
-            fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-            console.print(f"   [dim]Fields:[/dim] {fields_str}")
-            console.print()
-            print_dry_run_tree(base_path, [
-                ("model", [
-                    f"{feature_name}.dart",
-                    f"{feature_name}_failure.dart",
-                    f"i_{feature_name}_repository.dart",
-                    "value_objects.dart",
-                    "value_validators.dart"
-                ]),
-                ("infrastructure", [
-                    f"{feature_name}_dto.dart",
-                    f"{feature_name}_extensions.dart",
-                    f"{feature_name}_repository.dart"
-                ])
-            ])
-        else:  # presentation
-            console.print(f"[bold]🔧 Would add feature:[/bold] [cyan]{feature_name}[/cyan]")
-            console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
-            console.print()
-            print_dry_run_tree(feature_base_path, [
-                ("application", [
-                    f"{feature_name}_bloc.dart",
-                    f"{feature_name}_event.dart",
-                    f"{feature_name}_state.dart"
-                ]),
-                ("presentation", [
-                    f"{feature_name}_page.dart"
-                ])
-            ])
-        
-        console.print()
-        if mode != 'domain':
-            console.print("[bold]📝 Would update:[/bold] [cyan]lib/router.dart[/cyan]")
-        print_dry_run_footer()
-        return
-    
-    # Display what we're creating
-    if mode == 'both':
-        console.print(f"[bold cyan]🔧 Adding domain entity and feature: {feature_name}[/bold cyan]")
-        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-        console.print(f"   [dim]Fields:[/dim] {fields_str}")
-    elif mode == 'domain':
-        console.print(f"[bold cyan]🔧 Adding domain entity: {feature_name}[/bold cyan]")
-        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-        console.print(f"   [dim]Fields:[/dim] {fields_str}")
-    else:  # presentation
-        console.print(f"[bold cyan]🔧 Adding feature: {feature_name}[/bold cyan]")
-        console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
-    
-    # Create domain entity (if mode is 'both' or 'domain')
-    if mode in ['both', 'domain']:
-        domain_folder_path = lib_path / cfg.domain_folder
-        domain_folder_path.mkdir(exist_ok=True)
-        domain_dir = domain_folder_path / feature_name
-        domain_dir.mkdir(exist_ok=True)
-        
-        create_domain_entity_layers(domain_dir, feature_name, field_list, project_name, cfg.domain_folder)
-        
-        if mode == 'domain':
-            print_created_structure(feature_name, [
-                ("model", [f"{feature_name}.dart", f"{feature_name}_failure.dart", f"i_{feature_name}_repository.dart", "value_objects.dart", "value_validators.dart"]),
-                ("infrastructure", [f"{feature_name}_dto.dart", f"{feature_name}_extensions.dart", f"{feature_name}_repository.dart"])
-            ], [])
-    
-    # Create feature (if mode is 'both' or 'presentation')
-    if mode in ['both', 'presentation']:
-        # Determine feature folder
-        if folder is None:
-            if cfg.feature_folder:
-                feature_folder = cfg.feature_folder
-            else:
-                feature_folder = ""
-        else:
-            feature_folder = folder
-        
-        # Create feature directory
-        if feature_folder:
-            folder_path = lib_path
-            for folder_part in feature_folder.split('/'):
-                folder_path = folder_path / folder_part
-            feature_dir = folder_path / feature_name
-        else:
-            feature_dir = lib_path / feature_name
-        
-        feature_dir.mkdir(parents=True, exist_ok=True)
-        
-        if mode == 'presentation':
-            # Use existing domain model
-            create_presentation_feature_layers(
-                feature_dir, feature_name, domain_model_name, 
-                cfg.domain_folder, project_name, feature_folder
-            )
-            print_created_structure(feature_name, [
-                ("application", [f"{feature_name}_bloc.dart", f"{feature_name}_event.dart", f"{feature_name}_state.dart"]),
-                ("presentation", [f"{feature_name}_page.dart"])
-            ], ["lib/router.dart"])
-        else:  # mode == 'both'
-            # Create full feature with its own model
-            create_feature_layers(feature_dir, feature_name, field_list, project_name, feature_folder)
-            print_created_structure(feature_name, [
-                ("model", [f"{feature_name}.dart", f"{feature_name}_failure.dart", f"i_{feature_name}_repository.dart", "value_objects.dart", "value_validators.dart"]),
-                ("infrastructure", [f"{feature_name}_dto.dart", f"{feature_name}_extensions.dart", f"{feature_name}_repository.dart"]),
-                ("application", [f"{feature_name}_bloc.dart", f"{feature_name}_event.dart", f"{feature_name}_state.dart"]),
-                ("presentation", [f"{feature_name}_page.dart"])
-            ], ["lib/router.dart"])
-        
-        # Update router (only for features, not domain entities)
-        update_router(project_dir, feature_name, project_name, feature_folder)
-    
-    # Run Flutter commands (respecting --no-build and config)
-    if not no_build and cfg.auto_run_build_runner:
-        run_flutter_commands(project_dir)
-    elif no_build:
-        print_info("Skipping flutter pub get and build_runner (--no-build)")
-    
-    # Success message
-    if mode == 'both':
-        print_success(f"Domain entity and feature '{feature_name}' added successfully!")
-    elif mode == 'domain':
-        print_success(f"Domain entity '{feature_name}' added successfully!")
-    else:
-        print_success(f"Feature '{feature_name}' added successfully!")
+    # Early exit with error message
+    print_error("The 'add-feature' command has been removed.")
+    print_error("Use 'flutterator add-domain --name <model_name>' to create domain entities.")
+    print_error("Use 'flutterator add-component --name <name> --type list' to create list components.")
+    print_error("Use 'flutterator add-component --name <name> --type single' to create single item components.")
+    print_error("Use 'flutterator add-component --name <name> --type form' to create form components.")
+    sys.exit(1)
 
 
 @cli.command()
@@ -818,42 +543,52 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
 
 @cli.command()
 @click.option('--name', help='Component name (e.g., user_card, login_form)')
-@click.option('--fields', help='Form fields as name:type,name:type')
-@click.option('--form', is_flag=True, default=None, help='Create as form component')
+@click.option('--fields', help='Form fields as name:type,name:type (only for form type)')
+@click.option('--type', type=click.Choice(['form', 'list', 'single'], case_sensitive=False), help='Component type: form, list, or single')
 @click.option('--folder', help='Target folder (e.g., components, shared)')
 @click.option('--project-path', default='.', help='Path to Flutter project')
 @click.option('--dry-run', is_flag=True, help='Preview without creating files')
 @click.option('--no-build', is_flag=True, help='Skip flutter pub get')
-def add_component(name, fields, form, folder, project_path, dry_run, no_build):
+def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     """
     Add a reusable component with optional BLoC.
     
     \b
-    Two types available:
+    Three types available:
     
-    STANDARD COMPONENT:
-      Creates a simple component with BLoC for state management.
+    SINGLE COMPONENT (--type single or default):
+      Creates a component that displays a single item loaded by ID.
       • application/  - BLoC, events, states
       • presentation/ - Widget
     
-    FORM COMPONENT (--form):
+    LIST COMPONENT (--type list):
+      Creates a component that displays a list of items with full CRUD operations.
+      • application/  - BLoC with getAll, create, update, delete
+      • presentation/ - Widget with ListView
+    
+    FORM COMPONENT (--type form):
       Creates a form with field validation and submission handling.
       Requires --fields to define form inputs.
+      • application/  - Form BLoC, events, states
+      • presentation/ - Form widget
     
     \b
     Examples:
-      # Standard component (card, list item, etc.)
+      # Single component (default)
       flutterator add-component --name user_card
-    
+      
+      # List component
+      flutterator add-component --name todo_list --type list
+      
       # Form component with fields
-      flutterator add-component --name login --form \\
+      flutterator add-component --name login --type form \\
         --fields "email:string,password:string"
     
       # Component in specific folder
       flutterator add-component --name search_bar --folder shared/widgets
     
-      # Preview form component
-      flutterator add-component --name register --form --dry-run
+      # Preview component
+      flutterator add-component --name register --type list --dry-run
     
     \b
     Configure default folder in flutterator.yaml:
@@ -866,8 +601,9 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
     # Load configuration
     cfg = load_config(project_dir)
 
-    if form is False and fields is not None:
-        print_error("The --fields option can only be used with --form to create a form component.")
+    # Validate fields option
+    if fields is not None and type and type.lower() != 'form':
+        print_error("The --fields option can only be used with --type form.")
         sys.exit(1)
     
     # Interactive mode - always ask for missing parameters (skip if dry-run)
@@ -886,19 +622,35 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
         elif not dry_run:
             folder = click.prompt("Folder (leave empty for root)", default="")
     
-    # Interactive form flag - use parameter if provided via CLI, otherwise ask
-    if form is not None:
-        is_form = form
+    # Determine component type - use parameter if provided via CLI, otherwise ask interactively
+    if type:
+        component_type = type.lower()
     elif dry_run:
-        is_form = False  # Default to standard component in dry-run
+        component_type = 'single'  # Default to single component in dry-run
     else:
-        is_form = click.confirm("Is this a form component?", default=False)
+        console.print("[bold cyan]Select component type:[/bold cyan]")
+        console.print("  1. Single item (loads one item by ID)")
+        console.print("  2. List (shows all items with CRUD operations)")
+        console.print("  3. Form (form with validation)")
+        console.print()
+        while True:
+            choice = click.prompt("Type (1-3)", type=int)
+            if choice == 1:
+                component_type = 'single'
+                break
+            elif choice == 2:
+                component_type = 'list'
+                break
+            elif choice == 3:
+                component_type = 'form'
+                break
+            console.print("[red]Invalid choice. Please select 1, 2, or 3.[/red]")
     
     # Select domain model
     available_models = find_domain_models(lib_path, cfg.domain_folder)
     if not available_models:
         print_error(f"No domain models found in {cfg.domain_folder}/ folder.")
-        print_error("Create a domain model first using: flutterator add-feature --domain --name <model_name>")
+        print_error("Create a domain model first using: flutterator add-domain --name <model_name>")
         sys.exit(1)
     
     domain_model_name = None
@@ -923,7 +675,7 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
     
     # Get fields from domain model (for form components)
     field_list = []
-    if is_form:
+    if component_type == 'form':
         try:
             field_list = get_model_fields_from_domain(lib_path, cfg.domain_folder, domain_model_name)
         except Exception as e:
@@ -935,18 +687,15 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
         print_dry_run_header()
         console.print(f"[bold]🔧 Would add component:[/bold] [cyan]{component_name}[/cyan]")
         console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
-        if is_form:
-            console.print("   [dim]Type:[/dim] [magenta]Form component[/magenta]")
-            if field_list:
-                fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-                console.print(f"   [dim]Fields:[/dim] {fields_str}")
-        else:
-            console.print("   [dim]Type:[/dim] [blue]Standard component[/blue]")
+        console.print(f"   [dim]Type:[/dim] [magenta]{component_type.capitalize()} component[/magenta]")
+        if component_type == 'form' and field_list:
+            fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+            console.print(f"   [dim]Fields:[/dim] {fields_str}")
         if folder:
             console.print(f"   [dim]Folder:[/dim] [blue]{folder}[/blue]")
         console.print()
         
-        if is_form:
+        if component_type == 'form':
             print_dry_run_tree(base_path, [
                 ("application", [
                     f"{component_name}_form_bloc.dart",
@@ -957,7 +706,18 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
                     f"{component_name}_component.dart"
                 ])
             ])
-        else:
+        elif component_type == 'list':
+            print_dry_run_tree(base_path, [
+                ("application", [
+                    f"{component_name}_bloc.dart",
+                    f"{component_name}_event.dart",
+                    f"{component_name}_state.dart"
+                ]),
+                ("presentation", [
+                    f"{component_name}_component.dart"
+                ])
+            ])
+        else:  # single
             print_dry_run_tree(base_path, [
                 ("application", [
                     f"{component_name}_bloc.dart",
@@ -971,15 +731,11 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
         print_dry_run_footer()
         return
     
-    if is_form:
-        console.print(f"[bold cyan]🔧 Adding form component: {component_name}[/bold cyan]")
-        console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
-        if field_list:
-            fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
-            console.print(f"   [dim]Fields:[/dim] {fields_str}")
-    else:
-        console.print(f"[bold cyan]🔧 Adding component: {component_name}[/bold cyan]")
-        console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
+    console.print(f"[bold cyan]🔧 Adding {component_type} component: {component_name}[/bold cyan]")
+    console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
+    if component_type == 'form' and field_list:
+        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+        console.print(f"   [dim]Fields:[/dim] {fields_str}")
     
     if folder:
         console.print(f"   [dim]Folder:[/dim] [blue]{folder}[/blue]")
@@ -996,20 +752,28 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
     
     component_dir.mkdir(parents=True, exist_ok=True)
     
-    if not is_form:
-        # Create all layers with domain model reference
-        create_component_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder)
-        # Show created structure
-        print_created_structure(component_name, [
-            ("application", [f"{component_name}_bloc.dart", f"{component_name}_event.dart", f"{component_name}_state.dart"]),
-            ("presentation", [f"{component_name}_component.dart"])
-        ])
-    else:
+    if component_type == 'form':
         # Create all layers with domain model fields
         create_component_form_layers(component_dir, component_name, field_list, project_name, folder, domain_model_name, cfg.domain_folder)
         # Show created structure
         print_created_structure(component_name, [
             ("application", [f"{component_name}_form_bloc.dart", f"{component_name}_form_event.dart", f"{component_name}_form_state.dart"]),
+            ("presentation", [f"{component_name}_component.dart"])
+        ])
+    elif component_type == 'list':
+        # Create all layers with list functionality (CRUD operations)
+        create_component_list_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder)
+        # Show created structure
+        print_created_structure(component_name, [
+            ("application", [f"{component_name}_bloc.dart", f"{component_name}_event.dart", f"{component_name}_state.dart"]),
+            ("presentation", [f"{component_name}_component.dart"])
+        ])
+    else:  # single
+        # Create all layers with domain model reference
+        create_component_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder)
+        # Show created structure
+        print_created_structure(component_name, [
+            ("application", [f"{component_name}_bloc.dart", f"{component_name}_event.dart", f"{component_name}_state.dart"]),
             ("presentation", [f"{component_name}_component.dart"])
         ])
 
@@ -1020,99 +784,6 @@ def add_component(name, fields, form, folder, project_path, dry_run, no_build):
         print_info("Skipping flutter pub get and build_runner (--no-build)")
     
     print_success(f"Component '{component_name}' added successfully!")
-
-
-@cli.command(name='init')
-@click.option('--project-path', default='.', help='Path to Flutter project')
-@click.option('--force', is_flag=True, help='Overwrite existing config')
-def init_project(project_path, force):
-    """
-    Initialize Flutterator in an existing Flutter project.
-    
-    \b
-    Creates:
-      • flutterator.yaml configuration file
-      • lib/core/ directory (if missing)
-      • lib/features/ directory (optional)
-      • lib/shared/ directory (optional)
-    
-    \b
-    Examples:
-      # Initialize in current directory
-      flutterator init
-    
-      # Initialize in specific project
-      flutterator init --project-path ../my_flutter_app
-    
-      # Force overwrite existing config
-      flutterator init --force
-    """
-    project_dir = Path(project_path)
-    
-    # Check if it's a Flutter project
-    if not (project_dir / "pubspec.yaml").exists():
-        print_error("Not a Flutter project. pubspec.yaml not found.")
-        print_info("Run this command from a Flutter project directory.")
-        sys.exit(1)
-    
-    project_name = get_project_name(project_dir)
-    lib_path = project_dir / "lib"
-    
-    console.print(Panel.fit(
-        f"[bold cyan]🔧 Initializing Flutterator in: {project_name}[/bold cyan]",
-        border_style="cyan"
-    ))
-    
-    # Check for existing config
-    config_path = project_dir / PROJECT_CONFIG_FILE
-    if config_path.exists() and not force:
-        print_warning(f"{PROJECT_CONFIG_FILE} already exists.")
-        if not click.confirm("Overwrite?"):
-            print_info("Aborted. Use --force to overwrite.")
-            return
-    
-    # Create flutterator.yaml
-    print_step("Creating flutterator.yaml...")
-    create_default_config(project_dir, project_name)
-    
-    # Create directory structure
-    directories_created = []
-    
-    # Core directory
-    core_dir = lib_path / "core"
-    if not core_dir.exists():
-        core_dir.mkdir(parents=True, exist_ok=True)
-        (core_dir / "presentation").mkdir(exist_ok=True)
-        directories_created.append("lib/core/")
-    
-    # Features directory (optional, based on common usage)
-    features_dir = lib_path / "features"
-    if not features_dir.exists():
-        features_dir.mkdir(exist_ok=True)
-        directories_created.append("lib/features/")
-    
-    # Shared directory (optional)
-    shared_dir = lib_path / "shared"
-    if not shared_dir.exists():
-        shared_dir.mkdir(exist_ok=True)
-        (shared_dir / "widgets").mkdir(exist_ok=True)
-        directories_created.append("lib/shared/")
-    
-    # Show results
-    console.print()
-    if directories_created:
-        print_step("Created directories:")
-        for d in directories_created:
-            console.print(f"   [green]✅ {d}[/green]")
-    
-    console.print()
-    print_success("Flutterator initialized!")
-    
-    console.print()
-    console.print("[bold]Next steps:[/bold]")
-    console.print(f"   [cyan]1.[/cyan] Edit [bold]{PROJECT_CONFIG_FILE}[/bold] to customize settings")
-    console.print(f"   [cyan]2.[/cyan] Run: [bold]flutterator add-feature --name <feature_name>[/bold]")
-    console.print(f"   [cyan]3.[/cyan] Run: [bold]flutterator list[/bold] to see project structure")
 
 
 @cli.command(name='list')

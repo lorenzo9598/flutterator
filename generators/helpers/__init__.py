@@ -14,6 +14,7 @@ from .domain import create_domain_entity_layers
 from .component import (
     create_component_layers,
     create_component_form_layers,
+    create_component_list_layers,
     get_model_fields_from_domain,
     generate_component_widget_from_template,
     generate_form_event_from_template,

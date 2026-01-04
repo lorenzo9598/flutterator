@@ -15,12 +15,11 @@
 - [Quick Start](#-quick-start)
 - [Comandi Disponibili](#-comandi-disponibili)
   - [`create`](#flutterator-create) - Crea nuovo progetto
-  - [`add-feature`](#flutterator-add-feature) - Aggiunge feature DDD completa
+  - [`add-domain`](#flutterator-add-domain) - Aggiunge domain entity (model + infrastructure)
   - [`add-page`](#flutterator-add-page) - Aggiunge pagina semplice
-  - [`add-component`](#flutterator-add-component) - Aggiunge componente riutilizzabile
+  - [`add-component`](#flutterator-add-component) - Aggiunge componente riutilizzabile (form, list, single)
   - [`add-drawer-item`](#flutterator-add-drawer-item) - Aggiunge item al drawer
   - [`add-bottom-nav-item`](#flutterator-add-bottom-nav-item) - Aggiunge tab alla bottom nav
-  - [`init`](#flutterator-init) - Inizializza in progetto esistente
   - [`list`](#flutterator-list) - Elenca risorse del progetto
   - [`config`](#flutterator-config) - Gestisce configurazione
 - [Flag Globali](#-flag-globali)
@@ -49,7 +48,8 @@ Creare una nuova feature in un progetto Flutter DDD richiede:
 Con Flutterator:
 
 ```bash
-flutterator add-feature --name todo --fields "title:string,done:bool"
+flutterator add-domain --name todo --fields "title:string,done:bool"
+flutterator add-component --name todo_list --type list
 ```
 
 **Tempo: 5 secondi** ⚡
@@ -124,9 +124,10 @@ flutterator create --name my_app
 cd my_app
 
 # 3. Aggiungi una feature completa
-flutterator add-feature --name todo --fields "title:string,done:bool,priority:int"
+flutterator add-domain --name todo --fields "title:string,done:bool,priority:int"
+flutterator add-component --name todo_list --type list
 
-# 4. Esegui il progetto
+# 5. Esegui il progetto
 flutter run
 ```
 
@@ -137,34 +138,33 @@ flutter run
 cd my_existing_flutter_app
 
 # 2. Inizializza Flutterator
-flutterator init
-
 # 3. Aggiungi feature
-flutterator add-feature --name user --fields "name:string,email:string"
+flutterator add-domain --name user --fields "name:string,email:string"
+flutterator add-component --name user_list --type list
 ```
 
 ### Scenario 3: Preview Prima di Creare
 
 ```bash
 # Usa --dry-run per vedere cosa verrà creato senza modificare nulla
-flutterator add-feature --name product --fields "name:string,price:double" --dry-run
+flutterator add-domain --name product --fields "name:string,price:double" --dry-run
 ```
 
 ---
 
 ## 📋 Comandi Disponibili
 
-| Comando               | Descrizione                                         | Uso Tipico         |
-| --------------------- | --------------------------------------------------- | ------------------ |
-| `create`              | Crea nuovo progetto Flutter DDD                     | Inizio progetto    |
-| `add-feature`         | Aggiunge feature completa (model, bloc, repo, page) | Nuova funzionalità |
-| `add-page`            | Aggiunge pagina semplice                            | Pagine statiche    |
-| `add-component`       | Aggiunge componente riutilizzabile                  | Widget condivisi   |
-| `add-drawer-item`     | Aggiunge item al drawer                             | Menu laterale      |
-| `add-bottom-nav-item` | Aggiunge tab alla bottom nav                        | Tab navigation     |
-| `init`                | Inizializza Flutterator in progetto esistente       | Adozione graduale  |
-| `list`                | Elenca risorse del progetto                         | Panoramica         |
-| `config`              | Gestisce configurazione                             | Personalizzazione  |
+| Comando               | Descrizione                                    | Uso Tipico         |
+| --------------------- | ---------------------------------------------- | ------------------ |
+| `create`              | Crea nuovo progetto Flutter DDD                | Inizio progetto    |
+| `add-domain`          | Aggiunge domain entity (model, infrastructure) | Nuova funzionalità |
+| `add-component`       | Aggiunge componente (form, list, single)       | Nuova funzionalità |
+| `add-page`            | Aggiunge pagina semplice                       | Pagine statiche    |
+| `add-component`       | Aggiunge componente riutilizzabile             | Widget condivisi   |
+| `add-drawer-item`     | Aggiunge item al drawer                        | Menu laterale      |
+| `add-bottom-nav-item` | Aggiunge tab alla bottom nav                   | Tab navigation     |
+| `list`                | Elenca risorse del progetto                    | Panoramica         |
+| `config`              | Gestisce configurazione                        | Personalizzazione  |
 
 ---
 
@@ -250,121 +250,6 @@ my_app/
 
 ---
 
-### `flutterator add-feature`
-
-**Aggiunge una feature DDD completa con tutti i layer (model, infrastructure, application, presentation) oppure una domain entity condivisa (solo model e infrastructure).**
-
-Questo è il comando più potente: genera entity, repository, BLoC, page e tutto il boilerplate necessario.
-
-**Tipi:**
-- **Feature** (default): Use case completo con UI e BLoC
-- **Domain Entity** (`--domain`): Entità condivisa tra più feature (solo model + infrastructure)
-
-#### Sintassi
-
-```bash
-flutterator add-feature [OPTIONS]
-```
-
-#### Opzioni
-
-| Opzione          | Tipo   | Obbligatorio | Default       | Descrizione                                                         |
-| ---------------- | ------ | ------------ | ------------- | ------------------------------------------------------------------- |
-| `--name`         | string | ✅            | -             | Nome della feature/entity (es: todo, user, product)                 |
-| `--fields`       | string | ❌            | `"id:string"` | Campi del modello: `nome:tipo,nome:tipo`                            |
-| `--domain`       | flag   | ❌            | `false`       | Crea come domain entity (condivisa, senza application/presentation) |
-| `--folder`       | string | ❌            | da config     | Cartella di destinazione (es: features)                             |
-| `--dry-run`      | flag   | ❌            | `false`       | Preview senza creare file                                           |
-| `--no-build`     | flag   | ❌            | `false`       | Salta `flutter pub get` e `build_runner`                            |
-| `--project-path` | string | ❌            | `.`           | Path al progetto Flutter                                            |
-
-#### Tipi di Campo Supportati
-
-| Tipo       | Dart Type              | Esempio               |
-| ---------- | ---------------------- | --------------------- |
-| `string`   | `String`               | `name:string`         |
-| `int`      | `int`                  | `age:int`             |
-| `double`   | `double`               | `price:double`        |
-| `bool`     | `bool`                 | `active:bool`         |
-| `datetime` | `DateTime`             | `created_at:datetime` |
-| `list`     | `List<dynamic>`        | `tags:list`           |
-| `map`      | `Map<String, dynamic>` | `metadata:map`        |
-
-#### Modalità di Utilizzo
-
-**1. Riga di comando completa:**
-
-```bash
-flutterator add-feature --name todo --fields "title:string,done:bool,priority:int"
-```
-
-**2. Modalità interattiva** (se non specifichi --fields):
-
-```bash
-flutterator add-feature --name todo
-```
-
-```
-🔧 Adding fields interactively. Type 'done' when finished.
-Field name (or 'done'): title
-Field type [String]: string
-Field name (or 'done'): completed
-Field type [String]: bool
-Field name (or 'done'): done
-```
-
-#### Esempi
-
-```bash
-# Feature con campi inline (use case completo)
-flutterator add-feature --name todo --fields "title:string,done:bool,priority:int"
-
-# Domain entity condivisa (senza application/presentation)
-flutterator add-feature --name note --domain --fields "title:string,content:string"
-
-# Feature in cartella specifica
-flutterator add-feature --name user --folder features --fields "name:string,email:string"
-
-# Preview senza creare (dry-run)
-flutterator add-feature --name product --fields "name:string,price:double" --dry-run
-
-# Modalità interattiva per i campi
-flutterator add-feature --name order
-
-# Salta build_runner (più veloce)
-flutterator add-feature --name category --fields "name:string" --no-build
-```
-
-#### Struttura Generata
-
-```
-lib/todo/                          # o lib/features/todo/ se --folder features
-├── model/                         # 📋 DOMAIN LAYER
-│   ├── todo.dart                  # Entity con Freezed
-│   ├── todo_failure.dart          # Failure class per errori
-│   ├── i_todo_repository.dart     # Interface del repository
-│   ├── value_objects.dart         # Value objects per ogni campo
-│   └── value_validators.dart      # Validatori custom
-│
-├── infrastructure/                # 🔌 DATA LAYER
-│   ├── todo_dto.dart              # Data Transfer Object
-│   ├── todo_extensions.dart       # Extension methods
-│   └── todo_repository.dart       # Implementazione repository
-│
-├── application/                   # ⚙️ BUSINESS LOGIC LAYER
-│   ├── todo_bloc.dart             # BLoC state management
-│   ├── todo_event.dart            # Eventi del BLoC
-│   └── todo_state.dart            # Stati del BLoC
-│
-└── presentation/                  # 🎨 PRESENTATION LAYER
-    └── todo_page.dart             # Page widget
-```
-
-**Inoltre aggiorna:**
-- `lib/router.dart` - Aggiunge la nuova route
-
----
-
 ### `flutterator add-page`
 
 **Aggiunge una pagina semplice senza business logic.**
@@ -435,7 +320,7 @@ lib/settings/
 
 **Aggiunge un componente riutilizzabile con BLoC opzionale.**
 
-Supporta due tipi: componenti standard (con stato BLoC) e form components (con validazione).
+Supporta tre tipi: single (singolo item), list (lista con CRUD), e form (form con validazione).
 
 #### Sintassi
 
@@ -445,27 +330,35 @@ flutterator add-component [OPTIONS]
 
 #### Opzioni
 
-| Opzione      | Tipo   | Obbligatorio | Default   | Descrizione                        |
-| ------------ | ------ | ------------ | --------- | ---------------------------------- |
-| `--name`     | string | ✅            | -         | Nome del componente                |
-| `--form`     | flag   | ❌            | `false`   | Crea come form component           |
-| `--fields`   | string | ❌            | -         | Campi del form (richiede `--form`) |
-| `--folder`   | string | ❌            | da config | Cartella di destinazione           |
-| `--dry-run`  | flag   | ❌            | `false`   | Preview senza creare               |
-| `--no-build` | flag   | ❌            | `false`   | Salta flutter pub get              |
+| Opzione      | Tipo   | Obbligatorio | Default   | Descrizione                             |
+| ------------ | ------ | ------------ | --------- | --------------------------------------- |
+| `--name`     | string | ✅            | -         | Nome del componente                     |
+| `--type`     | choice | ❌            | -         | Tipo: `form`, `list`, o `single`        |
+| `--fields`   | string | ❌            | -         | Campi del form (richiede `--type form`) |
+| `--folder`   | string | ❌            | da config | Cartella di destinazione                |
+| `--dry-run`  | flag   | ❌            | `false`   | Preview senza creare                    |
+| `--no-build` | flag   | ❌            | `false`   | Salta flutter pub get                   |
 
-#### Due Tipi di Componente
+#### Tre Tipi di Componente
 
-**1. Standard Component** - Widget riutilizzabile con stato BLoC:
+**1. Single Component** (`--type single` o default) - Widget che mostra un singolo item caricato per ID:
 
 ```bash
 flutterator add-component --name user_card
+# oppure
+flutterator add-component --name user_card --type single
 ```
 
-**2. Form Component** - Form con validazione e gestione campi:
+**2. List Component** (`--type list`) - Widget che mostra una lista di items con operazioni CRUD complete:
 
 ```bash
-flutterator add-component --name login --form --fields "email:string,password:string"
+flutterator add-component --name todo_list --type list
+```
+
+**3. Form Component** (`--type form`) - Form con validazione e gestione campi:
+
+```bash
+flutterator add-component --name login --type form --fields "email:string,password:string"
 ```
 
 #### Modalità di Utilizzo
@@ -473,7 +366,14 @@ flutterator add-component --name login --form --fields "email:string,password:st
 **Riga di comando:**
 
 ```bash
+# Single component (default)
 flutterator add-component --name user_card
+
+# List component
+flutterator add-component --name todo_list --type list
+
+# Form component
+flutterator add-component --name login --type form --fields "email:string,password:string"
 ```
 
 **Modalità interattiva:**
@@ -483,30 +383,37 @@ flutterator add-component
 ```
 
 ```
-Component name: user_card
+Component name: todo_list
 Folder (leave empty for root) []: components
-Is this a form component? [y/N]: n
+Select component type:
+  1. Single item (loads one item by ID)
+  2. List (shows all items with CRUD operations)
+  3. Form (form with validation)
+Type (1-3): 2
 ```
 
 #### Esempi
 
 ```bash
-# Componente standard
+# Single component (default)
 flutterator add-component --name user_card
 
+# List component con CRUD completo
+flutterator add-component --name todo_list --type list
+
 # Form component con campi
-flutterator add-component --name login --form --fields "email:string,password:string"
+flutterator add-component --name login --type form --fields "email:string,password:string"
 
 # Componente in cartella specifica
 flutterator add-component --name search_bar --folder shared/widgets
 
 # Form registrazione
-flutterator add-component --name registration --form --fields "name:string,email:string,password:string,confirm:string"
+flutterator add-component --name registration --type form --fields "name:string,email:string,password:string"
 ```
 
 #### Struttura Generata
 
-**Standard Component:**
+**Single Component:**
 
 ```
 lib/user_card/
@@ -516,6 +423,18 @@ lib/user_card/
 │   └── user_card_state.dart
 └── presentation/
     └── user_card_component.dart
+```
+
+**List Component:**
+
+```
+lib/todo_list/
+├── application/
+│   ├── todo_list_bloc.dart      # BLoC con getAll, create, update, delete
+│   ├── todo_list_event.dart      # loadRequested, createRequested, updateRequested, deleteRequested
+│   └── todo_list_state.dart      # initial, loading, loaded(List<Model>), error
+└── presentation/
+    └── todo_list_component.dart   # Widget con ListView e CRUD operations
 ```
 
 **Form Component:**
@@ -652,66 +571,6 @@ flutterator add-bottom-nav-item --name profile
 3. ✅ Aggiorna `lib/home/presentation/home_screen.dart` (aggiunge BottomNavigationBar)
 
 ---
-
-### `flutterator init`
-
-**Inizializza Flutterator in un progetto Flutter esistente.**
-
-Ideale per adottare Flutterator gradualmente in progetti già avviati.
-
-#### Sintassi
-
-```bash
-flutterator init [OPTIONS]
-```
-
-#### Opzioni
-
-| Opzione          | Tipo   | Obbligatorio | Default | Descrizione                  |
-| ---------------- | ------ | ------------ | ------- | ---------------------------- |
-| `--project-path` | string | ❌            | `.`     | Path al progetto Flutter     |
-| `--force`        | flag   | ❌            | `false` | Sovrascrive config esistente |
-
-#### Esempi
-
-```bash
-# Inizializza nel progetto corrente
-flutterator init
-
-# Inizializza in altro progetto
-flutterator init --project-path ../my_flutter_app
-
-# Forza sovrascrittura config esistente
-flutterator init --force
-```
-
-#### Cosa Viene Generato
-
-1. ✅ `flutterator.yaml` - File di configurazione
-2. ✅ `lib/core/` - Cartella core (se mancante)
-3. ✅ `lib/features/` - Cartella features (se mancante)
-4. ✅ `lib/shared/` - Cartella shared (se mancante)
-
-#### Output
-
-```
-╭───────────────────────────────────────────╮
-│ 🔧 Initializing Flutterator in: my_app    │
-╰───────────────────────────────────────────╯
-→ Creating flutterator.yaml...
-
-→ Created directories:
-   ✅ lib/core/
-   ✅ lib/features/
-   ✅ lib/shared/
-
-✅ Flutterator initialized!
-
-Next steps:
-   1. Edit flutterator.yaml to customize settings
-   2. Run: flutterator add-feature --name <feature_name>
-   3. Run: flutterator list to see project structure
-```
 
 ---
 
@@ -862,7 +721,8 @@ Questi flag sono disponibili per tutti i comandi `add-*`:
 ### Esempio --dry-run
 
 ```bash
-$ flutterator add-feature --name todo --dry-run
+$ flutterator add-domain --name todo --fields "title:string" --dry-run
+$ flutterator add-component --name todo_list --type list --dry-run
 ```
 
 Output:
@@ -899,7 +759,8 @@ Output:
 
 ```bash
 # Più veloce: salta pub get e build_runner
-flutterator add-feature --name todo --fields "title:string" --no-build
+flutterator add-domain --name todo --fields "title:string" --no-build
+flutterator add-component --name todo_list --type list --no-build
 
 # Poi esegui manualmente quando vuoi
 flutter pub get
@@ -923,9 +784,6 @@ Flutterator carica la configurazione da più fonti (in ordine di priorità):
 
 ```bash
 # Crea flutterator.yaml nel progetto
-flutterator init
-
-# Oppure
 flutterator config --init
 ```
 
@@ -1098,7 +956,8 @@ L'IDE potrebbe non riconoscere il virtual environment. Soluzione:
 
 ```bash
 # Usa --no-build per saltare build_runner
-flutterator add-feature --name todo --no-build
+flutterator add-domain --name todo --fields "title:string" --no-build
+flutterator add-component --name todo_list --type list --no-build
 
 # Esegui build_runner una volta alla fine
 dart run build_runner build --delete-conflicting-outputs

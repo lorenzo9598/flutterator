@@ -39,7 +39,7 @@ def create_component_form_layers(component_dir: Path, component_name: str, field
     presentation_dir.mkdir(exist_ok=True)
     
     # Create component widget
-    generate_component_widget_from_template(component_name, presentation_dir, project_name, True, import_prefix)
+    generate_component_widget_from_template(component_name, presentation_dir, project_name, 'form', import_prefix)
 
 
 def create_component_layers(component_dir: Path, component_name: str, project_name: str, folder: Optional[str], domain_model_name: Optional[str] = None, domain_folder: Optional[str] = None) -> None:
@@ -69,15 +69,49 @@ def create_component_layers(component_dir: Path, component_name: str, project_na
     else:
         domain_import_prefix = None
     
-    # Create standard BLoC files
-    generate_file(project_name, app_dir, "component/component_event_template.jinja", f"{component_name}_event.dart", {"feature_name": component_name})
-    generate_file(project_name, app_dir, "component/component_state_template.jinja", f"{component_name}_state.dart", {"feature_name": component_name})
+    # Get PascalCase names
+    component_pascal = to_pascal_case_preserve(component_name)
+    
+    # Generate event and state files
+    if domain_import_prefix:
+        # When using domain model, generate event and state with domain model types
+        domain_model_pascal = to_pascal_case_preserve(domain_model_name)
+        
+        # Build Freezed mixin names correctly
+        freezed_mixin_event = "_$" + component_pascal + "Event"
+        freezed_mixin_state = "_$" + component_pascal + "State"
+        
+        # Generate event file
+        event_content = f"""part of '{component_name}_bloc.dart';
+
+@freezed
+abstract class {component_pascal}Event with {freezed_mixin_event} {{
+  const factory {component_pascal}Event.loadRequested(String id) = LoadRequested;
+  const factory {component_pascal}Event.deleteRequested(String id) = DeleteRequested;
+}}
+"""
+        (app_dir / f"{component_name}_event.dart").write_text(event_content)
+        
+        # Generate state file with domain model type
+        state_content = f"""part of '{component_name}_bloc.dart';
+
+@freezed
+abstract class {component_pascal}State with {freezed_mixin_state} {{
+  const factory {component_pascal}State.initial() = Initial;
+  const factory {component_pascal}State.loading() = Loading;
+  const factory {component_pascal}State.loaded({domain_model_pascal} item) = Loaded;
+  const factory {component_pascal}State.error(String message) = Error;
+}}
+"""
+        (app_dir / f"{component_name}_state.dart").write_text(state_content)
+    else:
+        # Standard generation without domain model
+        generate_file(project_name, app_dir, "component/component_event_template.jinja", f"{component_name}_event.dart", {"feature_name": component_name})
+        generate_file(project_name, app_dir, "component/component_state_template.jinja", f"{component_name}_state.dart", {"feature_name": component_name})
     
     # Generate BLoC with domain model imports if provided
     if domain_import_prefix:
-        bloc_content = f"""import 'dart:async';
-
-import 'package:bloc/bloc.dart';
+        bloc_content = f"""import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}.dart';
@@ -89,35 +123,29 @@ part '{component_name}_event.dart';
 part '{component_name}_state.dart';
 
 @injectable
-class {to_pascal_case(component_name)}Bloc extends Bloc<{to_pascal_case(component_name)}Event, {to_pascal_case(component_name)}State> {{
-  final I{to_pascal_case(domain_model_name)}Repository _repository;
+class {component_pascal}Bloc extends Bloc<{component_pascal}Event, {component_pascal}State> {{
+  final I{domain_model_pascal}Repository _repository;
 
-  {to_pascal_case(component_name)}Bloc(this._repository) : super(const {to_pascal_case(component_name)}State.initial()) {{
+  {component_pascal}Bloc(this._repository) : super(const {component_pascal}State.initial()) {{
     on<LoadRequested>(_onLoadRequested);
     on<DeleteRequested>(_onDeleteRequested);
   }}
 
-  void _onLoadRequested(LoadRequested event, Emitter<{to_pascal_case(component_name)}State> emit) async {{
-    emit(const {to_pascal_case(component_name)}State.loading());
-    final result = await _repository.getAll();
+  void _onLoadRequested(LoadRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
+    final result = await _repository.getById(event.id);
     result.fold(
-      (failure) => emit({to_pascal_case(component_name)}State.error(failure.toString())),
-      (items) => emit({to_pascal_case(component_name)}State.loaded(items)),
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (item) => emit({component_pascal}State.loaded(item)),
     );
   }}
 
-  void _onDeleteRequested(DeleteRequested event, Emitter<{to_pascal_case(component_name)}State> emit) async {{
-    emit(const {to_pascal_case(component_name)}State.loading());
+  void _onDeleteRequested(DeleteRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
     final result = await _repository.delete(event.id);
     result.fold(
-      (failure) => emit({to_pascal_case(component_name)}State.error(failure.toString())),
-      (_) async {{
-        final itemsResult = await _repository.getAll();
-        itemsResult.fold(
-          (failure) => emit({to_pascal_case(component_name)}State.error(failure.toString())),
-          (items) => emit({to_pascal_case(component_name)}State.loaded(items)),
-        );
-      }},
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (_) => emit(const {component_pascal}State.initial()),
     );
   }}
 }}
@@ -134,33 +162,55 @@ class {to_pascal_case(component_name)}Bloc extends Bloc<{to_pascal_case(componen
     presentation_dir.mkdir(exist_ok=True)
     
     # Create component widget
-    generate_component_widget_from_template(component_name, presentation_dir, project_name, False, import_prefix)
+    generate_component_widget_from_template(component_name, presentation_dir, project_name, 'single', import_prefix)
 
 
-def generate_component_widget_from_template(component_name: str, presentation_dir: Path, project_name: str, is_form: bool, import_prefix: str) -> None:
-    """Generate component widget file using Jinja template"""
+def generate_component_widget_from_template(component_name: str, presentation_dir: Path, project_name: str, component_type: str, import_prefix: str) -> None:
+    """Generate component widget file using Jinja template
+    
+    Args:
+        component_name: Name of the component
+        presentation_dir: Path to presentation directory
+        project_name: Name of the project
+        component_type: Type of component ('form', 'list', or 'single')
+        import_prefix: Import path prefix for the component
+    """
     pascal_name = to_pascal_case(component_name)
     
-    if is_form:
+    if component_type == 'form':
         bloc_name = f"{pascal_name}FormBloc"
         state_name = f"{pascal_name}FormState"
         bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_bloc.dart';"
         state_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_state.dart';"
-    else:
+        generate_file(project_name, presentation_dir, "component/component_widget_template.jinja", f"{component_name}_component.dart", {
+            "component_name": component_name,
+            "pascal_name": pascal_name,
+            "is_form": True,
+            "bloc_name": bloc_name,
+            "state_name": state_name,
+            "bloc_import": bloc_import,
+            "state_import": state_import
+        })
+    elif component_type == 'list':
+        # List component uses its own template
+        generate_file(project_name, presentation_dir, "component/component_list_widget_template.jinja", f"{component_name}_component.dart", {
+            "component_name": component_name,
+            "component_import_prefix": import_prefix
+        })
+    else:  # single
         bloc_name = f"{pascal_name}Bloc"
         state_name = f"{pascal_name}State"
         bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_bloc.dart';"
         state_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_state.dart';"
-    
-    generate_file(project_name, presentation_dir, "component/component_widget_template.jinja", f"{component_name}_component.dart", {
-        "component_name": component_name,
-        "pascal_name": pascal_name,
-        "is_form": is_form,
-        "bloc_name": bloc_name,
-        "state_name": state_name,
-        "bloc_import": bloc_import,
-        "state_import": state_import
-    })
+        generate_file(project_name, presentation_dir, "component/component_widget_template.jinja", f"{component_name}_component.dart", {
+            "component_name": component_name,
+            "pascal_name": pascal_name,
+            "is_form": False,
+            "bloc_name": bloc_name,
+            "state_name": state_name,
+            "bloc_import": bloc_import,
+            "state_import": state_import
+        })
 
 
 def generate_form_event_from_template(component_name: str, field_list: list[dict], app_dir: Path, project_name: str) -> None:
@@ -303,4 +353,181 @@ def get_model_fields_from_domain(lib_path: Path, domain_folder: str, model_name:
         })
     
     return fields
+
+
+def create_component_list_layers(component_dir: Path, component_name: str, project_name: str, folder: Optional[str], domain_model_name: Optional[str] = None, domain_folder: Optional[str] = None) -> None:
+    """Create all layers for a list component.
+    
+    This function creates a component that shows a list of items with full CRUD operations.
+    It riutilizes the logic from create_presentation_feature_layers but for components.
+    
+    Args:
+        component_dir: Path to component directory
+        component_name: Name of the component
+        project_name: Name of the project
+        folder: Optional folder path
+        domain_model_name: Domain model name (required)
+        domain_folder: Domain folder name (required)
+    """
+    if not domain_model_name or not domain_folder:
+        raise ValueError("domain_model_name and domain_folder are required for list components")
+    
+    # Build import paths
+    if folder:
+        component_import_prefix = f"{folder.replace('/', '/')}/{component_name}"
+    else:
+        component_import_prefix = component_name
+    
+    domain_import_prefix = f"{domain_folder}/{domain_model_name}"
+    
+    # Application layer
+    app_dir = component_dir / "application"
+    app_dir.mkdir(exist_ok=True)
+    
+    # Get PascalCase names
+    component_pascal = to_pascal_case_preserve(component_name)
+    domain_model_pascal = to_pascal_case_preserve(domain_model_name)
+    
+    # Build Freezed mixin names correctly
+    freezed_mixin_event = "_$" + component_pascal + "Event"
+    freezed_mixin_state = "_$" + component_pascal + "State"
+    
+    # Create event file that uses domain model for item types (same as feature)
+    event_content = f"""/*
+ * BLoC events template for component list operations
+ * Defines immutable events using Freezed that trigger BLoC actions:
+ * - LoadRequested: Fetch all items
+ * - CreateRequested: Create new item
+ * - UpdateRequested: Update existing item
+ * - DeleteRequested: Remove item by ID
+ * 
+ * Events represent user intentions and trigger state changes
+ */
+
+part of '{component_name}_bloc.dart';
+
+@freezed
+abstract class {component_pascal}Event with {freezed_mixin_event} {{
+  const factory {component_pascal}Event.loadRequested() = LoadRequested;
+  const factory {component_pascal}Event.createRequested({domain_model_pascal} item) = CreateRequested;
+  const factory {component_pascal}Event.updateRequested({domain_model_pascal} item) = UpdateRequested;
+  const factory {component_pascal}Event.deleteRequested(String id) = DeleteRequested;
+}}
+"""
+    (app_dir / f"{component_name}_event.dart").write_text(event_content)
+    
+    # Create state file that uses domain model for list types (same as feature)
+    state_content = f"""/*
+ * BLoC states template for component list UI representation
+ * Defines immutable states using Freezed for different UI states:
+ * - Initial: App just started, no data loaded
+ * - Loading: Data is being fetched/processed
+ * - Loaded: Data successfully retrieved with items list
+ * - Error: Something went wrong with error message
+ * 
+ * States represent the current condition of the component
+ */
+
+part of '{component_name}_bloc.dart';
+
+@freezed
+abstract class {component_pascal}State with {freezed_mixin_state} {{
+  const factory {component_pascal}State.initial() = Initial;
+  const factory {component_pascal}State.loading() = Loading;
+  const factory {component_pascal}State.loaded(List<{domain_model_pascal}> items) = Loaded;
+  const factory {component_pascal}State.error(String message) = Error;
+}}
+"""
+    (app_dir / f"{component_name}_state.dart").write_text(state_content)
+    
+    # Create BLoC that uses domain repository (same as feature)
+    bloc_content = f"""import 'package:bloc/bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:injectable/injectable.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/{domain_model_name}_failure.dart';
+import 'package:{project_name}/{domain_import_prefix}/model/i_{domain_model_name}_repository.dart';
+
+part '{component_name}_bloc.freezed.dart';
+part '{component_name}_event.dart';
+part '{component_name}_state.dart';
+
+@injectable
+class {component_pascal}Bloc extends Bloc<{component_pascal}Event, {component_pascal}State> {{
+  final I{domain_model_pascal}Repository _repository;
+
+  {component_pascal}Bloc(this._repository) : super(const {component_pascal}State.initial()) {{
+    on<LoadRequested>(_onLoadRequested);
+    on<CreateRequested>(_onCreateRequested);
+    on<UpdateRequested>(_onUpdateRequested);
+    on<DeleteRequested>(_onDeleteRequested);
+  }}
+
+  void _onLoadRequested(LoadRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
+    final result = await _repository.getAll();
+    result.fold(
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (items) => emit({component_pascal}State.loaded(items)),
+    );
+  }}
+
+  void _onCreateRequested(CreateRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
+    final result = await _repository.create(event.item);
+    result.fold(
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+          (items) => emit({component_pascal}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+
+  void _onUpdateRequested(UpdateRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
+    final result = await _repository.update(event.item);
+    result.fold(
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+          (items) => emit({component_pascal}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+
+  void _onDeleteRequested(DeleteRequested event, Emitter<{component_pascal}State> emit) async {{
+    emit(const {component_pascal}State.loading());
+    final result = await _repository.delete(event.id);
+    result.fold(
+      ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+      (_) async {{
+        final itemsResult = await _repository.getAll();
+        itemsResult.fold(
+          ({domain_model_pascal}Failure failure) => emit({component_pascal}State.error(failure.toString())),
+          (items) => emit({component_pascal}State.loaded(items)),
+        );
+      }},
+    );
+  }}
+}}
+"""
+    (app_dir / f"{component_name}_bloc.dart").write_text(bloc_content)
+    
+    # Presentation layer
+    presentation_dir = component_dir / "presentation"
+    presentation_dir.mkdir(exist_ok=True)
+    
+    # Create component widget using list template
+    generate_file(project_name, presentation_dir, "component/component_list_widget_template.jinja", f"{component_name}_component.dart", {
+        "component_name": component_name,
+        "component_pascal": component_pascal,
+        "component_import_prefix": component_import_prefix
+    })
 
