@@ -244,4 +244,4 @@ E2E tests verify that the generated Dart code:
 ---
 
 *Report updated: January 2025*  
-*Project version: 3.0.1*
+*Project version: 3.0.2*

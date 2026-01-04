@@ -9,7 +9,7 @@
 
 set -e
 
-VERSION="v3.0.1"
+VERSION="v3.0.2"
 echo "🚀 Building Flutterator ${VERSION} standalone executable..."
 echo ""
 
