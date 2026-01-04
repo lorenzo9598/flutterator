@@ -36,10 +36,9 @@ def create_folder_structure(lib_path, login):
         "core/presentation",
         "core/model",
         "domain",  # Domain entities folder
-        "home",
-        "home/presentation",
-        "splash",
-        "splash/presentation",
+        "features",
+        "features/home",
+        "features/splash",
         "logging",
         "storage",
     ]

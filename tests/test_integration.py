@@ -53,7 +53,7 @@ class TestPageGeneration:
         # Initial router content
         initial_router = """import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_project/features/home/presentation/home_screen.dart';
+import 'package:test_project/features/home/home_screen.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -70,7 +70,7 @@ final GoRouter router = GoRouter(
         update_router(project_dir, "test_page", "test_project")
 
         updated_content = router_file.read_text()
-        assert "test_page/presentation/test_page_page.dart" in updated_content
+        assert "test_page/test_page_page.dart" in updated_content
         assert "Test_pagePage.routeName" in updated_content
         assert "Test_pagePage()" in updated_content
         # Verify original route still exists
@@ -85,7 +85,7 @@ final GoRouter router = GoRouter(
         update_router(project_dir, "settings", "test_project", folder="features")
         
         updated_content = router_file.read_text()
-        assert "features/settings/presentation/settings_page.dart" in updated_content
+        assert "features/settings/settings_page.dart" in updated_content
 
 
 class TestFeatureGeneration:
@@ -480,7 +480,7 @@ class TestDryRunModeExtended:
             assert "bottom_nav_bar.dart" in result.output
             
             # Verify no files were created
-            screen_file = Path("test_project/lib/home/presentation/search_screen.dart")
+            screen_file = Path("test_project/lib/features/home/search_screen.dart")
             assert not screen_file.exists()
             nav_file = Path("test_project/lib/core/presentation/bottom_nav_bar.dart")
             assert not nav_file.exists()
@@ -543,7 +543,7 @@ class TestCLICommandsExtended:
             assert "favorites" in result.output.lower() or "Favorites" in result.output
             
             # Verify screen was created
-            screen_file = Path("test_project/lib/home/presentation/favorites_screen.dart")
+            screen_file = Path("test_project/lib/features/home/favorites_screen.dart")
             assert screen_file.exists()
             
             # Verify bottom nav was created
@@ -680,7 +680,7 @@ class TestErrorHandling:
         runner = click.testing.CliRunner()
         
         with runner.isolated_filesystem():
-            # Create minimal project without home/presentation
+            # Create minimal project without features/home
             Path("pubspec.yaml").write_text("name: test\n")
             Path("lib").mkdir()
             
@@ -698,7 +698,7 @@ class TestErrorHandling:
         runner = click.testing.CliRunner()
         
         with runner.isolated_filesystem():
-            # Create minimal project without home/presentation
+            # Create minimal project without features/home
             Path("pubspec.yaml").write_text("name: test\n")
             Path("lib").mkdir()
             

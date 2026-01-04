@@ -35,8 +35,9 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/)
   - Componente widget con ListView (senza Scaffold, solo BlocBuilder)
 
 #### Modifiche a `add-page`
-- **BREAKING**: Le pagine vengono ora create in `lib/features/{page_name}/presentation/` invece di `lib/{page_name}/presentation/`
+- **BREAKING**: Le pagine vengono ora create in `lib/features/{page_name}/` (senza cartella `presentation`) invece di `lib/{page_name}/presentation/`
 - Il router viene aggiornato automaticamente con il percorso corretto
+- Anche le pagine `home` e `splash` create con `create` seguono la stessa struttura: `lib/features/home/home_screen.dart` e `lib/features/splash/splash_screen.dart`
 
 #### Template componenti lista
 - **Modificato**: Template `component_list_widget_template.jinja` semplificato
@@ -147,7 +148,7 @@ lib/settings/presentation/settings_page.dart
 
 **Dopo:**
 ```
-lib/features/settings/presentation/settings_page.dart
+lib/features/settings/settings_page.dart
 ```
 
 ---

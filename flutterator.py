@@ -292,7 +292,7 @@ def add_page(name, project_path, dry_run, no_build):
     
     \b
     Creates:
-      • lib/features/<name>/presentation/<name>_page.dart
+      • lib/features/<name>/<name>_page.dart
       • Updates lib/router.dart with new route
     
     \b
@@ -325,7 +325,7 @@ def add_page(name, project_path, dry_run, no_build):
         console.print(f"[bold]📄 Would add page:[/bold] [cyan]{page_name}[/cyan]")
         console.print()
         print_dry_run_tree(f"lib/features/{page_name}", [
-            ("presentation", [f"{page_name}_page.dart"])
+            ("", [f"{page_name}_page.dart"])
         ])
         console.print()
         console.print("[bold]📝 Would update:[/bold] [cyan]lib/router.dart[/cyan]")
@@ -340,19 +340,15 @@ def add_page(name, project_path, dry_run, no_build):
     page_dir = features_dir / page_name
     page_dir.mkdir(exist_ok=True)
     
-    # Create presentation layer
-    presentation_dir = page_dir / "presentation"
-    presentation_dir.mkdir(exist_ok=True)
-    
-    # Generate page file
-    generate_page_file(page_name, presentation_dir, project_name)
+    # Generate page file directly in page directory (no presentation folder)
+    generate_page_file(page_name, page_dir, project_name)
     
     # Update router with features folder
     update_router(project_dir, page_name, project_name, folder="features")
     
     # Show created structure
     print_created_structure(page_name, [
-        ("presentation", [f"{page_name}_page.dart"])
+        ("", [f"{page_name}_page.dart"])
     ], ["lib/router.dart"])
     
     # Run flutter commands (respecting --no-build and config)
@@ -546,9 +542,9 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     
     \b
     Creates/Updates:
-      • lib/<name>/presentation/<name>_page.dart
+      • lib/features/<name>/<name>_page.dart
       • lib/core/presentation/app_drawer.dart
-      • lib/home/presentation/home_screen.dart (adds drawer)
+      • lib/features/home/home_screen.dart (adds drawer)
       • lib/router.dart (new route)
     
     \b
@@ -579,7 +575,7 @@ def add_drawer_item(name, project_path, dry_run, no_build):
         console.print()
         console.print("[bold]📝 Would update/create:[/bold]")
         console.print("   [cyan]├── lib/router.dart[/cyan]")
-        console.print("   [cyan]├── lib/home/presentation/home_screen.dart[/cyan]")
+        console.print("   [cyan]├── lib/features/home/home_screen.dart[/cyan]")
         console.print("   [cyan]└── lib/core/presentation/app_drawer.dart[/cyan]")
         print_dry_run_footer()
         return
@@ -587,9 +583,9 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     console.print(f"[bold cyan]📱 Adding drawer item: {drawer_item_name}[/bold cyan]")
     
     # Check if home screen exists
-    home_presentation_dir = lib_path / "home" / "presentation"
-    if not home_presentation_dir.exists():
-        print_error("Home presentation directory not found. Make sure this is a Flutterator project.")
+    home_dir = lib_path / "features" / "home"
+    if not home_dir.exists():
+        print_error("Home directory not found. Make sure this is a Flutterator project.")
         sys.exit(1)
     
     # Create page for the drawer item
@@ -603,7 +599,7 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     
     print_created_structure(drawer_item_name, [
         ("presentation", [f"{drawer_item_name}_page.dart"])
-    ], ["lib/router.dart", "lib/home/presentation/home_screen.dart", "lib/core/presentation/app_drawer.dart"])
+    ], ["lib/router.dart", "lib/features/home/home_screen.dart", "lib/core/presentation/app_drawer.dart"])
     
     print_success(f"Drawer item '{drawer_item_name}' added successfully!")
 
@@ -619,9 +615,9 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     
     \b
     Creates/Updates:
-      • lib/home/presentation/<name>_screen.dart
+      • lib/features/home/<name>_screen.dart
       • lib/core/presentation/bottom_nav_bar.dart
-      • lib/home/presentation/home_screen.dart (adds bottom nav)
+      • lib/features/home/home_screen.dart (adds bottom nav)
     
     \b
     Examples:
@@ -648,12 +644,12 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
         print_dry_run_header()
         console.print(f"[bold]📱 Would add bottom nav item:[/bold] [cyan]{bottom_nav_item_name}[/cyan]")
         console.print()
-        tree = Tree(f"[bold blue]📁 lib/home/presentation/[/bold blue]")
+        tree = Tree(f"[bold blue]📁 lib/features/home/[/bold blue]")
         tree.add(f"[green]📄 {bottom_nav_item_name}_screen.dart[/green]")
         console.print(tree)
         console.print()
         console.print("[bold]📝 Would update/create:[/bold]")
-        console.print("   [cyan]├── lib/home/presentation/home_screen.dart[/cyan]")
+        console.print("   [cyan]├── lib/features/home/home_screen.dart[/cyan]")
         console.print("   [cyan]└── lib/core/presentation/bottom_nav_bar.dart[/cyan]")
         print_dry_run_footer()
         return
@@ -661,9 +657,9 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     console.print(f"[bold cyan]📱 Adding bottom nav item: {bottom_nav_item_name}[/bold cyan]")
     
     # Check if home screen exists
-    home_presentation_dir = lib_path / "home" / "presentation"
-    if not home_presentation_dir.exists():
-        print_error("Home presentation directory not found. Make sure this is a Flutterator project.")
+    home_dir = lib_path / "features" / "home"
+    if not home_dir.exists():
+        print_error("Home directory not found. Make sure this is a Flutterator project.")
         sys.exit(1)
     
     # Create page for the bottom nav item
@@ -683,9 +679,9 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     
     console.print()
     console.print("[bold]📝 Updated files:[/bold]")
-    console.print("   [cyan]→ lib/home/presentation/home_screen.dart[/cyan]")
+    console.print("   [cyan]→ lib/features/home/home_screen.dart[/cyan]")
     console.print("   [cyan]→ lib/core/presentation/bottom_nav_bar.dart[/cyan]")
-    console.print(f"   [green]✅ lib/home/presentation/{bottom_nav_item_name}_screen.dart[/green]")
+    console.print(f"   [green]✅ lib/features/home/{bottom_nav_item_name}_screen.dart[/green]")
     
     print_success(f"Bottom nav item '{bottom_nav_item_name}' added successfully!")
 

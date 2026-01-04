@@ -306,9 +306,8 @@ flutterator add-page --name privacy --folder pages
 #### Struttura Generata
 
 ```
-lib/settings/
-└── presentation/
-    └── settings_page.dart
+lib/features/settings/
+└── settings_page.dart
 ```
 
 **Inoltre aggiorna:**
@@ -507,7 +506,7 @@ flutterator add-drawer-item --name help --dry-run
 
 1. ✅ Crea `lib/<nome>/presentation/<nome>_page.dart`
 2. ✅ Crea/Aggiorna `lib/core/presentation/app_drawer.dart`
-3. ✅ Aggiorna `lib/home/presentation/home_screen.dart` (aggiunge drawer)
+3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge drawer)
 4. ✅ Aggiorna `lib/router.dart`
 
 ---
@@ -566,9 +565,9 @@ flutterator add-bottom-nav-item --name profile
 
 #### Cosa Viene Generato/Modificato
 
-1. ✅ Crea `lib/home/presentation/<nome>_screen.dart`
+1. ✅ Crea `lib/features/home/<nome>_screen.dart`
 2. ✅ Crea/Aggiorna `lib/core/presentation/bottom_nav_bar.dart`
-3. ✅ Aggiorna `lib/home/presentation/home_screen.dart` (aggiunge BottomNavigationBar)
+3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge BottomNavigationBar)
 
 ---
 

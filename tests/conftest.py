@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
     # Create router.dart
     router_content = """import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_project/home/presentation/home_screen.dart';
+import 'package:test_project/features/home/home_screen.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[

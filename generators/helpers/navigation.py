@@ -28,7 +28,7 @@ def create_drawer_page(project_dir: Path, drawer_item_name: str, project_name: s
 
 def update_home_screen_with_drawer(project_dir: Path, project_name: str) -> None:
     """Update the home screen to include a drawer"""
-    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
+    home_screen_path = project_dir / "lib" / "features" / "home" / "home_screen.dart"
     
     if not home_screen_path.exists():
         click.echo("⚠️ Home screen not found, creating basic drawer implementation")
@@ -138,13 +138,13 @@ def update_router_for_drawer_item(project_dir: Path, drawer_item_name: str) -> N
 
 
 def create_bottom_nav_page(project_dir: Path, bottom_nav_item_name: str) -> None:
-    """Create a screen for the bottom nav item in home/presentation using Jinja template"""
-    home_presentation_dir = project_dir / "lib" / "home" / "presentation"
-    home_presentation_dir.mkdir(parents=True, exist_ok=True)
+    """Create a screen for the bottom nav item in features/home using Jinja template"""
+    home_dir = project_dir / "lib" / "features" / "home"
+    home_dir.mkdir(parents=True, exist_ok=True)
     
     project_name = get_project_name(project_dir)
     
-    generate_file(project_name, home_presentation_dir, "home/screen_template.jinja", f"{bottom_nav_item_name}_screen.dart", {
+    generate_file(project_name, home_dir, "home/screen_template.jinja", f"{bottom_nav_item_name}_screen.dart", {
         "screen_name": bottom_nav_item_name.capitalize(),
         "screen_title": bottom_nav_item_name.replace("_", " ").capitalize()
     })
@@ -152,7 +152,7 @@ def create_bottom_nav_page(project_dir: Path, bottom_nav_item_name: str) -> None
 
 def update_home_screen_with_bottom_nav(project_dir: Path, bottom_nav_item_name: str, project_name: str) -> None:
     """Update the home screen to include bottom navigation"""
-    home_screen_path = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
+    home_screen_path = project_dir / "lib" / "features" / "home" / "home_screen.dart"
     
     if not home_screen_path.exists():
         click.echo("⚠️ Home screen not found, creating basic bottom nav implementation")
@@ -163,7 +163,7 @@ def update_home_screen_with_bottom_nav(project_dir: Path, bottom_nav_item_name: 
     if "BottomNavigationBar" in content or "BottomNavBar" in content:
         class_name = bottom_nav_item_name.capitalize() + 'Screen'
         
-        screen_import = f"import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"
+        screen_import = f"import 'package:{project_name}/features/home/{bottom_nav_item_name}_screen.dart';"
         if screen_import not in content:
             lines = content.split('\n')
             insert_index = 0
@@ -203,7 +203,7 @@ def update_home_screen_with_bottom_nav(project_dir: Path, bottom_nav_item_name: 
         
         imports = f"""import 'package:flutter/material.dart';
 import 'package:{project_name}/core/presentation/bottom_nav_bar.dart';
-import 'package:{project_name}/home/presentation/{bottom_nav_item_name}_screen.dart';"""
+import 'package:{project_name}/features/home/{bottom_nav_item_name}_screen.dart';"""
         
         if drawer_import_needed:
             imports += f"\nimport 'package:{project_name}/core/presentation/app_drawer.dart';"

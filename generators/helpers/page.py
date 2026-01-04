@@ -30,7 +30,7 @@ def update_router(project_dir: Path, page_name: str, project_name: str, folder: 
     content = router_path.read_text()
     
     # Add import
-    import_line = f"import 'package:{project_name}/{import_prefix}/presentation/{page_name}_page.dart';"
+    import_line = f"import 'package:{project_name}/{import_prefix}/{page_name}_page.dart';"
     if import_line not in content:
         # Find where to insert import (after other imports)
         lines = content.split('\n')
