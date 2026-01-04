@@ -203,26 +203,25 @@ class TestE2EFlutterSDK:
         
         print(f"\nInit output: {result.output}")
         
-        # Add a feature (provide folder via flag to avoid prompt)
+        # Add a domain entity
         result = runner.invoke(cli, [
-            "add-feature",
+            "add-domain",
             "--name", "todo",
             "--fields", "title:string,completed:bool,priority:int",
-            "--folder", "",  # Root folder
             "--project-path", str(project_path),
             "--no-build"  # We'll run pub get ourselves
         ])
         
-        print(f"Add feature output: {result.output}")
+        print(f"Add domain output: {result.output}")
         
         if result.exit_code != 0:
-            pytest.fail(f"add-feature failed: {result.output}")
+            pytest.fail(f"add-domain failed: {result.output}")
         
-        # Verify feature files exist
-        feature_dir = project_path / "lib" / "todo"
-        assert feature_dir.exists(), "Feature directory not created"
-        assert (feature_dir / "model" / "todo.dart").exists(), "Entity file not created"
-        assert (feature_dir / "application" / "todo_bloc.dart").exists(), "Bloc file not created"
+        # Verify domain entity files exist
+        domain_dir = project_path / "lib" / "domain" / "todo"
+        assert domain_dir.exists(), "Domain directory not created"
+        assert (domain_dir / "model" / "todo.dart").exists(), "Entity file not created"
+        assert (domain_dir / "infrastructure" / "todo_repository.dart").exists(), "Repository file not created"
         
         # Run flutter pub get
         print("📦 Running flutter pub get...")

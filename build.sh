@@ -215,7 +215,8 @@ echo ""
 echo "🚀 Usage:"
 echo "   flutterator --help"
 echo "   flutterator create --name myapp"
-echo "   flutterator add-feature --name todo --fields \"title:string,done:bool\""
+echo "   flutterator add-domain --name todo --fields \"title:string,done:bool\""
+echo "   flutterator add-component --name todo_list --type list"
 echo ""
 INSTALLER
 
@@ -312,9 +313,10 @@ source ~/.zshrc  # o ~/.bashrc
 # Crea nuovo progetto
 flutterator create --name my_app
 
-# Aggiungi feature DDD
+# Aggiungi domain entity e componente
 cd my_app
-flutterator add-feature --name todo --fields "title:string,done:bool"
+flutterator add-domain --name todo --fields "title:string,done:bool"
+flutterator add-component --name todo_list --type list
 
 # Vedi tutti i comandi
 flutterator --help
@@ -325,7 +327,8 @@ flutterator --help
 | Comando | Descrizione |
 |---------|-------------|
 | `create` | Crea nuovo progetto Flutter DDD |
-| `add-feature` | Aggiunge feature completa |
+| `add-domain` | Aggiunge domain entity (model + infrastructure) |
+| `add-component` | Aggiunge componente riutilizzabile (form, list, single) |
 | `add-page` | Aggiunge pagina semplice |
 | `add-component` | Aggiunge componente riutilizzabile |
 | `add-drawer-item` | Aggiunge item al drawer |
