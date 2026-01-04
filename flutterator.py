@@ -932,211 +932,209 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
 
 
 @cli.command(name='list')
-@click.argument('resource_type', required=False, default='all', 
-                type=click.Choice(['all', 'features', 'pages', 'components', 'routes']))
 @click.option('--project-path', default='.', help='Path to Flutter project')
-def list_resources(resource_type, project_path):
+def list_resources(project_path):
     """
-    List resources in the Flutter project.
+    List pages and domain models in the Flutter project.
     
     \b
-    Resource Types:
-      all        - Show everything (default)
-      features   - DDD features with all layers
-      pages      - Simple pages
-      components - Reusable components
-      routes     - Routes from router.dart
+    Shows:
+      pages       - All pages from router.dart
+      models      - All domain models from domain/ folder
     
     \b
     Examples:
-      # List all resources
+      # List pages and models
       flutterator list
-    
-      # List only features
-      flutterator list features
-    
-      # List routes
-      flutterator list routes
     """
     project_dir = Path(project_path)
     lib_path, project_name = validate_flutter_project(project_dir)
+    
+    # Load configuration
+    cfg = load_config(project_dir)
     
     console.print(Panel.fit(
         f"[bold cyan]📋 Project: {project_name}[/bold cyan]",
         border_style="cyan"
     ))
     
-    if resource_type in ['all', 'features']:
-        _list_features(lib_path)
+    # List pages from router.dart
+    _list_pages_from_router(project_dir, project_name)
     
-    if resource_type in ['all', 'pages']:
-        _list_pages(lib_path)
-    
-    if resource_type in ['all', 'components']:
-        _list_components(lib_path)
-    
-    if resource_type in ['all', 'routes']:
-        _list_routes(project_dir, project_name)
+    # List domain models
+    _list_domain_models(lib_path, cfg.domain_folder if cfg.domain_folder else "domain")
 
 
-def _list_features(lib_path: Path) -> None:
-    """List all features in the project."""
-    features = []
-    
-    # A feature has model/, infrastructure/, application/, presentation/ subdirs
-    for item in lib_path.iterdir():
-        if item.is_dir():
-            subdirs = {d.name for d in item.iterdir() if d.is_dir()}
-            # Check if it looks like a DDD feature
-            if {'model', 'application'}.issubset(subdirs) or \
-               {'model', 'infrastructure', 'application', 'presentation'}.issubset(subdirs):
-                features.append(item)
-    
-    if features:
-        console.print()
-        console.print("[bold blue]📦 Features:[/bold blue]")
-        for feature in sorted(features, key=lambda x: x.name):
-            feature_tree = Tree(f"[cyan]{feature.name}/[/cyan]")
-            
-            # List layers
-            for layer in ['model', 'infrastructure', 'application', 'presentation']:
-                layer_path = feature / layer
-                if layer_path.exists():
-                    files = [f.stem for f in layer_path.glob("*.dart")]
-                    if files:
-                        layer_branch = feature_tree.add(f"[dim]{layer}/[/dim]")
-                        for f in sorted(files)[:3]:  # Show max 3 files
-                            layer_branch.add(f"[green]{f}[/green]")
-                        if len(files) > 3:
-                            layer_branch.add(f"[dim]... +{len(files)-3} more[/dim]")
-            
-            console.print(feature_tree)
-    else:
-        console.print()
-        console.print("[dim]📦 No features found[/dim]")
-
-
-def _list_pages(lib_path: Path) -> None:
-    """List all simple pages (not features)."""
-    pages = []
-    
-    # A page only has presentation/ subdir (no model, infrastructure, application)
-    for item in lib_path.iterdir():
-        if item.is_dir() and item.name not in ['core', 'shared', 'features', 'components']:
-            subdirs = {d.name for d in item.iterdir() if d.is_dir()}
-            # Only presentation, no model/infrastructure/application
-            if 'presentation' in subdirs and not {'model', 'application'}.intersection(subdirs):
-                pages.append(item)
-    
-    if pages:
-        console.print()
-        console.print("[bold blue]📄 Pages:[/bold blue]")
-        for page in sorted(pages, key=lambda x: x.name):
-            presentation_path = page / "presentation"
-            dart_files = list(presentation_path.glob("*.dart")) if presentation_path.exists() else []
-            file_count = f"({len(dart_files)} file{'s' if len(dart_files) != 1 else ''})"
-            console.print(f"   [cyan]{page.name}/[/cyan] [dim]{file_count}[/dim]")
-    else:
-        console.print()
-        console.print("[dim]📄 No simple pages found[/dim]")
-
-
-def _list_components(lib_path: Path) -> None:
-    """List all components."""
-    components = []
-    
-    # Check in components/ folder
-    components_dir = lib_path / "components"
-    if components_dir.exists():
-        for item in components_dir.iterdir():
-            if item.is_dir():
-                components.append(('components', item))
-    
-    # Check in shared/ folder
-    shared_dir = lib_path / "shared"
-    if shared_dir.exists():
-        for item in shared_dir.iterdir():
-            if item.is_dir():
-                components.append(('shared', item))
-    
-    # Check for components in lib root (has application/ and presentation/ but no model/)
-    for item in lib_path.iterdir():
-        if item.is_dir() and item.name not in ['core', 'shared', 'features', 'components', 'home']:
-            subdirs = {d.name for d in item.iterdir() if d.is_dir()}
-            if {'application', 'presentation'}.issubset(subdirs) and 'model' not in subdirs:
-                components.append(('root', item))
-    
-    if components:
-        console.print()
-        console.print("[bold blue]🧩 Components:[/bold blue]")
-        for location, comp in sorted(components, key=lambda x: x[1].name):
-            # Check if it's a form component
-            app_path = comp / "application"
-            is_form = any("form" in f.name.lower() for f in app_path.glob("*.dart")) if app_path.exists() else False
-            comp_type = "[magenta](form)[/magenta]" if is_form else "[dim](standard)[/dim]"
-            location_tag = f"[dim]@{location}[/dim]" if location != 'root' else ""
-            console.print(f"   [cyan]{comp.name}/[/cyan] {comp_type} {location_tag}")
-    else:
-        console.print()
-        console.print("[dim]🧩 No components found[/dim]")
-
-
-def _list_routes(project_dir: Path, project_name: str) -> None:
-    """List all routes from router.dart."""
+def _list_pages_from_router(project_dir: Path, project_name: str) -> None:
+    """List all pages by parsing router.dart."""
     router_path = project_dir / "lib" / "router.dart"
     
     if not router_path.exists():
         console.print()
-        console.print("[dim]🛤️  No router.dart found[/dim]")
+        console.print("[dim]📄 No router.dart found[/dim]")
         return
     
-    routes = []
+    pages = []
     try:
         with open(router_path, 'r') as f:
             content = f.read()
-            
-        # Parse routes - look for AutoRoute patterns
+        
         import re
         
-        # Pattern: AutoRoute(page: SomePage, path: '/something')
-        pattern1 = r"AutoRoute\s*\(\s*page:\s*(\w+).*?path:\s*['\"]([^'\"]+)['\"]"
-        # Pattern: AutoRoute(path: '/something', page: SomePage)
-        pattern2 = r"AutoRoute\s*\(\s*path:\s*['\"]([^'\"]+)['\"].*?page:\s*(\w+)"
+        # Extract imports for pages
+        # Pattern: import 'package:{project_name}/features/{name}/{name}_page.dart';
+        # Pattern: import 'package:{project_name}/features/{name}/{name}_screen.dart';
+        import_pattern = rf"import\s+['\"]package:{re.escape(project_name)}/features/(\w+)/(\w+)_(?:page|screen)\.dart['\"];"
         
-        for match in re.finditer(pattern1, content, re.DOTALL):
-            routes.append((match.group(2), match.group(1)))
+        import_matches = re.finditer(import_pattern, content)
+        page_classes = {}  # class_name -> {page_name, file_path}
         
-        for match in re.finditer(pattern2, content, re.DOTALL):
-            routes.append((match.group(1), match.group(2)))
+        for match in import_matches:
+            page_folder = match.group(1)
+            page_file = match.group(2)
+            file_type = 'screen' if 'screen' in match.group(0) else 'page'
+            
+            # Determine class name from file name
+            # home_screen.dart -> HomeScreen, settings_page.dart -> SettingsPage
+            class_name = ''.join(word.capitalize() for word in page_file.split('_')) + ('Screen' if file_type == 'screen' else 'Page')
+            
+            page_classes[class_name] = {
+                'page_name': page_folder,
+                'file_path': f"lib/features/{page_folder}/{page_file}_{file_type}.dart",
+                'file_type': file_type
+            }
         
-        # Also look for simple route definitions
-        # Pattern: '/path': (context) => SomePage()
-        pattern3 = r"['\"](/[^'\"]*)['\"].*?=>\s*(\w+)\s*\("
-        for match in re.finditer(pattern3, content):
-            route = (match.group(1), match.group(2))
-            if route not in routes:
-                routes.append(route)
+        # Extract routes from GoRoute
+        # Pattern: GoRoute(path: HomeScreen.routeName, builder: ... => const HomeScreen(),)
+        # Pattern: GoRoute(path: '/path', builder: ... => const ClassName(),)
+        builder_pattern = r"builder:.*?const\s+(\w+)\s*\("
+        
+        # Find all GoRoute blocks - need to handle nested parentheses
+        # Strategy: find GoRoute( and then find matching closing paren
+        go_route_starts = list(re.finditer(r"GoRoute\s*\(", content))
+        
+        for start_match in go_route_starts:
+            start_pos = start_match.end() - 1  # Position of opening paren
+            # Find matching closing paren
+            paren_count = 0
+            end_pos = start_pos
+            for i, char in enumerate(content[start_pos:], start_pos):
+                if char == '(':
+                    paren_count += 1
+                elif char == ')':
+                    paren_count -= 1
+                    if paren_count == 0:
+                        end_pos = i + 1
+                        break
+            
+            if end_pos > start_pos:
+                block_content = content[start_match.start():end_pos]
                 
+                # Extract class name from builder
+                class_match = re.search(builder_pattern, block_content, re.DOTALL)
+                if not class_match:
+                    continue
+                
+                class_name = class_match.group(1)
+                
+                if class_name not in page_classes:
+                    continue
+                
+                # Extract path
+                path = None
+                
+                # Try pattern: path: ClassName.routeName
+                route_name_pattern = rf"path:\s*{re.escape(class_name)}\.routeName"
+                if re.search(route_name_pattern, block_content):
+                    # Need to read the page file to get routeName value
+                    page_info = page_classes[class_name]
+                    page_file_path = project_dir / page_info['file_path']
+                    
+                    if page_file_path.exists():
+                        try:
+                            page_content = page_file_path.read_text()
+                            route_name_match = re.search(r"static\s+const\s+String\s+routeName\s*=\s*['\"]([^'\"]+)['\"]", page_content)
+                            if route_name_match:
+                                path = route_name_match.group(1)
+                        except Exception:
+                            pass
+                
+                # Try pattern: path: '/literal_path'
+                if not path:
+                    literal_path_pattern = r"path:\s*['\"]([^'\"]+)['\"]"
+                    literal_match = re.search(literal_path_pattern, block_content)
+                    if literal_match:
+                        path = literal_match.group(1)
+                
+                # Fallback: infer from class name
+                if not path:
+                    page_info = page_classes[class_name]
+                    page_name = page_info['page_name']
+                    if page_name == 'home':
+                        path = '/home'
+                    elif page_name == 'splash':
+                        path = '/'
+                    else:
+                        path = f"/{page_name}"
+                
+                page_info = page_classes[class_name]
+                pages.append({
+                    'name': page_info['page_name'],
+                    'path': path,
+                    'class': class_name,
+                    'file_path': page_info['file_path']
+                })
+        
     except Exception as e:
         console.print(f"[yellow]⚠️  Could not parse router.dart: {e}[/yellow]")
         return
     
-    if routes:
+    if pages:
         console.print()
-        console.print("[bold blue]🛤️  Routes:[/bold blue]")
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_routes = []
-        for r in routes:
-            if r[0] not in seen:
-                seen.add(r[0])
-                unique_routes.append(r)
-        
-        for path, page in sorted(unique_routes, key=lambda x: x[0]):
-            console.print(f"   [green]{path:<20}[/green] → [cyan]{page}[/cyan]")
+        console.print("[bold blue]📄 Pages:[/bold blue]")
+        for page in sorted(pages, key=lambda x: x['path']):
+            console.print(f"   [green]{page['path']:<20}[/green] → [cyan]{page['class']:<20}[/cyan] [dim]({page['file_path']})[/dim]")
     else:
         console.print()
-        console.print("[dim]🛤️  No routes found in router.dart[/dim]")
+        console.print("[dim]📄 No pages found in router.dart[/dim]")
+
+
+def _list_domain_models(lib_path: Path, domain_folder: str) -> None:
+    """List all domain models."""
+    models = find_domain_models(lib_path, domain_folder)
+    
+    if models:
+        console.print()
+        console.print("[bold blue]📦 Domain Models:[/bold blue]")
+        for model in sorted(models):
+            model_path = f"lib/{domain_folder}/{model}/model/{model}.dart"
+            console.print(f"   [cyan]{model:<20}[/cyan] [dim]({model_path})[/dim]")
+    else:
+        console.print()
+        console.print(f"[dim]📦 No domain models found in {domain_folder}/ folder[/dim]")
+
+
+# Obsolete functions - kept for reference but not used anymore
+# The list command now only shows pages (from router.dart) and domain models
+
+def _list_features(lib_path: Path) -> None:
+    """[OBSOLETE] List all features in the project - no longer used."""
+    pass
+
+
+def _list_pages(lib_path: Path) -> None:
+    """[OBSOLETE] List all simple pages - no longer used. Use _list_pages_from_router instead."""
+    pass
+
+
+def _list_components(lib_path: Path) -> None:
+    """[OBSOLETE] List all components - no longer used."""
+    pass
+
+
+def _list_routes(project_dir: Path, project_name: str) -> None:
+    """[OBSOLETE] List all routes from router.dart - functionality merged into _list_pages_from_router."""
+    pass
 
 
 if __name__ == "__main__":

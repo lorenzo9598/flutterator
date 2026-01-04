@@ -9,6 +9,27 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/)
 
 ---
 
+## [3.0.1] - 2025-01-04
+
+### 🔧 Fix
+
+#### Comando `list`
+- **FIX**: Corretto parsing di `router.dart` per gestire correttamente le parentesi annidate nei blocchi `GoRoute`
+- Il comando ora trova correttamente tutte le pagine definite nel router
+- Migliorato il parsing per leggere il valore di `routeName` dai file delle pagine
+
+### Refactoring
+
+#### Comando `list`
+- **BREAKING**: Il comando `list` è stato semplificato
+- Rimossi argomenti `resource_type` (features, pages, components, routes)
+- Ora mostra solo:
+  - **Pagine**: Parse da `router.dart` (estrarre import e route GoRoute)
+  - **Modelli domain**: Trovati usando `find_domain_models` nella cartella `domain/`
+- Le funzioni obsolete `_list_features`, `_list_pages`, `_list_components`, `_list_routes` sono state commentate
+
+---
+
 ## [3.0.0] - 2025-01-04
 
 ### 🔄 Refactoring Major

@@ -575,21 +575,15 @@ flutterator add-bottom-nav-item --name profile
 
 ### `flutterator list`
 
-**Elenca le risorse presenti nel progetto Flutter.**
+**Elenca pagine e modelli domain del progetto.**
 
-Utile per avere una panoramica di features, pagine, componenti e routes.
+Mostra tutte le pagine parse da `router.dart` e tutti i modelli domain dalla cartella `domain/`.
 
 #### Sintassi
 
 ```bash
-flutterator list [TIPO] [OPTIONS]
+flutterator list [OPTIONS]
 ```
-
-#### Argomenti
-
-| Argomento | Valori                                             | Default | Descrizione                |
-| --------- | -------------------------------------------------- | ------- | -------------------------- |
-| `TIPO`    | `all`, `features`, `pages`, `components`, `routes` | `all`   | Tipo di risorse da listare |
 
 #### Opzioni
 
@@ -600,20 +594,8 @@ flutterator list [TIPO] [OPTIONS]
 #### Esempi
 
 ```bash
-# Lista tutto
+# Lista pagine e modelli
 flutterator list
-
-# Solo features DDD
-flutterator list features
-
-# Solo pagine semplici
-flutterator list pages
-
-# Solo componenti
-flutterator list components
-
-# Solo routes
-flutterator list routes
 ```
 
 #### Output Esempio
@@ -622,6 +604,16 @@ flutterator list routes
 ╭──────────────────────╮
 │ 📋 Project: my_app   │
 ╰──────────────────────╯
+
+📄 Pages:
+   /home          → HomeScreen        (lib/features/home/home_screen.dart)
+   /              → SplashScreen      (lib/features/splash/splash_screen.dart)
+   /settings      → SettingsPage     (lib/features/settings/settings_page.dart)
+
+📦 Domain Models:
+   todo           (lib/domain/todo/model/todo.dart)
+   user           (lib/domain/user/model/user.dart)
+```
 
 📦 Features:
 todo/
