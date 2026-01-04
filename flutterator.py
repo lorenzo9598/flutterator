@@ -364,6 +364,155 @@ def add_page(name, project_path, dry_run, no_build):
     print_success(f"Page '{page_name}' added successfully!")
 
 
+@cli.command()
+@click.option('--name', help='Domain entity name (e.g., todo, user, product)')
+@click.option('--fields', help='Fields as name:type,name:type (e.g., "title:string,done:bool,priority:int")')
+@click.option('--folder', help='Domain folder (default from config)')
+@click.option('--project-path', default='.', help='Path to Flutter project')
+@click.option('--dry-run', is_flag=True, help='Preview without creating files')
+@click.option('--no-build', is_flag=True, help='Skip flutter pub get')
+def add_domain(name, fields, folder, project_path, dry_run, no_build):
+    """
+    Add a domain entity (model + infrastructure only).
+    
+    \b
+    Creates:
+      • lib/<domain_folder>/<name>/model/ - Entity, failure, repository interface
+      • lib/<domain_folder>/<name>/infrastructure/ - DTO, service, mapper, repository
+    
+    \b
+    Domain entities are shared business entities that can be used by multiple features.
+    They do NOT include application or presentation layers.
+    
+    \b
+    Examples:
+      # Domain entity with fields
+      flutterator add-domain --name todo --fields "title:string,done:bool,priority:int"
+      
+      # Interactive mode (will prompt for fields)
+      flutterator add-domain --name user
+      
+      # Preview what will be created
+      flutterator add-domain --name product --fields "name:string,price:double" --dry-run
+      
+      # Custom domain folder
+      flutterator add-domain --name note --fields "title:string" --folder shared/domain
+    """
+    project_dir = Path(project_path)
+    lib_path, project_name = validate_flutter_project(project_dir)
+    
+    # Load configuration
+    cfg = load_config(project_dir)
+    
+    # Interactive mode - ask for missing parameters (skip if dry-run)
+    if not name:
+        if dry_run:
+            print_error("--name is required with --dry-run")
+            sys.exit(1)
+        name = click.prompt("Domain entity name")
+    
+    entity_name = name.lower().replace(' ', '_')
+    
+    # Use folder from CLI or config
+    if folder is None:
+        folder = cfg.domain_folder if cfg.domain_folder else "domain"
+    
+    # Parse fields
+    field_list = []
+    if fields:
+        # Parse fields from string: "name:type,name:type"
+        for field_str in fields.split(','):
+            field_str = field_str.strip()
+            if ':' not in field_str:
+                print_error(f"Invalid field format: {field_str}. Expected format: name:type")
+                sys.exit(1)
+            field_name, field_type = field_str.split(':', 1)
+            field_list.append({"name": field_name.strip(), "type": field_type.strip()})
+    elif not dry_run:
+        # Interactive mode for fields
+        console.print("[bold cyan]Adding fields interactively. Type 'done' when finished.[/bold cyan]")
+        while True:
+            field_name = click.prompt("Field name (or 'done')", default="done")
+            if field_name.lower() == 'done':
+                break
+            field_type = click.prompt("Field type", default="string", type=click.Choice(['string', 'int', 'double', 'bool', 'datetime', 'list', 'map'], case_sensitive=False))
+            field_list.append({"name": field_name.strip(), "type": field_type.strip()})
+    
+    # Ensure id field exists (add if not present)
+    has_id = any(field['name'] == 'id' for field in field_list)
+    if not has_id:
+        field_list.insert(0, {"name": "id", "type": "string"})
+    
+    # Build base path for display
+    base_path = f"lib/{folder}/{entity_name}"
+    
+    # Dry-run mode: show what would be created
+    if dry_run:
+        print_dry_run_header()
+        console.print(f"[bold]📦 Would add domain entity:[/bold] [cyan]{entity_name}[/cyan]")
+        console.print(f"   [dim]Domain folder:[/dim] [blue]{folder}[/blue]")
+        if field_list:
+            fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+            console.print(f"   [dim]Fields:[/dim] {fields_str}")
+        console.print()
+        
+        print_dry_run_tree(base_path, [
+            ("model", [
+                f"{entity_name}.dart",
+                f"{entity_name}_failure.dart",
+                f"i_{entity_name}_repository.dart",
+                "value_objects.dart",
+                "value_validators.dart"
+            ]),
+            ("infrastructure", [
+                f"{entity_name}_dto.dart",
+                f"{entity_name}_service.dart",
+                f"{entity_name}_mapper.dart",
+                f"{entity_name}_repository.dart"
+            ])
+        ])
+        print_dry_run_footer()
+        return
+    
+    console.print(f"[bold cyan]📦 Adding domain entity: {entity_name}[/bold cyan]")
+    console.print(f"   [dim]Domain folder:[/dim] [blue]{folder}[/blue]")
+    if field_list:
+        fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
+        console.print(f"   [dim]Fields:[/dim] {fields_str}")
+    
+    # Create domain directory structure
+    domain_dir = lib_path / folder / entity_name
+    domain_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create domain entity layers (model + infrastructure only)
+    create_domain_entity_layers(domain_dir, entity_name, field_list, project_name, folder)
+    
+    # Show created structure
+    print_created_structure(entity_name, [
+        ("model", [
+            f"{entity_name}.dart",
+            f"{entity_name}_failure.dart",
+            f"i_{entity_name}_repository.dart",
+            "value_objects.dart",
+            "value_validators.dart"
+        ]),
+        ("infrastructure", [
+            f"{entity_name}_dto.dart",
+            f"{entity_name}_service.dart",
+            f"{entity_name}_mapper.dart",
+            f"{entity_name}_repository.dart"
+        ])
+    ])
+    
+    # Run Flutter commands (respecting --no-build and config)
+    if not no_build and cfg.auto_run_build_runner:
+        run_flutter_commands(project_dir)
+    elif no_build:
+        print_info("Skipping flutter pub get and build_runner (--no-build)")
+    
+    print_success(f"Domain entity '{entity_name}' added successfully!")
+
+
 # @cli.command()  # Disabled - use add-domain + add-component --type list instead
 def add_feature(name=None, folder=None, fields=None, project_path='.', dry_run=False, no_build=False, domain=False, presentation=False):
     """
