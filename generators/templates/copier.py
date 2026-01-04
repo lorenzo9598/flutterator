@@ -5,6 +5,30 @@ from jinja2 import Template
 BASE_DIR = Path(__file__).parent  
 TEMPLATE_DIR = BASE_DIR.parent / "static" / "templates"
 
+def hex_to_dart_color(hex_color: str) -> str:
+    """
+    Convert hex color string to Dart Color object.
+    
+    Args:
+        hex_color: Hex color string (e.g., "#2196F3" or "2196F3")
+    
+    Returns:
+        Dart Color string (e.g., "Color(0xFF2196F3)")
+    """
+    # Remove # if present
+    hex_color = hex_color.lstrip('#')
+    
+    # Ensure it's 6 characters
+    if len(hex_color) != 6:
+        # Default to blue if invalid
+        hex_color = "2196F3"
+    
+    # Convert to uppercase for consistency
+    hex_color = hex_color.upper()
+    
+    # Return Dart Color format
+    return f"Color(0xFF{hex_color})"
+
 def generate_file(project_name: str, lib_path: Path, template_name: str, output_path: str, args: dict = None):
     template_content = (TEMPLATE_DIR / template_name).read_text()
     

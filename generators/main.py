@@ -9,6 +9,7 @@ from .assets import copy_assets
 from .config import generate_config_files
 from .templates import generate_files
 from .initializator import initialize_project
+from generators.helpers.config import load_config
 
 def run_cmd(cmd, capture_output=False):
     """Executes a shell command and displays output"""
@@ -50,8 +51,11 @@ def init(flutter_name, login):
     # Initialize the project (remove default files, create folders, etc.)
     initialize_project(lib_path, project_path, login)
 
+    # Load configuration (will use defaults + global config if exists)
+    cfg = load_config(project_path)
+
     # Generate files in various folders
-    generate_files(lib_path, login, flutter_name)
+    generate_files(lib_path, login, flutter_name, cfg.primary_color, cfg.secondary_color)
     
     # Generate configuration files (pubspec.yaml, analysis_options.yaml)
     generate_config_files(lib_path, login, flutter_name)

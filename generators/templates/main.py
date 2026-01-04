@@ -17,11 +17,11 @@ from ._core.core_generator import generate_files as generate_core_files
 # from .infrastructure import generate_infrastructure
 # from .api import generate_api
 
-def generate_files(lib_path, login: bool, project_name: str):
+def generate_files(lib_path, login: bool, project_name: str, primary_color: str = None, secondary_color: str = None):
     click.echo("\n📁 Generating files...")
 
     # Generate lib files
-    generate_lib_files(project_name, lib_path, login)
+    generate_lib_files(project_name, lib_path, login, primary_color, secondary_color)
 
     # Generate core files
     generate_core_files(project_name, lib_path, login)
