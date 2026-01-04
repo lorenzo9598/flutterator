@@ -1,100 +1,103 @@
 # 📊 Test Coverage Report
 
-**Data**: Gennaio 2025  
-**Versione**: 3.0.1  
-**Test totali**: 70  
-**Stato**: ✅ Tutti passano
+**Date**: January 2025  
+**Version**: 3.0.2  
+**Total Tests**: 70  
+**Status**: ✅ All passing
 
 ---
 
-## 📋 Copertura per Categoria
+## 📋 Coverage by Category
 
-| Categoria                       | Test  | Stato |
-| ------------------------------- | ----- | ----- |
-| Import & Moduli                 | 2     | ✅     |
-| Utility Functions               | 6     | ✅     |
-| Page Generation                 | 3     | ✅     |
-| Feature/Domain Generation       | 3     | ✅     |
-| Drawer Generation               | 3     | ✅     |
-| Bottom Nav Generation           | 2     | ✅     |
-| Component Generation            | 2     | ✅     |
-| CLI Commands                    | 5     | ✅     |
-| Dry-Run Mode                    | 3     | ✅     |
-| Dry-Run Extended                | 2     | ✅     |
-| CLI Extended                    | 4     | ✅     |
-| Content Verification            | 3     | ✅     |
-| Error Handling                  | 5     | ✅     |
-| Feature Behavior                | 1     | ✅     |
-| New Commands (init/list/config) | 10    | ✅     |
-| Domain Models & Components      | 4     | ✅     |
-| **E2E Flutter SDK**             | **5** | ✅     |
-| **E2E Dart Syntax**             | **2** | ✅     |
-| Fixture                         | 1     | ✅     |
-
----
-
-## ✅ Matrice Copertura Funzionalità
-
-| Funzionalità          | Esistenza | Contenuto | CLI | Dry-Run | Errori | **E2E** |
-| --------------------- | --------- | --------- | --- | ------- | ------ | ------- |
-| `add-page`            | ✅         | ✅         | ✅   | ✅       | ✅      | ✅       |
-| `add-domain`          | ✅         | ✅         | ✅   | ✅       | ✅      | ✅       |
-| `add-component`       | ✅         | ✅         | ✅   | ✅       | ✅      | ✅       |
-| `add-drawer-item`     | ✅         | ✅         | ✅   | ✅       | ✅      | -       |
-| `add-bottom-nav-item` | ✅         | ✅         | ✅   | ✅       | ✅      | -       |
-| `create`              | ✅         | -         | ✅   | -       | ✅      | ✅       |
-| `init`                | ✅         | ✅         | ✅   | -       | ✅      | -       |
-| `list`                | ✅         | ✅         | ✅   | -       | -      | -       |
-| `config`              | ✅         | ✅         | ✅   | -       | ✅      | -       |
-
-**Legenda**:
-- ✅ = Coperto da test
-- - = Non testato (opzionale o non necessario)
+| Category                           | Tests | Status |
+| ---------------------------------- | ----- | ------ |
+| Import & Modules                   | 2     | ✅      |
+| Utility Functions                  | 6     | ✅      |
+| Page Generation                    | 3     | ✅      |
+| Feature/Domain Generation          | 3     | ✅      |
+| Drawer Generation (deprecated)     | 3     | ✅      |
+| Bottom Nav Generation (deprecated) | 2     | ✅      |
+| Component Generation               | 2     | ✅      |
+| CLI Commands                       | 5     | ✅      |
+| Dry-Run Mode                       | 3     | ✅      |
+| Dry-Run Extended                   | 2     | ✅      |
+| CLI Extended                       | 4     | ✅      |
+| Content Verification               | 3     | ✅      |
+| Error Handling                     | 5     | ✅      |
+| Feature Behavior                   | 1     | ✅      |
+| New Commands (list/config)         | 10    | ✅      |
+| Domain Models & Components         | 4     | ✅      |
+| **E2E Flutter SDK**                | **5** | ✅      |
+| **E2E Dart Syntax**                | **2** | ✅      |
+| Fixture                            | 1     | ✅      |
 
 ---
 
-## 🧪 Test E2E Flutter SDK
+## ✅ Feature Coverage Matrix
 
-Questi test verificano che il codice Dart generato sia valido usando Flutter SDK reale.
+| Feature         | Existence | Content | CLI | Dry-Run | Errors | **E2E** |
+| --------------- | --------- | ------- | --- | ------- | ------ | ------- |
+| `add-page`      | ✅         | ✅       | ✅   | ✅       | ✅      | ✅       |
+| `add-domain`    | ✅         | ✅       | ✅   | ✅       | ✅      | ✅       |
+| `add-component` | ✅         | ✅       | ✅   | ✅       | ✅      | ✅       |
+| `create`        | ✅         | -       | ✅   | -       | ✅      | ✅       |
+| `list`          | ✅         | ✅       | ✅   | -       | -      | -       |
+| `config`        | ✅         | ✅       | ✅   | -       | ✅      | -       |
 
-| Test                           | Descrizione                             | Tempo |
-| ------------------------------ | --------------------------------------- | ----- |
-| `test_flutter_sdk_available`   | Verifica Flutter SDK installato         | ~1s   |
-| `test_create_project_compiles` | Progetto creato con Flutterator compila | ~15s  |
-| `test_add_domain_compiles`     | Domain entity aggiunta compila          | ~10s  |
-| `test_add_component_compiles`  | Componente aggiunto compila             | ~10s  |
-| `test_add_page_compiles`       | Pagina aggiunta compila                 | ~5s   |
-| `test_dart_available`          | Verifica Dart SDK disponibile           | ~1s   |
-| `test_generated_entity_syntax` | Sintassi entity valida                  | ~1s   |
+**Deprecated Commands** (code kept for backward compatibility, no longer available in CLI):
+- ~~`add-drawer-item`~~ - ⚠️ DEPRECATED (tests still present: 3 tests)
+- ~~`add-bottom-nav-item`~~ - ⚠️ DEPRECATED (tests still present: 2 tests)
+- ~~`init`~~ - ⚠️ DEPRECATED (tests still present: part of TestNewCommands)
 
-**Requisiti**: Flutter SDK installato. Se non disponibile, i test vengono **automaticamente skippati** con messaggio:
+**Legend**:
+- ✅ = Covered by tests
+- - = Not tested (optional or not necessary)
+- ⚠️ = Deprecated but tests maintained
+
+---
+
+## 🧪 E2E Flutter SDK Tests
+
+These tests verify that the generated Dart code is valid using the real Flutter SDK.
+
+| Test                           | Description                               | Time |
+| ------------------------------ | ----------------------------------------- | ---- |
+| `test_flutter_sdk_available`   | Verify Flutter SDK installed              | ~1s  |
+| `test_create_project_compiles` | Project created with Flutterator compiles | ~15s |
+| `test_add_domain_compiles`     | Domain entity added compiles              | ~10s |
+| `test_add_component_compiles`  | Component added compiles                  | ~10s |
+| `test_add_page_compiles`       | Page added compiles                       | ~5s  |
+| `test_dart_available`          | Verify Dart SDK available                 | ~1s  |
+| `test_generated_entity_syntax` | Generated entity syntax valid             | ~1s  |
+
+**Requirements**: Flutter SDK installed. If not available, tests are **automatically skipped** with message:
 ```
 ⚠️  Flutter SDK not installed - E2E tests skipped
 ```
 
 ---
 
-## 📈 Statistiche Finali
+## 📈 Final Statistics
 
-| Metrica                   | Valore        |
-| ------------------------- | ------------- |
-| Test totali               | **70**        |
-| Test passati              | **70 (100%)** |
-| Categorie testate         | **19**        |
-| Funzionalità core coperte | **9/9**       |
-| Test unitari              | 8             |
-| Test integrazione         | 55            |
-| Test E2E                  | 7             |
-| Tempo esecuzione totale   | ~50s          |
+| Metric                | Value         |
+| --------------------- | ------------- |
+| Total tests           | **70**        |
+| Tests passed          | **70 (100%)** |
+| Categories tested     | **19**        |
+| Core features covered | **6/6**       |
+| Unit tests            | 8             |
+| Integration tests     | 55            |
+| E2E tests             | 7             |
+| Total execution time  | ~50s          |
 
 ---
 
-## 📝 Struttura Test
+## 📝 Test Structure
 
 ```
 tests/
-├── conftest.py                  # Fixture condivise
-├── test_basic.py                # Test unitari (8 test)
+├── conftest.py                  # Shared fixtures
+├── test_basic.py                # Unit tests (8 tests)
 │   ├── test_imports
 │   ├── test_helpers_imports
 │   ├── test_temp_project_fixture
@@ -104,140 +107,141 @@ tests/
 │   ├── test_to_pascal_case_preserve
 │   └── test_map_field_type
 │
-├── test_integration.py          # Test integrazione (55 test)
-│   ├── TestPageGeneration           # 3 test
-│   ├── TestFeatureGeneration        # 3 test
-│   ├── TestDrawerGeneration         # 3 test
-│   ├── TestBottomNavGeneration      # 2 test
-│   ├── TestComponentGeneration      # 2 test
-│   ├── TestCLICommands              # 5 test
-│   ├── TestDryRunMode               # 3 test
-│   ├── TestDryRunModeExtended       # 2 test
-│   ├── TestCLICommandsExtended      # 4 test
-│   ├── TestContentVerification      # 3 test
-│   ├── TestErrorHandling            # 5 test
+├── test_integration.py          # Integration tests (55 tests)
+│   ├── TestPageGeneration           # 3 tests
+│   ├── TestFeatureGeneration        # 3 tests
+│   ├── TestDrawerGeneration         # 3 tests ⚠️ (deprecated command)
+│   ├── TestBottomNavGeneration      # 2 tests ⚠️ (deprecated command)
+│   ├── TestComponentGeneration      # 2 tests
+│   ├── TestCLICommands              # 5 tests
+│   ├── TestDryRunMode               # 3 tests
+│   ├── TestDryRunModeExtended       # 2 tests
+│   ├── TestCLICommandsExtended      # 4 tests
+│   ├── TestContentVerification      # 3 tests
+│   ├── TestErrorHandling            # 5 tests
 │   ├── TestFeatureBehavior          # 1 test
-│   ├── TestNewCommands              # 10 test
-│   ├── TestFeatureModes             # 4 test
-│   └── TestComponentWithDomainModels # 4 test
+│   ├── TestNewCommands              # 10 tests (init removed)
+│   ├── TestFeatureModes             # 4 tests
+│   └── TestComponentWithDomainModels # 4 tests
 │
-└── test_e2e_flutter.py          # Test E2E (7 test)
-    ├── TestE2EFlutterSDK            # 5 test
-    └── TestE2EDartSyntax            # 2 test
+└── test_e2e_flutter.py          # E2E tests (7 tests)
+    ├── TestE2EFlutterSDK            # 5 tests
+    └── TestE2EDartSyntax            # 2 tests
 ```
 
 ---
 
-## 🎯 Dettaglio Copertura
+## 🎯 Coverage Details
 
-### Test Unitari (test_basic.py)
+### Unit Tests (test_basic.py)
 
-| Test                                   | Descrizione                               |
-| -------------------------------------- | ----------------------------------------- |
-| `test_imports`                         | Verifica import moduli flutterator        |
-| `test_helpers_imports`                 | Verifica import helper functions          |
-| `test_temp_project_fixture`            | Verifica fixture progetto                 |
-| `test_project_name_validation_valid`   | Validazione nomi progetto validi          |
-| `test_project_name_validation_invalid` | Validazione nomi progetto invalidi        |
-| `test_to_pascal_case`                  | Conversione snake_case → PascalCase       |
-| `test_to_pascal_case_preserve`         | Conversione preservando maiuscole interne |
-| `test_map_field_type`                  | Mapping tipi campo Dart                   |
+| Test                                   | Description                          |
+| -------------------------------------- | ------------------------------------ |
+| `test_imports`                         | Verify flutterator module imports    |
+| `test_helpers_imports`                 | Verify helper functions imports      |
+| `test_temp_project_fixture`            | Verify project fixture               |
+| `test_project_name_validation_valid`   | Validate valid project names         |
+| `test_project_name_validation_invalid` | Validate invalid project names       |
+| `test_to_pascal_case`                  | Convert snake_case → PascalCase      |
+| `test_to_pascal_case_preserve`         | Convert preserving internal capitals |
+| `test_map_field_type`                  | Map Dart field types                 |
 
-### Test Integrazione (test_integration.py)
+### Integration Tests (test_integration.py)
 
-#### Page Generation (3 test)
-- Generazione file pagina
-- Aggiornamento router
-- Supporto cartelle annidate
+#### Page Generation (3 tests)
+- Page file generation
+- Router update
+- Nested folder support
 
-#### Feature/Domain Generation (3 test)
-- Creazione layer feature completa
-- Verifica contenuto file generati
-- Supporto cartelle personalizzate
+#### Feature/Domain Generation (3 tests)
+- Complete feature layer creation
+- Verify generated file content
+- Custom folder support
 
-#### Component Generation (4 test)
-- Componente standard (single)
-- Componente form
-- Componente list
-- Integrazione con domain models
+#### Component Generation (4 tests)
+- Standard component (single)
+- Form component
+- List component
+- Integration with domain models
 
-#### Navigation (5 test)
-- Drawer generation (3 test)
-- Bottom nav generation (2 test)
+#### Navigation (5 tests) ⚠️ DEPRECATED
+- Drawer generation (3 tests) - CLI command removed, code maintained
+- Bottom nav generation (2 tests) - CLI command removed, code maintained
 
-#### CLI Commands (9 test)
+#### CLI Commands (9 tests)
 - Help commands
 - Create command
 - Add commands
 - Error handling
 
-#### Dry-Run Mode (5 test)
-- Dry-run per tutti i comandi add-*
-- Verifica nessun file creato
-- Output corretto
+#### Dry-Run Mode (5 tests)
+- Dry-run for all add-* commands
+- Verify no files created
+- Correct output
 
-#### Error Handling (5 test)
-- Progetto non valido
-- Directory mancanti
-- Formato campi invalido
-- Configurazioni errate
+#### Error Handling (5 tests)
+- Invalid project
+- Missing directories
+- Invalid field format
+- Invalid configurations
 
-#### New Commands (10 test)
-- `init` command
+#### New Commands (10 tests)
 - `list` command
 - `config` command
 - Error handling
+- Note: `init` command no longer exists (removed from CLI)
 
-#### Domain Models (4 test)
-- Trovare domain models
-- Estrarre campi da domain
-- Creare componenti con domain
-- Form con domain fields
+#### Domain Models (4 tests)
+- Find domain models
+- Extract fields from domain
+- Create components with domain
+- Form with domain fields
 
-### Test E2E (test_e2e_flutter.py)
+### E2E Tests (test_e2e_flutter.py)
 
-#### Flutter SDK Tests (5 test)
-- Verifica Flutter SDK disponibile
-- Progetto creato compila
-- Domain entity aggiunta compila
-- Componente aggiunto compila
-- Pagina aggiunta compila
+#### Flutter SDK Tests (5 tests)
+- Verify Flutter SDK available
+- Created project compiles
+- Domain entity added compiles
+- Component added compiles
+- Page added compiles
 
-#### Dart Syntax Tests (2 test)
-- Verifica Dart SDK disponibile
-- Sintassi entity generata valida
-
----
-
-## 🎯 Conclusione
-
-**Test suite completa e aggiornata!**
-
-La test suite include:
-- ✅ Test unitari per helper functions (8 test)
-- ✅ Test integrazione per tutti i comandi (55 test)
-- ✅ Test dry-run per tutti i flag (5 test)
-- ✅ Test error handling per tutti i casi (5 test)
-- ✅ **Test E2E con Flutter SDK reale** (7 test)
-
-I test E2E verificano che il codice Dart generato:
-- Abbia sintassi valida
-- Possa essere analizzato da `dart analyze`
-- Non abbia errori di struttura
-- Compili correttamente con Flutter SDK
-
-**Coverage stimata**: ~80-85%
+#### Dart Syntax Tests (2 tests)
+- Verify Dart SDK available
+- Generated entity syntax valid
 
 ---
 
-## 📊 Miglioramenti Recenti (v3.0.1)
+## 🎯 Conclusion
 
-- ✅ Test aggiornati per `add-domain` (sostituisce `add-feature`)
-- ✅ Test E2E aggiornati per verificare domain entities
-- ✅ Test componenti con domain models
-- ✅ Test form con estrazione campi da domain
+**Complete and updated test suite!**
+
+The test suite includes:
+- ✅ Unit tests for helper functions (8 tests)
+- ✅ Integration tests for all commands (55 tests)
+- ✅ Dry-run tests for all flags (5 tests)
+- ✅ Error handling tests for all cases (5 tests)
+- ✅ **E2E tests with real Flutter SDK** (7 tests)
+
+E2E tests verify that the generated Dart code:
+- Has valid syntax
+- Can be analyzed by `dart analyze`
+- Has no structure errors
+- Compiles correctly with Flutter SDK
+
+**Estimated coverage**: ~80-85%
 
 ---
 
-*Report aggiornato: Gennaio 2025*  
-*Versione progetto: 3.0.1*
+## 📊 Recent Improvements (v3.0.1)
+
+- ✅ Tests updated for `add-domain` (replaces `add-feature`)
+- ✅ E2E tests updated to verify domain entities
+- ✅ Component tests with domain models
+- ✅ Form tests with field extraction from domain
+- ⚠️ Deprecated commands: `add-drawer-item`, `add-bottom-nav-item`, `init` (removed from CLI, code maintained)
+
+---
+
+*Report updated: January 2025*  
+*Project version: 3.0.1*

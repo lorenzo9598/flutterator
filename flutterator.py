@@ -160,8 +160,7 @@ def cli():
       add-page            Add a simple page
       add-domain          Add a domain entity (model + infrastructure only)
       add-component       Add a reusable component (form, list, or single)
-      add-drawer-item     Add drawer navigation item
-      add-bottom-nav-item Add bottom navigation item
+      list                List pages and domain models
       config              Manage configuration
     
     \b
@@ -542,11 +541,13 @@ def add_feature(name=None, folder=None, fields=None, project_path='.', dry_run=F
     sys.exit(1)
 
 
-@cli.command()
-@click.option('--name', prompt='Drawer item name', help='Item name (e.g., settings, profile)')
-@click.option('--project-path', default='.', help='Path to Flutter project')
-@click.option('--dry-run', is_flag=True, help='Preview without creating files')
-@click.option('--no-build', is_flag=True, help='Skip flutter pub get')
+# DEPRECATED: This command has been removed from the CLI but code is kept for retrocompatibilità
+# Use add-page instead for simple pages, or add-component for more complex navigation needs
+# @cli.command()
+# @click.option('--name', prompt='Drawer item name', help='Item name (e.g., settings, profile)')
+# @click.option('--project-path', default='.', help='Path to Flutter project')
+# @click.option('--dry-run', is_flag=True, help='Preview without creating files')
+# @click.option('--no-build', is_flag=True, help='Skip flutter pub get')
 def add_drawer_item(name, project_path, dry_run, no_build):
     """
     Add a drawer navigation item to the home screen.
@@ -615,11 +616,13 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     print_success(f"Drawer item '{drawer_item_name}' added successfully!")
 
 
-@cli.command()
-@click.option('--name', prompt='Bottom nav item name', help='Tab name (e.g., search, favorites)')
-@click.option('--project-path', default='.', help='Path to Flutter project')
-@click.option('--dry-run', is_flag=True, help='Preview without creating files')
-@click.option('--no-build', is_flag=True, help='Skip flutter pub get')
+# DEPRECATED: This command has been removed from the CLI but code is kept for retrocompatibilità
+# Use add-page instead for simple pages, or add-component for more complex navigation needs
+# @cli.command()
+# @click.option('--name', prompt='Bottom nav item name', help='Tab name (e.g., search, favorites)')
+# @click.option('--project-path', default='.', help='Path to Flutter project')
+# @click.option('--dry-run', is_flag=True, help='Preview without creating files')
+# @click.option('--no-build', is_flag=True, help='Skip flutter pub get')
 def add_bottom_nav_item(name, project_path, dry_run, no_build):
     """
     Add a bottom navigation tab to the home screen.

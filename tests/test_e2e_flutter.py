@@ -185,9 +185,8 @@ class TestE2EFlutterSDK:
         
         This test:
         1. Uses an existing Flutter project
-        2. Initializes Flutterator
-        3. Adds a feature with fields
-        4. Verifies the code compiles
+        2. Adds a domain entity with fields
+        3. Verifies the code compiles
         """
         from flutterator import cli
         import click.testing
@@ -195,13 +194,8 @@ class TestE2EFlutterSDK:
         runner = click.testing.CliRunner()
         project_path = real_flutter_project
         
-        # Initialize Flutterator in the project
-        result = runner.invoke(cli, [
-            "init",
-            "--project-path", str(project_path)
-        ])
-        
-        print(f"\nInit output: {result.output}")
+        # Note: init command has been removed - Flutterator works directly on Flutter projects
+        # Just add domain entity directly
         
         # Add a domain entity
         result = runner.invoke(cli, [

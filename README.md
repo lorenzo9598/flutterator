@@ -1,6 +1,6 @@
 # 🚀 Flutterator
 
-**Una CLI per generare e gestire progetti Flutter con architettura DDD (Domain-Driven Design)**
+**A CLI to generate and manage Flutter projects with DDD (Domain-Driven Design) architecture**
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![Flutter](https://img.shields.io/badge/Flutter-Compatible-02569B.svg)](https://flutter.dev/)
@@ -8,100 +8,98 @@
 
 ---
 
-## 📑 Indice
+## 📑 Table of Contents
 
-- [Cos'è Flutterator?](#-cosè-flutterator)
-- [Installazione](#-installazione)
+- [What is Flutterator?](#-what-is-flutterator)
+- [Installation](#-installation)
 - [Quick Start](#-quick-start)
-- [Comandi Disponibili](#-comandi-disponibili)
-  - [`create`](#flutterator-create) - Crea nuovo progetto
-  - [`add-domain`](#flutterator-add-domain) - Aggiunge domain entity (model + infrastructure)
-  - [`add-page`](#flutterator-add-page) - Aggiunge pagina semplice
-  - [`add-component`](#flutterator-add-component) - Aggiunge componente riutilizzabile (form, list, single)
-  - [`add-drawer-item`](#flutterator-add-drawer-item) - Aggiunge item al drawer
-  - [`add-bottom-nav-item`](#flutterator-add-bottom-nav-item) - Aggiunge tab alla bottom nav
-  - [`list`](#flutterator-list) - Elenca risorse del progetto
-  - [`config`](#flutterator-config) - Gestisce configurazione
-- [Flag Globali](#-flag-globali)
-- [Configurazione](#-configurazione)
-- [Architettura Generata](#-architettura-generata)
-- [Test](#-test)
+- [Available Commands](#-available-commands)
+  - [`create`](#flutterator-create) - Create new project
+  - [`add-domain`](#flutterator-add-domain) - Add domain entity (model + infrastructure)
+  - [`add-page`](#flutterator-add-page) - Add simple page
+  - [`add-component`](#flutterator-add-component) - Add reusable component (form, list, single)
+  - [`list`](#flutterator-list) - List project resources
+  - [`config`](#flutterator-config) - Manage configuration
+- [Global Flags](#-global-flags)
+- [Configuration](#-configuration)
+- [Generated Architecture](#-generated-architecture)
+- [Testing](#-testing)
 - [Troubleshooting](#-troubleshooting)
 
 ---
 
-## 📖 Cos'è Flutterator?
+## 📖 What is Flutterator?
 
-Flutterator è uno strumento da riga di comando che **automatizza la creazione di progetti Flutter** seguendo le best practice dell'architettura **Domain-Driven Design (DDD)**. 
+Flutterator is a command-line tool that **automates Flutter project creation** following **Domain-Driven Design (DDD)** architecture best practices.
 
-Invece di creare manualmente decine di file per ogni nuova feature (entity, repository, bloc, page, dto...), Flutterator li genera automaticamente con una struttura coerente e professionale.
+Instead of manually creating dozens of files for each new feature (entity, repository, bloc, page, dto...), Flutterator generates them automatically with a consistent and professional structure.
 
-### 🎯 Problema che Risolve
+### 🎯 Problem It Solves
 
-Creare una nuova feature in un progetto Flutter DDD richiede:
-- 📁 Creare 4+ cartelle (model, infrastructure, application, presentation)
-- 📄 Creare 10+ file Dart (entity, failure, repository interface, dto, bloc, event, state, page...)
-- ✏️ Scrivere codice boilerplate per ogni file
-- 🔗 Aggiornare il router con le nuove route
-- ⏱️ **Tempo stimato: 30-60 minuti per feature**
+Creating a new feature in a Flutter DDD project requires:
+- 📁 Creating 4+ folders (model, infrastructure, application, presentation)
+- 📄 Creating 10+ Dart files (entity, failure, repository interface, dto, bloc, event, state, page...)
+- ✏️ Writing boilerplate code for each file
+- 🔗 Updating the router with new routes
+- ⏱️ **Estimated time: 30-60 minutes per feature**
 
-Con Flutterator:
+With Flutterator:
 
 ```bash
 flutterator add-domain --name todo --fields "title:string,done:bool"
 flutterator add-component --name todo_list --type list
 ```
 
-**Tempo: 5 secondi** ⚡
+**Time: 5 seconds** ⚡
 
-### 💡 A Chi è Rivolto
+### 💡 Who It's For
 
-- **Sviluppatori Flutter** che usano architettura DDD/Clean Architecture
-- **Team** che vogliono standardizzare la struttura del codice
-- **Freelancer** che vogliono velocizzare lo sviluppo di nuovi progetti
-- **Studenti** che vogliono imparare l'architettura DDD con esempi pratici
+- **Flutter developers** using DDD/Clean Architecture
+- **Teams** wanting to standardize code structure
+- **Freelancers** wanting to speed up new project development
+- **Students** wanting to learn DDD architecture with practical examples
 
 ---
 
-## 📦 Installazione
+## 📦 Installation
 
-### Requisiti
+### Requirements
 
 - **Python 3.8+**
-- **Flutter SDK** (per i progetti generati)
+- **Flutter SDK** (for generated projects)
 
-### Installazione da Sorgente (Consigliata)
+### Installation from Source (Recommended)
 
 ```bash
-# 1. Clona il repository
+# 1. Clone the repository
 git clone https://github.com/lorenzobusi/flutterator.git
 cd flutterator
 
-# 2. Crea virtual environment
+# 2. Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# oppure: venv\Scripts\activate  # Windows
+# or: venv\Scripts\activate  # Windows
 
-# 3. Installa dipendenze
+# 3. Install dependencies
 pip install -e .
 
-# 4. Verifica installazione
+# 4. Verify installation
 flutterator --help
 ```
 
-### Installazione via pip (quando pubblicato)
+### Installation via pip (when published)
 
 ```bash
 pip install flutterator
 ```
 
-### Verifica Installazione
+### Verify Installation
 
 ```bash
 flutterator --help
 ```
 
-Output atteso:
+Expected output:
 
 ```
 Usage: flutterator [OPTIONS] COMMAND [ARGS]...
@@ -114,88 +112,84 @@ Usage: flutterator [OPTIONS] COMMAND [ARGS]...
 
 ## 🚀 Quick Start
 
-### Scenario 1: Nuovo Progetto
+### Scenario 1: New Project
 
 ```bash
-# 1. Crea un nuovo progetto Flutter con struttura DDD
+# 1. Create a new Flutter project with DDD structure
 flutterator create --name my_app
 
-# 2. Entra nel progetto
+# 2. Enter the project
 cd my_app
 
-# 3. Aggiungi una feature completa
+# 3. Add a complete feature
 flutterator add-domain --name todo --fields "title:string,done:bool,priority:int"
 flutterator add-component --name todo_list --type list
 
-# 5. Esegui il progetto
+# 5. Run the project
 flutter run
 ```
 
-### Scenario 2: Progetto Esistente
+### Scenario 2: Existing Project
 
 ```bash
-# 1. Vai nel tuo progetto Flutter esistente
+# 1. Go to your existing Flutter project
 cd my_existing_flutter_app
 
-# 2. Inizializza Flutterator
-# 3. Aggiungi feature
+# 2. Add features
 flutterator add-domain --name user --fields "name:string,email:string"
 flutterator add-component --name user_list --type list
 ```
 
-### Scenario 3: Preview Prima di Creare
+### Scenario 3: Preview Before Creating
 
 ```bash
-# Usa --dry-run per vedere cosa verrà creato senza modificare nulla
+# Use --dry-run to see what will be created without modifying anything
 flutterator add-domain --name product --fields "name:string,price:double" --dry-run
 ```
 
 ---
 
-## 📋 Comandi Disponibili
+## 📋 Available Commands
 
-| Comando               | Descrizione                                    | Uso Tipico         |
-| --------------------- | ---------------------------------------------- | ------------------ |
-| `create`              | Crea nuovo progetto Flutter DDD                | Inizio progetto    |
-| `add-domain`          | Aggiunge domain entity (model, infrastructure) | Nuova funzionalità |
-| `add-component`       | Aggiunge componente (form, list, single)       | Nuova funzionalità |
-| `add-page`            | Aggiunge pagina semplice                       | Pagine statiche    |
-| `add-component`       | Aggiunge componente riutilizzabile             | Widget condivisi   |
-| `add-drawer-item`     | Aggiunge item al drawer                        | Menu laterale      |
-| `add-bottom-nav-item` | Aggiunge tab alla bottom nav                   | Tab navigation     |
-| `list`                | Elenca risorse del progetto                    | Panoramica         |
-| `config`              | Gestisce configurazione                        | Personalizzazione  |
+| Command         | Description                               | Typical Use       |
+| --------------- | ----------------------------------------- | ----------------- |
+| `create`        | Create new Flutter DDD project            | Project start     |
+| `add-domain`    | Add domain entity (model, infrastructure) | New functionality |
+| `add-component` | Add component (form, list, single)        | New functionality |
+| `add-page`      | Add simple page                           | Static pages      |
+| `list`          | List project resources                    | Overview          |
+| `config`        | Manage configuration                      | Customization     |
 
 ---
 
-## 🔧 Dettaglio Comandi
+## 🔧 Command Details
 
 ### `flutterator create`
 
-**Crea un nuovo progetto Flutter con architettura DDD completa.**
+**Creates a new Flutter project with complete DDD architecture.**
 
-#### Sintassi
+#### Syntax
 
 ```bash
 flutterator create [OPTIONS]
 ```
 
-#### Opzioni
+#### Options
 
-| Opzione   | Tipo   | Obbligatorio | Default | Descrizione                    |
-| --------- | ------ | ------------ | ------- | ------------------------------ |
-| `--name`  | string | ❌            | -       | Nome del progetto (snake_case) |
-| `--login` | flag   | ❌            | `false` | Include autenticazione         |
+| Option    | Type   | Required | Default | Description               |
+| --------- | ------ | -------- | ------- | ------------------------- |
+| `--name`  | string | ❌        | -       | Project name (snake_case) |
+| `--login` | flag   | ❌        | `false` | Include authentication    |
 
-#### Modalità di Utilizzo
+#### Usage Modes
 
-**1. Riga di comando completa:**
+**1. Complete command line:**
 
 ```bash
 flutterator create --name my_app --login
 ```
 
-**2. Modalità interattiva** (se non specifichi --name):
+**2. Interactive mode** (if you don't specify --name):
 
 ```bash
 flutterator create
@@ -206,20 +200,20 @@ Project name: my_app
 Does the project have login? [y/N]: y
 ```
 
-#### Esempi
+#### Examples
 
 ```bash
-# Progetto base
+# Basic project
 flutterator create --name my_app
 
-# Progetto con autenticazione
+# Project with authentication
 flutterator create --name my_app --login
 
-# Modalità interattiva (chiede nome e opzioni)
+# Interactive mode (asks for name and options)
 flutterator create
 ```
 
-#### Struttura Generata
+#### Generated Structure
 
 ```
 my_app/
@@ -232,55 +226,134 @@ my_app/
 │   │   ├── infrastructure/     # Firebase modules, helpers
 │   │   │   ├── firebase_injectable_module.dart
 │   │   │   └── utils.dart
-│   │   └── presentation/       # Widget comuni
+│   │   └── presentation/       # Common widgets
 │   │       └── app_widget.dart
-│   ├── home/
-│   │   └── presentation/
-│   │       └── home_screen.dart
-│   ├── splash/
-│   │   └── presentation/
-│   │       └── splash_screen.dart
+│   ├── domain/                 # Domain entities (shared business entities)
+│   ├── features/               # Features (use cases)
+│   │   ├── home/
+│   │   │   └── presentation/
+│   │   │       └── home_screen.dart
+│   │   └── splash/
+│   │       └── presentation/
+│   │           └── splash_screen.dart
 │   ├── main.dart              # Entry point
 │   ├── injection.dart         # Dependency injection setup
-│   └── router.dart            # Routing con auto_route
-├── pubspec.yaml               # Dipendenze Flutter
+│   └── router.dart            # Routing with auto_route
+├── pubspec.yaml               # Flutter dependencies
 ├── analysis_options.yaml
 └── ...
 ```
 
 ---
 
+### `flutterator add-domain`
+
+**Adds a domain entity (model + infrastructure only).**
+
+Domain entities are shared business entities that can be used by multiple features. They do NOT include application or presentation layers.
+
+#### Syntax
+
+```bash
+flutterator add-domain [OPTIONS]
+```
+
+#### Options
+
+| Option           | Type   | Required | Default     | Description                       |
+| ---------------- | ------ | -------- | ----------- | --------------------------------- |
+| `--name`         | string | ✅        | -           | Domain entity name                |
+| `--fields`       | string | ❌        | -           | Fields as name:type,name:type     |
+| `--folder`       | string | ❌        | from config | Domain folder (default: "domain") |
+| `--dry-run`      | flag   | ❌        | `false`     | Preview without creating          |
+| `--no-build`     | flag   | ❌        | `false`     | Skip flutter pub get              |
+| `--project-path` | string | ❌        | `.`         | Project path                      |
+
+#### Usage Modes
+
+**Command line:**
+
+```bash
+flutterator add-domain --name todo --fields "title:string,done:bool,priority:int"
+```
+
+**Interactive mode:**
+
+```bash
+flutterator add-domain --name todo
+```
+
+```
+Domain entity name: todo
+Fields (name:type,name:type): title:string,done:bool,priority:int
+```
+
+#### Examples
+
+```bash
+# Domain entity with fields
+flutterator add-domain --name todo --fields "title:string,done:bool,priority:int"
+
+# Interactive mode (will prompt for fields)
+flutterator add-domain --name user
+
+# Preview what will be created
+flutterator add-domain --name product --fields "name:string,price:double" --dry-run
+
+# Custom domain folder
+flutterator add-domain --name note --fields "title:string" --folder shared/domain
+```
+
+#### Generated Structure
+
+```
+lib/domain/todo/
+├── model/
+│   ├── todo.dart
+│   ├── todo_failure.dart
+│   ├── i_todo_repository.dart
+│   ├── value_objects.dart
+│   └── value_validators.dart
+└── infrastructure/
+    ├── todo_dto.dart
+    ├── todo_service.dart
+    ├── todo_mapper.dart
+    └── todo_repository.dart
+```
+
+---
+
 ### `flutterator add-page`
 
-**Aggiunge una pagina semplice senza business logic.**
+**Adds a simple page without business logic.**
 
-Ideale per pagine statiche come About, Settings, Privacy Policy, etc.
+Ideal for static pages like About, Settings, Privacy Policy, etc.
 
-#### Sintassi
+#### Syntax
 
 ```bash
 flutterator add-page [OPTIONS]
 ```
 
-#### Opzioni
+#### Options
 
-| Opzione          | Tipo   | Obbligatorio | Default   | Descrizione              |
-| ---------------- | ------ | ------------ | --------- | ------------------------ |
-| `--name`         | string | ✅            | -         | Nome della pagina        |
-| `--folder`       | string | ❌            | da config | Cartella di destinazione |
-| `--dry-run`      | flag   | ❌            | `false`   | Preview senza creare     |
-| `--no-build`     | flag   | ❌            | `false`   | Salta flutter pub get    |
-| `--project-path` | string | ❌            | `.`       | Path al progetto         |
+| Option           | Type   | Required | Default     | Description              |
+| ---------------- | ------ | -------- | ----------- | ------------------------ |
+| `--name`         | string | ✅        | -           | Page name                |
+| `--folder`       | string | ❌        | from config | Destination folder       |
+| `--dry-run`      | flag   | ❌        | `false`     | Preview without creating |
+| `--no-build`     | flag   | ❌        | `false`     | Skip flutter pub get     |
+| `--project-path` | string | ❌        | `.`         | Project path             |
 
-#### Modalità di Utilizzo
+#### Usage Modes
 
-**Riga di comando:**
+**Command line:**
 
 ```bash
 flutterator add-page --name settings
 ```
 
-**Modalità interattiva:**
+**Interactive mode:**
 
 ```bash
 flutterator add-page
@@ -290,79 +363,79 @@ flutterator add-page
 Page name: settings
 ```
 
-#### Esempi
+#### Examples
 
 ```bash
-# Pagina settings
+# Settings page
 flutterator add-page --name settings
 
-# Pagina about con preview
+# About page with preview
 flutterator add-page --name about --dry-run
 
-# Pagina in cartella specifica
+# Page in specific folder
 flutterator add-page --name privacy --folder pages
 ```
 
-#### Struttura Generata
+#### Generated Structure
 
 ```
 lib/features/settings/
 └── settings_page.dart
 ```
 
-**Inoltre aggiorna:**
-- `lib/router.dart` - Aggiunge la nuova route
+**Also updates:**
+- `lib/router.dart` - Adds the new route
 
 ---
 
 ### `flutterator add-component`
 
-**Aggiunge un componente riutilizzabile con BLoC opzionale.**
+**Adds a reusable component with optional BLoC.**
 
-Supporta tre tipi: single (singolo item), list (lista con CRUD), e form (form con validazione).
+Supports three types: single (single item), list (list with CRUD), and form (form with validation).
 
-#### Sintassi
+#### Syntax
 
 ```bash
 flutterator add-component [OPTIONS]
 ```
 
-#### Opzioni
+#### Options
 
-| Opzione      | Tipo   | Obbligatorio | Default               | Descrizione                             |
-| ------------ | ------ | ------------ | --------------------- | --------------------------------------- |
-| `--name`     | string | ✅            | -                     | Nome del componente                     |
-| `--type`     | choice | ❌            | -                     | Tipo: `form`, `list`, o `single`        |
-| `--fields`   | string | ❌            | -                     | Campi del form (richiede `--type form`) |
-| `--folder`   | string | ❌            | `features/components` | Cartella di destinazione                |
-| `--dry-run`  | flag   | ❌            | `false`               | Preview senza creare                    |
-| `--no-build` | flag   | ❌            | `false`               | Salta flutter pub get                   |
+| Option       | Type   | Required | Default               | Description                          |
+| ------------ | ------ | -------- | --------------------- | ------------------------------------ |
+| `--name`     | string | ✅        | -                     | Component name                       |
+| `--type`     | choice | ❌        | -                     | Type: `form`, `list`, or `single`    |
+| `--fields`   | string | ❌        | -                     | Form fields (requires `--type form`) |
+| `--folder`   | string | ❌        | `features/components` | Destination folder                   |
+| `--dry-run`  | flag   | ❌        | `false`               | Preview without creating             |
+| `--no-build` | flag   | ❌        | `false`               | Skip flutter pub get                 |
 
-#### Tre Tipi di Componente
+#### Three Component Types
 
-**1. Single Component** (`--type single` o default) - Widget che mostra un singolo item caricato per ID:
+**1. Single Component** (`--type single` or default) - Widget that displays a single item loaded by ID:
 
 ```bash
 flutterator add-component --name user_card
-# oppure
+# or
 flutterator add-component --name user_card --type single
 ```
 
-**2. List Component** (`--type list`) - Widget che mostra una lista di items con operazioni CRUD complete:
+**2. List Component** (`--type list`) - Widget that displays a list of items with complete CRUD operations:
 
 ```bash
 flutterator add-component --name todo_list --type list
 ```
 
-**3. Form Component** (`--type form`) - Form con validazione e gestione campi:
+**3. Form Component** (`--type form`) - Form with validation and field management:
 
 ```bash
 flutterator add-component --name login --type form --fields "email:string,password:string"
 ```
 
-#### Modalità di Utilizzo
+#### Usage Modes
 
-**Riga di comando:**
+**Command line:**
 
 ```bash
 # Single component (default)
@@ -375,7 +448,7 @@ flutterator add-component --name todo_list --type list
 flutterator add-component --name login --type form --fields "email:string,password:string"
 ```
 
-**Modalità interattiva:**
+**Interactive mode:**
 
 ```bash
 flutterator add-component
@@ -390,26 +463,26 @@ Select component type:
 Type (1-3): 2
 ```
 
-#### Esempi
+#### Examples
 
 ```bash
 # Single component (default)
 flutterator add-component --name user_card
 
-# List component con CRUD completo
+# List component with complete CRUD
 flutterator add-component --name todo_list --type list
 
-# Form component con campi
+# Form component with fields
 flutterator add-component --name login --type form --fields "email:string,password:string"
 
-# Componente in cartella specifica
+# Component in specific folder
 flutterator add-component --name search_bar --folder shared/widgets
 
-# Form registrazione
+# Registration form
 flutterator add-component --name registration --type form --fields "name:string,email:string,password:string"
 ```
 
-#### Struttura Generata
+#### Generated Structure
 
 **Single Component:**
 
@@ -428,11 +501,11 @@ lib/user_card/
 ```
 lib/todo_list/
 ├── application/
-│   ├── todo_list_bloc.dart      # BLoC con getAll, create, update, delete
+│   ├── todo_list_bloc.dart      # BLoC with getAll, create, update, delete
 │   ├── todo_list_event.dart      # loadRequested, createRequested, updateRequested, deleteRequested
 │   └── todo_list_state.dart      # initial, loading, loaded(List<Model>), error
 └── presentation/
-    └── todo_list_component.dart   # Widget con ListView e CRUD operations
+    └── todo_list_component.dart   # Widget with ListView and CRUD operations
 ```
 
 **Form Component:**
@@ -449,11 +522,14 @@ lib/login/
 
 ---
 
-### `flutterator add-drawer-item`
+<!-- DEPRECATED: This command has been removed from the CLI but code is maintained for backward compatibility -->
+<!-- ### `flutterator add-drawer-item` (DEPRECATED)
 
-**Aggiunge un item al drawer (menu laterale) della navigazione.**
+**Adds an item to the drawer (side menu) navigation.**
 
-Crea la pagina, il drawer (se non esiste) e configura tutto automaticamente.
+Creates the page, drawer (if it doesn't exist) and configures everything automatically.
+
+**⚠️ DEPRECATED**: This command has been removed. Use `add-page` for simple pages or `add-component` for more complex navigation.
 
 #### Sintassi
 
@@ -508,13 +584,18 @@ flutterator add-drawer-item --name help --dry-run
 3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge drawer)
 4. ✅ Aggiorna `lib/router.dart`
 
+-->
+
 ---
 
-### `flutterator add-bottom-nav-item`
+<!-- DEPRECATED: This command has been removed from the CLI but code is maintained for backward compatibility -->
+<!-- ### `flutterator add-bottom-nav-item` (DEPRECATED)
 
-**Aggiunge un tab alla bottom navigation bar.**
+**Adds a tab to the bottom navigation bar.**
 
-Crea la schermata e configura la bottom navigation automaticamente.
+Creates the screen and configures the bottom navigation automatically.
+
+**⚠️ DEPRECATED**: This command has been removed. Use `add-page` for simple pages or `add-component` for more complex navigation.
 
 #### Sintassi
 
@@ -568,36 +649,35 @@ flutterator add-bottom-nav-item --name profile
 2. ✅ Crea/Aggiorna `lib/core/presentation/bottom_nav_bar.dart`
 3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge BottomNavigationBar)
 
----
-
+-->
 ---
 
 ### `flutterator list`
 
-**Elenca pagine e modelli domain del progetto.**
+**Lists pages and domain models in the project.**
 
-Mostra tutte le pagine parse da `router.dart` e tutti i modelli domain dalla cartella `domain/`.
+Shows all pages parsed from `router.dart` and all domain models from the `domain/` folder.
 
-#### Sintassi
+#### Syntax
 
 ```bash
 flutterator list [OPTIONS]
 ```
 
-#### Opzioni
+#### Options
 
-| Opzione          | Tipo   | Obbligatorio | Default | Descrizione      |
-| ---------------- | ------ | ------------ | ------- | ---------------- |
-| `--project-path` | string | ❌            | `.`     | Path al progetto |
+| Option           | Type   | Required | Default | Description  |
+| ---------------- | ------ | -------- | ------- | ------------ |
+| `--project-path` | string | ❌        | `.`     | Project path |
 
-#### Esempi
+#### Examples
 
 ```bash
-# Lista pagine e modelli
+# List pages and models
 flutterator list
 ```
 
-#### Output Esempio
+#### Example Output
 
 ```
 ╭──────────────────────╮
@@ -649,31 +729,31 @@ user/
 
 ### `flutterator config`
 
-**Gestisce la configurazione di Flutterator.**
+**Manages Flutterator configuration.**
 
-Permette di visualizzare o creare il file di configurazione.
+Allows viewing or creating the configuration file.
 
-#### Sintassi
+#### Syntax
 
 ```bash
 flutterator config [OPTIONS]
 ```
 
-#### Opzioni
+#### Options
 
-| Opzione          | Tipo   | Descrizione                   |
-| ---------------- | ------ | ----------------------------- |
-| `--show`         | flag   | Mostra configurazione attuale |
-| `--init`         | flag   | Crea file di configurazione   |
-| `--project-path` | string | Path al progetto              |
+| Option           | Type   | Description                |
+| ---------------- | ------ | -------------------------- |
+| `--show`         | flag   | Show current configuration |
+| `--init`         | flag   | Create configuration file  |
+| `--project-path` | string | Project path               |
 
-#### Esempi
+#### Examples
 
 ```bash
-# Mostra configurazione attuale
+# Show current configuration
 flutterator config --show
 
-# Crea file di configurazione
+# Create configuration file
 flutterator config --init
 ```
 
@@ -698,17 +778,17 @@ flutterator config --init
 
 ---
 
-## 🏃 Flag Globali
+## 🏃 Global Flags
 
-Questi flag sono disponibili per tutti i comandi `add-*`:
+These flags are available for all `add-*` commands:
 
-| Flag             | Descrizione                              | Esempio                 |
-| ---------------- | ---------------------------------------- | ----------------------- |
-| `--dry-run`      | Preview senza creare file                | `--dry-run`             |
-| `--no-build`     | Salta `flutter pub get` e `build_runner` | `--no-build`            |
-| `--project-path` | Specifica il path al progetto            | `--project-path ../app` |
+| Flag             | Description                               | Example                 |
+| ---------------- | ----------------------------------------- | ----------------------- |
+| `--dry-run`      | Preview without creating files            | `--dry-run`             |
+| `--no-build`     | Skip `flutter pub get` and `build_runner` | `--no-build`            |
+| `--project-path` | Specify project path                      | `--project-path ../app` |
 
-### Esempio --dry-run
+### --dry-run Example
 
 ```bash
 $ flutterator add-domain --name todo --fields "title:string" --dry-run
@@ -745,83 +825,83 @@ Output:
 ℹ️  Run without --dry-run to create these files
 ```
 
-### Esempio --no-build
+### --no-build Example
 
 ```bash
-# Più veloce: salta pub get e build_runner
+# Faster: skip pub get and build_runner
 flutterator add-domain --name todo --fields "title:string" --no-build
 flutterator add-component --name todo_list --type list --no-build
 
-# Poi esegui manualmente quando vuoi
+# Then run manually when you want
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 ```
 
 ---
 
-## ⚙️ Configurazione
+## ⚙️ Configuration
 
-### Priorità Configurazione
+### Configuration Priority
 
-Flutterator carica la configurazione da più fonti (in ordine di priorità):
+Flutterator loads configuration from multiple sources (in priority order):
 
-1. **🔴 Flag CLI** (massima priorità) - `--folder features`
-2. **🟠 `flutterator.yaml`** nel progetto
-3. **🟡 `~/.flutteratorrc`** globale (home directory)
-4. **🟢 Defaults** (minima priorità)
+1. **🔴 CLI Flags** (highest priority) - `--folder features`
+2. **🟠 `flutterator.yaml`** in project
+3. **🟡 `~/.flutteratorrc`** global (home directory)
+4. **🟢 Defaults** (lowest priority)
 
-### Creare Configurazione
+### Create Configuration
 
 ```bash
-# Crea flutterator.yaml nel progetto
+# Create flutterator.yaml in project
 flutterator config --init
 ```
 
-### Esempio flutterator.yaml
+### flutterator.yaml Example
 
 ```yaml
-# 📁 Cartelle default per il codice generato
+# 📁 Default folders for generated code
 defaults:
   feature_folder: "features"     # lib/features/todo/
-  domain_folder: "domain"         # lib/domain/note/ (entità condivise)
+  domain_folder: "domain"         # lib/domain/note/ (shared entities)
   component_folder: "features/components" # lib/features/components/user_card/
-  auto_run_build_runner: true    # Esegue build_runner dopo generazione
+  auto_run_build_runner: true    # Runs build_runner after generation
 
-# 🎨 Configurazione UI (per riferimento futuro)
+# 🎨 UI Configuration (for future reference)
 styling:
   primary_color: "#2196F3"
   secondary_color: "#FF9800"
 ```
 
-### Esempio ~/.flutteratorrc (Globale)
+### ~/.flutteratorrc Example (Global)
 
 ```yaml
-# Configurazione globale per tutti i progetti
+# Global configuration for all projects
 defaults:
   feature_folder: "features"
-  auto_run_build_runner: false  # Disabilita per tutti i progetti
+  auto_run_build_runner: false  # Disable for all projects
 ```
 
 ---
 
-## 🏗️ Architettura Generata
+## 🏗️ Generated Architecture
 
-Flutterator genera progetti seguendo l'architettura **DDD (Domain-Driven Design)** con separazione in layer:
+Flutterator generates projects following **DDD (Domain-Driven Design)** architecture with layer separation:
 
 ```
 lib/
-├── core/                        # 🔧 CORE - Codice condiviso
-│   ├── model/                   # Value objects, failures comuni
+├── core/                        # 🔧 CORE - Shared code
+│   ├── model/                   # Value objects, common failures
 │   │   ├── value_objects.dart
 │   │   ├── value_failures.dart
 │   │   └── value_validators.dart
-│   ├── infrastructure/          # Moduli DI, helpers
+│   ├── infrastructure/          # DI modules, helpers
 │   │   └── firebase_injectable_module.dart
-│   └── presentation/            # Widget comuni
+│   └── presentation/            # Common widgets
 │       └── app_widget.dart
 │
-├── domain/                      # 🏛️ DOMAIN ENTITIES - Entità condivise
-│   ├── auth/                    # Entità Auth (condivisa)
+├── domain/                      # 🏛️ DOMAIN ENTITIES - Shared entities
+│   ├── auth/                    # Auth entity (shared)
 │   │   ├── model/               # Entity, failures, repository interface
 │   │   │   ├── user.dart
 │   │   │   ├── user_profile.dart
@@ -830,15 +910,15 @@ lib/
 │   │       ├── firebase_auth_facade.dart
 │   │       └── user_profile_repository.dart
 │   │
-│   └── note/                    # Esempio: entità Note (condivisa)
+│   └── note/                    # Example: Note entity (shared)
 │       ├── model/
 │       │   ├── note.dart
 │       │   └── i_note_repository.dart
 │       └── infrastructure/
 │           └── note_repository.dart
 │
-├── features/                    # 📦 FEATURES - Use cases specifici
-│   ├── auth/                    # Feature Auth (use case completo)
+├── features/                    # 📦 FEATURES - Specific use cases
+│   ├── auth/                    # Auth feature (complete use case)
 │   │   ├── application/         # ⚙️ APPLICATION LAYER
 │   │   │   ├── auth_bloc.dart
 │   │   │   ├── auth_event.dart
@@ -846,17 +926,17 @@ lib/
 │   │   └── presentation/        # 🎨 PRESENTATION LAYER
 │   │       └── login_screen.dart
 │   │
-│   └── notes/                    # Esempio feature "gestione note"
-│       │                          # (usa domain/note)
+│   └── notes/                    # Example feature "note management"
+│       │                          # (uses domain/note)
 │       ├── application/         # ⚙️ APPLICATION LAYER
-│       │   ├── notes_bloc.dart      # BLoC (logica)
+│       │   ├── notes_bloc.dart      # BLoC (logic)
 │       │   ├── notes_event.dart     # Events
 │       │   └── notes_state.dart     # States
 │       │
 │       └── presentation/        # 🎨 PRESENTATION LAYER
 │           └── notes_page.dart      # UI
 │
-├── shared/                      # 🧩 SHARED - Componenti condivisi
+├── shared/                      # 🧩 SHARED - Shared components
 │   └── widgets/
 │
 ├── main.dart                    # Entry point
@@ -864,48 +944,48 @@ lib/
 └── router.dart                  # 🛤️ Routing (auto_route)
 ```
 
-### Perché DDD?
+### Why DDD?
 
-| Beneficio          | Descrizione                                    |
-| ------------------ | ---------------------------------------------- |
-| **Testabilità**    | Ogni layer è isolato e testabile               |
-| **Manutenibilità** | Codice organizzato e prevedibile               |
-| **Scalabilità**    | Facile aggiungere nuove feature                |
-| **Team**           | Più sviluppatori possono lavorare in parallelo |
+| Benefit             | Description                              |
+| ------------------- | ---------------------------------------- |
+| **Testability**     | Each layer is isolated and testable      |
+| **Maintainability** | Organized and predictable code           |
+| **Scalability**     | Easy to add new features                 |
+| **Team**            | Multiple developers can work in parallel |
 
 ---
 
-## 📚 Dipendenze Flutter Generate
+## 📚 Flutter Generated Dependencies
 
-I progetti generati usano queste dipendenze Flutter standard:
+Generated projects use these standard Flutter dependencies:
 
-| Pacchetto         | Scopo                  | Link                                                |
+| Package           | Purpose                | Link                                                |
 | ----------------- | ---------------------- | --------------------------------------------------- |
 | `flutter_bloc`    | State management       | [pub.dev](https://pub.dev/packages/flutter_bloc)    |
 | `freezed`         | Immutable classes      | [pub.dev](https://pub.dev/packages/freezed)         |
 | `injectable`      | Dependency injection   | [pub.dev](https://pub.dev/packages/injectable)      |
-| `auto_route`      | Routing declarativo    | [pub.dev](https://pub.dev/packages/auto_route)      |
+| `auto_route`      | Declarative routing    | [pub.dev](https://pub.dev/packages/auto_route)      |
 | `dartz`           | Functional programming | [pub.dev](https://pub.dev/packages/dartz)           |
 | `json_annotation` | JSON serialization     | [pub.dev](https://pub.dev/packages/json_annotation) |
 
 ---
 
-## 🧪 Test
+## 🧪 Testing
 
 ```bash
-# Attiva virtual environment
+# Activate virtual environment
 source venv/bin/activate
 
-# Esegui tutti i test
+# Run all tests
 pytest tests/ -v
 
-# Solo test veloci (senza E2E)
+# Only fast tests (without E2E)
 pytest tests/test_basic.py tests/test_integration.py -v
 
-# Solo test E2E (richiede Flutter SDK installato)
+# Only E2E tests (requires Flutter SDK installed)
 pytest tests/test_e2e_flutter.py -v
 
-# Con coverage
+# With coverage
 pytest tests/ --cov=. --cov-report=html
 ```
 
@@ -916,41 +996,41 @@ pytest tests/ --cov=. --cov-report=html
 ### "Command not found: flutterator"
 
 ```bash
-# Assicurati di aver installato correttamente
+# Make sure you installed correctly
 pip install -e .
 
-# Oppure usa python direttamente
+# Or use python directly
 python flutterator.py --help
 ```
 
 ### "Not a valid Flutter project"
 
 ```bash
-# Flutterator richiede pubspec.yaml e lib/
-# Assicurati di essere in un progetto Flutter valido
+# Flutterator requires pubspec.yaml and lib/
+# Make sure you're in a valid Flutter project
 ls pubspec.yaml lib/
 ```
 
-### "rich import error" nell'IDE
+### "rich import error" in IDE
 
-L'IDE potrebbe non riconoscere il virtual environment. Soluzione:
+The IDE might not recognize the virtual environment. Solution:
 1. `Cmd+Shift+P` → "Python: Select Interpreter"
-2. Seleziona `./venv/bin/python`
+2. Select `./venv/bin/python`
 
-### build_runner lento
+### build_runner slow
 
 ```bash
-# Usa --no-build per saltare build_runner
+# Use --no-build to skip build_runner
 flutterator add-domain --name todo --fields "title:string" --no-build
 flutterator add-component --name todo_list --type list --no-build
 
-# Esegui build_runner una volta alla fine
+# Run build_runner once at the end
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### Errori di compilazione Dart
+### Dart compilation errors
 
-Dopo aver generato codice, esegui:
+After generating code, run:
 
 ```bash
 flutter pub get
@@ -959,52 +1039,52 @@ dart run build_runner build --delete-conflicting-outputs
 
 ---
 
-## 🤝 Contribuire
+## 🤝 Contributing
 
-1. Fork del repository
-2. Crea branch: `git checkout -b feature/nuova-feature`
-3. Commit: `git commit -m 'Aggiunge nuova feature'`
-4. Push: `git push origin feature/nuova-feature`
-5. Apri Pull Request
+1. Fork the repository
+2. Create branch: `git checkout -b feature/new-feature`
+3. Commit: `git commit -m 'Add new feature'`
+4. Push: `git push origin feature/new-feature`
+5. Open Pull Request
 
-### Struttura del Progetto
+### Project Structure
 
 ```
 flutterator/
-├── flutterator.py              # CLI principale
+├── flutterator.py              # Main CLI
 ├── generators/
-│   ├── helpers/                # Funzioni helper
-│   │   ├── config.py           # Gestione configurazione
-│   │   └── project.py          # Validazione progetto
-│   └── static/templates/       # Template Jinja2
+│   ├── helpers/                # Helper functions
+│   │   ├── config.py           # Configuration management
+│   │   └── project.py          # Project validation
+│   └── static/templates/       # Jinja2 templates
 ├── tests/                      # Test suite
-└── docs/                       # Documentazione
+└── docs/                       # Documentation
 ```
 
 ---
 
-## 📄 Licenza
+## 📄 License
 
-MIT License - vedi [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
-## 👨‍💻 Autore
+## 👨‍💻 Author
 
 **Lorenzo Busi** - [GetAutomation](https://getautomation.it)
 
 ---
 
-## 🙏 Ringraziamenti
+## 🙏 Acknowledgments
 
 - [Click](https://click.palletsprojects.com/) - CLI framework
 - [Jinja2](https://jinja.palletsprojects.com/) - Template engine
 - [Rich](https://rich.readthedocs.io/) - Terminal formatting
 - [Flutter](https://flutter.dev/) - UI framework
-- [Reso Coder](https://resocoder.com/) - Ispirazione architettura DDD
+- [Reso Coder](https://resocoder.com/) - DDD architecture inspiration
 
 ---
 
 <p align="center">
-  <i>Generato con ❤️ da Flutterator</i>
+  <i>Generated with ❤️ by Flutterator</i>
 </p>
