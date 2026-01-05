@@ -2,6 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+{% if domain_model_name and domain_folder %}
+import 'package:[[project_name]]/[[domain_folder]]/[[domain_model_name]]/model/value_objects.dart';
+{% endif %}
 
 part '[[component_name]]_form_event.dart';
 part '[[component_name]]_form_state.dart';
@@ -12,7 +15,7 @@ class [[pascal_name]]FormBloc extends Bloc<[[pascal_name]]FormEvent, [[pascal_na
   [[pascal_name]]FormBloc() : super([[pascal_name]]FormState.initial()) {
 {% for field in field_list %}
 {% if field.name != 'id' %}
-    // on<[[field.name|title]]Changed>(_on[[field.name|title]]Changed);
+    on<[[field.pascal_name]]Changed>(_on[[field.pascal_name]]Changed);
 {% endif %}
 {% endfor %}
     on<Submit>(_onSubmit);
@@ -20,12 +23,12 @@ class [[pascal_name]]FormBloc extends Bloc<[[pascal_name]]FormEvent, [[pascal_na
 
 {% for field in field_list %}
 {% if field.name != 'id' %}
-  // void _on[[field.name|title]]Changed([[field.name|title]]Changed event, Emitter<[[pascal_name]]FormState> emit) {
-  //   emit(state.copyWith(
-  //     [[field.name]]: [[field.name|title]](event.[[field.name]]Str),
-  //     showErrorMessages: false,
-  //   ));
-  // }
+  void _on[[field.pascal_name]]Changed([[field.pascal_name]]Changed event, Emitter<[[pascal_name]]FormState> emit) {
+    emit(state.copyWith(
+      [[field.name]]: [[field.pascal_name]](event.[[field.name]]Str),
+      showErrorMessages: false,
+    ));
+  }
 {% endif %}
 {% endfor %}
 

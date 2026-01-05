@@ -1,0 +1,75 @@
+/*
+ * Form component widget template
+ * Generates a form widget with automatic TextField generation based on domain model fields
+ * - Automatic field generation from domain model
+ * - Validation based on ValueObjects
+ * - BLoC integration for state management
+ */
+
+import 'package:caravaggio_ui/caravaggio_ui.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:[[project_name]]/core/model/failures.dart';
+[[bloc_import]]
+
+class [[pascal_name]]Component extends StatelessWidget {
+  const [[pascal_name]]Component({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<[[bloc_name]], [[state_name]]>(
+      builder: (context, state) {
+        return Form(
+          autovalidateMode: state.showErrorMessages ? AutovalidateMode.always : AutovalidateMode.disabled,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+{% for field in field_list %}
+{% if field.name != 'id' %}
+                  CTextField.bordered(
+                    decoration: const CFieldDecoration(
+                      labelText: '[[field.label]]',
+                    ),
+                    onChanged: (String value) {
+                      context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(value));
+                    },
+                    validator: (_) {
+                      return context.read<[[bloc_name]]>().state.[[field.name]].value.fold(
+                            (ValueFailure<String> f) => f.toString(),
+                            (_) => null,
+                          );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+{% endif %}
+{% endfor %}
+                  CButton.elevated(
+                    radius: AppRadius.s,
+                    onPressed: state.isSubmitting ? null : () {
+                      context.read<[[bloc_name]]>().add(const [[pascal_name]]FormEvent.submit());
+                    },
+                    child: state.isSubmitting 
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : CText.label('Submit'),
+                  ),
+                  if (state.isSubmitting) ...<Widget>[
+                    const SizedBox(height: 8),
+                    const LinearProgressIndicator(value: null),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+

@@ -38,8 +38,8 @@ def create_component_form_layers(component_dir: Path, component_name: str, field
     presentation_dir = component_dir / "presentation"
     presentation_dir.mkdir(exist_ok=True)
     
-    # Create component widget
-    generate_component_widget_from_template(component_name, presentation_dir, project_name, 'form', import_prefix)
+    # Create component widget - pass field_list and domain info for form components
+    generate_form_widget_from_template(component_name, field_list, presentation_dir, project_name, import_prefix)
 
 
 def create_component_layers(component_dir: Path, component_name: str, project_name: str, folder: Optional[str], domain_model_name: Optional[str] = None, domain_folder: Optional[str] = None) -> None:
@@ -165,6 +165,41 @@ class {component_pascal}Bloc extends Bloc<{component_pascal}Event, {component_pa
     generate_component_widget_from_template(component_name, presentation_dir, project_name, 'single', import_prefix)
 
 
+def generate_form_widget_from_template(component_name: str, field_list: list[dict], presentation_dir: Path, project_name: str, import_prefix: str) -> None:
+    """Generate form component widget file using Jinja template
+    
+    Args:
+        component_name: Name of the component
+        field_list: List of field dictionaries
+        presentation_dir: Path to presentation directory
+        project_name: Name of the project
+        import_prefix: Import path prefix for the component
+    """
+    pascal_name = to_pascal_case(component_name)
+    bloc_name = f"{pascal_name}FormBloc"
+    state_name = f"{pascal_name}FormState"
+    bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_bloc.dart';"
+    
+    # Add pascal_name and label to each field for template use
+    processed_field_list = []
+    for field in field_list:
+        field_dict = dict(field)  # Create a copy
+        field_dict['pascal_name'] = to_pascal_case_preserve(field['name'])
+        # Generate label: convert snake_case to Title Case (e.g., "user_name" -> "User Name")
+        field_name = field['name']
+        field_dict['label'] = ' '.join(word.capitalize() for word in field_name.split('_'))
+        processed_field_list.append(field_dict)
+    
+    generate_file(project_name, presentation_dir, "component/component_form_widget_template.jinja", f"{component_name}_component.dart", {
+        "component_name": component_name,
+        "pascal_name": pascal_name,
+        "bloc_name": bloc_name,
+        "state_name": state_name,
+        "bloc_import": bloc_import,
+        "field_list": processed_field_list
+    })
+
+
 def generate_component_widget_from_template(component_name: str, presentation_dir: Path, project_name: str, component_type: str, import_prefix: str) -> None:
     """Generate component widget file using Jinja template
     
@@ -178,19 +213,9 @@ def generate_component_widget_from_template(component_name: str, presentation_di
     pascal_name = to_pascal_case(component_name)
     
     if component_type == 'form':
-        bloc_name = f"{pascal_name}FormBloc"
-        state_name = f"{pascal_name}FormState"
-        bloc_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_bloc.dart';"
-        state_import = f"import 'package:{project_name}/{import_prefix}/application/{component_name}_form_state.dart';"
-        generate_file(project_name, presentation_dir, "component/component_widget_template.jinja", f"{component_name}_component.dart", {
-            "component_name": component_name,
-            "pascal_name": pascal_name,
-            "is_form": True,
-            "bloc_name": bloc_name,
-            "state_name": state_name,
-            "bloc_import": bloc_import,
-            "state_import": state_import
-        })
+        # Form components now use generate_form_widget_from_template
+        # This should not be called for form components anymore
+        raise ValueError("Use generate_form_widget_from_template for form components")
     elif component_type == 'list':
         # List component uses its own template
         generate_file(project_name, presentation_dir, "component/component_list_widget_template.jinja", f"{component_name}_component.dart", {
@@ -279,12 +304,17 @@ def generate_form_bloc_from_template(component_name: str, field_list: list[dict]
     """
     pascal_name = to_pascal_case(component_name)
     
-    # If using domain model, we still use the template but note that
-    # the form bloc will work with the domain model fields
+    # Add pascal_name to each field for template use
+    processed_field_list = []
+    for field in field_list:
+        field_dict = dict(field)  # Create a copy
+        field_dict['pascal_name'] = to_pascal_case_preserve(field['name'])
+        processed_field_list.append(field_dict)
+    
     generate_file(project_name, app_dir, "component/component_form_bloc_template.jinja", f"{component_name}_form_bloc.dart", {
         "component_name": component_name,
         "pascal_name": pascal_name,
-        "field_list": field_list,
+        "field_list": processed_field_list,
         "domain_model_name": domain_model_name,
         "domain_folder": domain_folder
     })
