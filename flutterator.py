@@ -776,13 +776,46 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     
     component_name = name.lower().replace(' ', '_')
 
-    # Use folder from CLI, config, or default to features/components
+    # Select feature/folder for component
     if folder is None:
-        if cfg.component_folder:
-            folder = cfg.component_folder
+        # Find available features/folders in lib/features
+        features_dir = lib_path / "features"
+        available_features = []
+        if features_dir.exists():
+            # Get all directories in features/
+            for item in features_dir.iterdir():
+                if item.is_dir():
+                    feature_name = item.name
+                    available_features.append(feature_name)
+        
+        # Sort features and put "components" first if it exists
+        available_features = sorted(available_features, key=lambda x: (x != "components", x))
+        
+        if not dry_run and available_features:
+            console.print("[bold cyan]Select feature/folder for component:[/bold cyan]")
+            for i, feat in enumerate(available_features):
+                default_mark = " (default)" if feat == "components" else ""
+                console.print(f"  {i}. {feat}{default_mark}")
+            console.print()
+            
+            while True:
+                try:
+                    choice_str = click.prompt(f"Feature (0-{len(available_features)-1})", default="0", type=str)
+                    choice = int(choice_str) if choice_str else 0
+                    if 0 <= choice < len(available_features):
+                        selected_feature = available_features[choice]
+                        folder = f"features/{selected_feature}"
+                        break
+                    else:
+                        console.print(f"[red]Invalid choice. Please select 0-{len(available_features)-1}.[/red]")
+                except ValueError:
+                    console.print("[red]Invalid input. Please enter a number.[/red]")
         else:
-            # Default to features/components if not specified
-            folder = "features/components"
+            # Default to features/components if not specified or in dry-run
+            if cfg.component_folder:
+                folder = cfg.component_folder
+            else:
+                folder = "features/components"
     
     # Determine component type - use parameter if provided via CLI, otherwise ask interactively
     if type:
