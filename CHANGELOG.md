@@ -9,6 +9,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2025-01-XX
+
+### ✨ Features
+
+#### Input Validation Improvements
+- **ADDED**: Robust validation for field names and types in `add-domain` command
+- **ADDED**: Validation for Dart reserved keywords in field names
+- **ADDED**: Validation for valid Dart types (primitives, collections, domain models)
+- **ADDED**: Better error messages with suggestions when validation fails
+- **ADDED**: Support for composite model names (e.g., `NoteItem`) - maintains PascalCase for Dart classes while using snake_case for folder names
+
+#### Complex Type Support
+- **ADDED**: Support for complex types like `List<ModelName>` where `ModelName` is an existing domain model
+- **ADDED**: Automatic validation that referenced models exist before allowing their use
+- **ADDED**: Helpful error messages listing available models when a model name is incorrect
+- **ADDED**: Support for both PascalCase (`List<TodoItem>`) and snake_case (`List<todo_item>`) input formats
+
+#### Form Component Generation
+- **ADDED**: Automatic form generation based on domain model fields
+- **ADDED**: Form component automatically includes all fields from the domain model
+- **ADDED**: Feature folder selection when creating components (default: `components`)
+
+### 🐛 Fixes
+
+#### Domain Entity Generation
+- **FIXED**: Entity class names now correctly use PascalCase (e.g., `TodoItem`) while folder names use snake_case (e.g., `todo_item`)
+- **FIXED**: Part statements in generated files now use correct snake_case format
+- **FIXED**: DTO fields for `List<ModelType>` now correctly generate as `List<ModelTypeDto>`
+- **FIXED**: Missing imports for referenced models in both entity and DTO classes
+- **FIXED**: Mapper now correctly handles `List<Model>` conversions using referenced mappers
+- **FIXED**: Mapper constructor now properly injects dependencies for referenced mappers
+
+#### Template Fixes
+- **FIXED**: Removed commented-out sections in generated form component code
+- **FIXED**: Jinja placeholders now correctly processed (changed from `{{ }}` to `[[ ]]`)
+- **FIXED**: Service template now uses correct kebab-case for API routes
+- **FIXED**: Repository interface names now use correct PascalCase
+
+### 🔧 Improvements
+
+#### Code Generation
+- **IMPROVED**: Better handling of primitive types vs domain models in entity generation
+- **IMPROVED**: Automatic import generation for referenced domain models
+- **IMPROVED**: Mapper generation now handles complex types with proper dependency injection
+- **IMPROVED**: Better separation between ValueObjects (for primitives) and direct types (for domain models)
+
+#### Developer Experience
+- **IMPROVED**: Interactive mode now provides helpful tips for field type input
+- **IMPROVED**: Better error messages when creating domain entities with invalid field types
+- **IMPROVED**: Validation now checks for available models and suggests correct names
+
+---
+
 ## [3.0.2] - 2025-01-XX
 
 ### 🗑️ Deprecated Commands Removed from CLI

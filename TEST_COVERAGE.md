@@ -1,7 +1,7 @@
 # 📊 Test Coverage Report
 
 **Date**: January 2025  
-**Version**: 3.0.2  
+**Version**: 3.1.0  
 **Total Tests**: 70  
 **Status**: ✅ All passing
 
@@ -244,4 +244,4 @@ E2E tests verify that the generated Dart code:
 ---
 
 *Report updated: January 2025*  
-*Project version: 3.0.2*
+*Project version: 3.1.0*
