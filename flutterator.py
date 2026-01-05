@@ -37,6 +37,13 @@ from generators.helpers import (
     create_component_layers,
     create_component_form_layers,
     create_component_list_layers,
+    # Validation
+    validate_entity_name,
+    validate_field_name,
+    validate_field_type,
+    parse_fields_string,
+    pascal_case_to_snake_case,
+    to_pascal_case_preserve,
     # Configuration
     FlutteratorConfig,
     load_config,
@@ -421,46 +428,90 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
             sys.exit(1)
         name = click.prompt("Domain entity name")
     
-    entity_name = name.lower().replace(' ', '_')
+    # Validate entity name
+    is_valid, error_msg = validate_entity_name(name)
+    if not is_valid:
+        print_error(error_msg)
+        sys.exit(1)
+    
+    # Handle entity name: support PascalCase (e.g., "NoteItem") and snake_case (e.g., "note_item")
+    # - PascalCase names: use snake_case for folder, PascalCase for class
+    # - snake_case names: use snake_case for folder, PascalCase for class
+    if name and name[0].isupper() and '_' not in name:
+        # PascalCase input (e.g., "NoteItem")
+        entity_folder_name = pascal_case_to_snake_case(name)
+        entity_class_name = name  # Keep original PascalCase
+    else:
+        # snake_case or other format
+        entity_folder_name = name.lower().replace(' ', '_').replace('-', '_')
+        entity_class_name = to_pascal_case_preserve(entity_folder_name)
     
     # Use folder from CLI or config
     if folder is None:
         folder = cfg.domain_folder if cfg.domain_folder else "domain"
     
-    # Parse fields
+    # Parse and validate fields
     field_list = []
     if fields:
-        # Parse fields from string: "name:type,name:type"
-        for field_str in fields.split(','):
-            field_str = field_str.strip()
-            if ':' not in field_str:
-                print_error(f"Invalid field format: {field_str}. Expected format: name:type")
-                sys.exit(1)
-            field_name, field_type = field_str.split(':', 1)
-            field_list.append({"name": field_name.strip(), "type": field_type.strip()})
+        try:
+            parsed_fields = parse_fields_string(fields)
+            for field_name, field_type in parsed_fields:
+                # Validate field name
+                is_valid_name, name_error = validate_field_name(field_name)
+                if not is_valid_name:
+                    print_error(f"Invalid field name '{field_name}': {name_error}")
+                    sys.exit(1)
+                
+                # Validate field type
+                is_valid_type, type_error, normalized_type = validate_field_type(field_type, lib_path, folder)
+                if not is_valid_type:
+                    print_error(f"Invalid field type '{field_type}' for field '{field_name}': {type_error}")
+                    sys.exit(1)
+                
+                field_list.append({"name": field_name, "type": normalized_type})
+        except ValueError as e:
+            print_error(str(e))
+            sys.exit(1)
     elif not dry_run:
         # Interactive mode for fields
         console.print("[bold cyan]Adding fields interactively. Type 'done' when finished.[/bold cyan]")
+        console.print("[dim]Tip: Use PascalCase for model names (e.g., NoteItem), List<ModelName> for lists[/dim]")
         while True:
             field_name = click.prompt("Field name (or 'done')", default="done")
             if field_name.lower() == 'done':
                 break
-            field_type = click.prompt("Field type", default="string", type=click.Choice(['string', 'int', 'double', 'bool', 'datetime', 'list', 'map'], case_sensitive=False))
-            field_list.append({"name": field_name.strip(), "type": field_type.strip()})
+            
+            # Validate field name
+            is_valid_name, name_error = validate_field_name(field_name)
+            if not is_valid_name:
+                print_error(f"Invalid field name: {name_error}")
+                continue
+            
+            field_type = click.prompt("Field type (e.g., string, int, List<ModelName>)", default="string")
+            
+            # Validate field type
+            is_valid_type, type_error, normalized_type = validate_field_type(field_type, lib_path, folder)
+            if not is_valid_type:
+                print_error(f"Invalid field type: {type_error}")
+                continue
+            
+            field_list.append({"name": field_name, "type": normalized_type})
     
     # Ensure id field exists (add if not present)
     has_id = any(field['name'] == 'id' for field in field_list)
     if not has_id:
         field_list.insert(0, {"name": "id", "type": "string"})
     
-    # Build base path for display
-    base_path = f"lib/{folder}/{entity_name}"
+    # Build base path for display (use folder name for paths)
+    base_path = f"lib/{folder}/{entity_folder_name}"
     
     # Dry-run mode: show what would be created
     if dry_run:
         print_dry_run_header()
-        console.print(f"[bold]📦 Would add domain entity:[/bold] [cyan]{entity_name}[/cyan]")
+        console.print(f"[bold]📦 Would add domain entity:[/bold] [cyan]{entity_class_name}[/cyan]")
         console.print(f"   [dim]Domain folder:[/dim] [blue]{folder}[/blue]")
+        console.print(f"   [dim]Class name:[/dim] [blue]{entity_class_name}[/blue]")
+        console.print(f"   [dim]Folder name:[/dim] [blue]{entity_folder_name}[/blue]")
         if field_list:
             fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
             console.print(f"   [dim]Fields:[/dim] {fields_str}")
@@ -468,49 +519,52 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
         
         print_dry_run_tree(base_path, [
             ("model", [
-                f"{entity_name}.dart",
-                f"{entity_name}_failure.dart",
-                f"i_{entity_name}_repository.dart",
+                f"{entity_folder_name}.dart",
+                f"{entity_folder_name}_failure.dart",
+                f"i_{entity_folder_name}_repository.dart",
                 "value_objects.dart",
                 "value_validators.dart"
             ]),
             ("infrastructure", [
-                f"{entity_name}_dto.dart",
-                f"{entity_name}_service.dart",
-                f"{entity_name}_mapper.dart",
-                f"{entity_name}_repository.dart"
+                f"{entity_folder_name}_dto.dart",
+                f"{entity_folder_name}_service.dart",
+                f"{entity_folder_name}_mapper.dart",
+                f"{entity_folder_name}_repository.dart"
             ])
         ])
         print_dry_run_footer()
         return
     
-    console.print(f"[bold cyan]📦 Adding domain entity: {entity_name}[/bold cyan]")
+    console.print(f"[bold cyan]📦 Adding domain entity: {entity_class_name}[/bold cyan]")
     console.print(f"   [dim]Domain folder:[/dim] [blue]{folder}[/blue]")
+    console.print(f"   [dim]Class name:[/dim] [blue]{entity_class_name}[/blue]")
+    console.print(f"   [dim]Folder name:[/dim] [blue]{entity_folder_name}[/blue]")
     if field_list:
         fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
         console.print(f"   [dim]Fields:[/dim] {fields_str}")
     
-    # Create domain directory structure
-    domain_dir = lib_path / folder / entity_name
+    # Create domain directory structure (use folder name for directory)
+    domain_dir = lib_path / folder / entity_folder_name
     domain_dir.mkdir(parents=True, exist_ok=True)
     
     # Create domain entity layers (model + infrastructure only)
-    create_domain_entity_layers(domain_dir, entity_name, field_list, project_name, folder)
+    # Pass both folder_name (for paths) and class_name (for class names)
+    create_domain_entity_layers(domain_dir, entity_folder_name, entity_class_name, field_list, project_name, folder)
     
     # Show created structure
-    print_created_structure(entity_name, [
+    print_created_structure(entity_folder_name, [
         ("model", [
-            f"{entity_name}.dart",
-            f"{entity_name}_failure.dart",
-            f"i_{entity_name}_repository.dart",
+            f"{entity_folder_name}.dart",
+            f"{entity_folder_name}_failure.dart",
+            f"i_{entity_folder_name}_repository.dart",
             "value_objects.dart",
             "value_validators.dart"
         ]),
         ("infrastructure", [
-            f"{entity_name}_dto.dart",
-            f"{entity_name}_service.dart",
-            f"{entity_name}_mapper.dart",
-            f"{entity_name}_repository.dart"
+            f"{entity_folder_name}_dto.dart",
+            f"{entity_folder_name}_service.dart",
+            f"{entity_folder_name}_mapper.dart",
+            f"{entity_folder_name}_repository.dart"
         ])
     ])
     
@@ -520,7 +574,7 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
     elif no_build:
         print_info("Skipping flutter pub get and build_runner (--no-build)")
     
-    print_success(f"Domain entity '{entity_name}' added successfully!")
+    print_success(f"Domain entity '{entity_class_name}' added successfully!")
 
 
 # @cli.command()  # Disabled - use add-domain + add-component --type list instead

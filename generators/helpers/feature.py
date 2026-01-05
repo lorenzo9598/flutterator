@@ -1,7 +1,8 @@
 """Feature generation functions"""
 
+import re
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict
 from generators.templates.copier import generate_file
 from .utils import map_field_type, to_pascal_case, to_pascal_case_preserve
 
@@ -117,22 +118,30 @@ import 'package:{project_name}/{import_prefix}/model/value_validators.dart';
 """
     
     # Specific Value Objects for each field (excluding 'id' since we have UniqueId)
+    # Also skip complex types (List<T>, domain models) as they don't use ValueObjects
     field_vos = []
     for field in field_list:
         field_name = field['name']
+        field_type = field['type']
+        
         # Skip 'id' field since we have UniqueId
         if field_name == 'id':
             continue
+        
+        # Skip complex types (List<T>) and domain models (PascalCase starting with uppercase)
+        # These types are used directly, not as ValueObjects
+        if '<' in field_type or (field_type and field_type[0].isupper() and field_type not in ['String', 'DateTime']):
+            continue
             
-        field_type = map_field_type(field['type'])
+        mapped_field_type = map_field_type(field_type)
         capitalized_name = to_pascal_case_preserve(field_name)
         
         field_vo = f"""
-class {capitalized_name} extends ValueObject<{field_type}> {{
+class {capitalized_name} extends ValueObject<{mapped_field_type}> {{
   @override
-  final Either<ValueFailure<{field_type}>, {field_type}> value;
+  final Either<ValueFailure<{mapped_field_type}>, {mapped_field_type}> value;
 
-  factory {capitalized_name}({field_type} input) {{
+  factory {capitalized_name}({mapped_field_type} input) {{
     return {capitalized_name}._(validate{capitalized_name}(input));
   }}
 
@@ -235,6 +244,65 @@ def find_domain_models(lib_path: Path, domain_folder: str) -> List[str]:
                     models.append(item.name)
     
     return sorted(models)
+
+
+def get_domain_model_class_name(lib_path: Path, domain_folder: str, folder_name: str) -> Optional[str]:
+    """Get the class name (PascalCase) from a domain model entity file.
+    
+    Args:
+        lib_path: Path to lib/ directory
+        domain_folder: Name of domain folder (e.g., 'domain')
+        folder_name: Folder name of the model (snake_case, e.g., 'todo_item')
+    
+    Returns:
+        Class name in PascalCase (e.g., 'TodoItem') or None if not found
+    """
+    entity_file = lib_path / domain_folder / folder_name / "model" / f"{folder_name}.dart"
+    
+    if not entity_file.exists():
+        return None
+    
+    try:
+        content = entity_file.read_text()
+        # Look for class definition: abstract class ClassName with
+        match = re.search(r'abstract class (\w+)\s+with', content)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    
+    return None
+
+
+def find_domain_models_with_class_names(lib_path: Path, domain_folder: str) -> Dict[str, str]:
+    """Find all available domain models with their class names.
+    
+    Returns a dictionary mapping folder names (snake_case) to class names (PascalCase).
+    
+    Args:
+        lib_path: Path to lib/ directory
+        domain_folder: Name of domain folder (e.g., 'domain')
+    
+    Returns:
+        Dictionary mapping folder names to class names (e.g., {'todo_item': 'TodoItem'})
+    """
+    domain_path = lib_path / domain_folder
+    
+    if not domain_path.exists():
+        return {}
+    
+    models_map = {}
+    for item in domain_path.iterdir():
+        if item.is_dir():
+            model_dir = item / "model"
+            if model_dir.exists() and model_dir.is_dir():
+                entity_file = model_dir / f"{item.name}.dart"
+                if entity_file.exists():
+                    class_name = get_domain_model_class_name(lib_path, domain_folder, item.name)
+                    if class_name:
+                        models_map[item.name] = class_name
+    
+    return models_map
 
 
 def create_presentation_feature_layers(feature_dir: Path, feature_name: str, domain_model_name: str, domain_folder: str, project_name: str, folder: Optional[str]) -> None:

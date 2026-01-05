@@ -9,34 +9,39 @@
 
 import 'package:injectable/injectable.dart';
 import 'package:[[project_name]]/core/model/value_objects.dart';
-import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]].dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]].dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/value_objects.dart';
-import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_dto.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
+[[mapper_imports]]
 
-/// Mapper for converting between [[entity_name.capitalize()]] DTO and Domain Entity
+/// Mapper for converting between [[entity_name]] DTO and Domain Entity
 @lazySingleton
-class [[entity_name.capitalize()]]Mapper {
+class [[entity_name]]Mapper {
+[[mapper_fields]]
+
+  [[entity_name]]Mapper([[mapper_constructor_params]]);
+
   /// Converts DTO to Domain Entity
-  [[entity_name.capitalize()]] toDomain([[entity_name.capitalize()]]Dto dto) {
-    return [[entity_name.capitalize()]](
+  [[entity_name]] toDomain([[entity_name]]Dto dto) {
+    return [[entity_name]](
 [[from_dto_fields]]
     );
   }
 
   /// Converts Domain Entity to DTO
-  [[entity_name.capitalize()]]Dto toDto([[entity_name.capitalize()]] entity) {
-    return [[entity_name.capitalize()]]Dto(
+  [[entity_name]]Dto toDto([[entity_name]] entity) {
+    return [[entity_name]]Dto(
 [[to_dto_fields]]
     );
   }
 
   /// Converts list of DTOs to list of Domain Entities
-  List<[[entity_name.capitalize()]]> toDomainList(List<[[entity_name.capitalize()]]Dto> dtos) {
+  List<[[entity_name]]> toDomainList(List<[[entity_name]]Dto> dtos) {
     return dtos.map((dto) => toDomain(dto)).toList();
   }
 
   /// Converts list of Domain Entities to list of DTOs
-  List<[[entity_name.capitalize()]]Dto> toDtoList(List<[[entity_name.capitalize()]]> entities) {
+  List<[[entity_name]]Dto> toDtoList(List<[[entity_name]]> entities) {
     return entities.map((entity) => toDto(entity)).toList();
   }
 }

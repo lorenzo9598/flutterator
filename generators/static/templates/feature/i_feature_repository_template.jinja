@@ -12,10 +12,10 @@
 import 'package:dartz/dartz.dart';
 [[i_repo_import]]
 
-abstract class I[[feature_name.capitalize()]]Repository {
-  Future<Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>>> getAll();
-  Future<Either<[[feature_name.capitalize()]]Failure, [[feature_name.capitalize()]]>> getById(String id);
-  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> create([[feature_name.capitalize()]] item);
-  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> update([[feature_name.capitalize()]] item);
-  Future<Either<[[feature_name.capitalize()]]Failure, Unit>> delete(String id);
+abstract class I[[feature_name]]Repository {
+  Future<Either<[[feature_name]]Failure, List<[[feature_name]]>>> getAll();
+  Future<Either<[[feature_name]]Failure, [[feature_name]]>> getById(String id);
+  Future<Either<[[feature_name]]Failure, Unit>> create([[feature_name]] item);
+  Future<Either<[[feature_name]]Failure, Unit>> update([[feature_name]] item);
+  Future<Either<[[feature_name]]Failure, Unit>> delete(String id);
 }

@@ -11,73 +11,73 @@
 
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]].dart';
-import 'package:[[project_name]]/[[import_prefix]]/model/[[entity_name]]_failure.dart';
-import 'package:[[project_name]]/[[import_prefix]]/model/i_[[entity_name]]_repository.dart';
-import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_service.dart';
-import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[entity_name]]_mapper.dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]].dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]]_failure.dart';
+import 'package:[[project_name]]/[[import_prefix]]/model/i_[[file_name]]_repository.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_service.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_mapper.dart';
 
-@Injectable(as: I[[entity_name.capitalize()]]Repository)
-class [[entity_name.capitalize()]]Repository implements I[[entity_name.capitalize()]]Repository {
-  final [[entity_name.capitalize()]]Service _service;
-  final [[entity_name.capitalize()]]Mapper _mapper;
+@Injectable(as: I[[entity_name]]Repository)
+class [[entity_name]]Repository implements I[[entity_name]]Repository {
+  final [[entity_name]]Service _service;
+  final [[entity_name]]Mapper _mapper;
 
-  [[entity_name.capitalize()]]Repository(
+  [[entity_name]]Repository(
     this._service,
     this._mapper,
   );
 
   @override
-  Future<Either<[[entity_name.capitalize()]]Failure, List<[[entity_name.capitalize()]]>>> getAll() async {
+  Future<Either<[[entity_name]]Failure, List<[[entity_name]]>>> getAll() async {
     try {
       final dtos = await _service.getAll();
       final domain = _mapper.toDomainList(dtos);
       return right(domain);
     } catch (e) {
-      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+      return left(const [[entity_name]]Failure.unexpected());
     }
   }
 
   @override
-  Future<Either<[[entity_name.capitalize()]]Failure, [[entity_name.capitalize()]]>> getById(String id) async {
+  Future<Either<[[entity_name]]Failure, [[entity_name]]>> getById(String id) async {
     try {
       final dto = await _service.getById(id);
       final domain = _mapper.toDomain(dto);
       return right(domain);
     } catch (e) {
-      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+      return left(const [[entity_name]]Failure.unexpected());
     }
   }
 
   @override
-  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> create([[entity_name.capitalize()]] item) async {
+  Future<Either<[[entity_name]]Failure, Unit>> create([[entity_name]] item) async {
     try {
       final dto = _mapper.toDto(item);
       await _service.create(dto);
       return right(unit);
     } catch (e) {
-      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+      return left(const [[entity_name]]Failure.unexpected());
     }
   }
 
   @override
-  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> update([[entity_name.capitalize()]] item) async {
+  Future<Either<[[entity_name]]Failure, Unit>> update([[entity_name]] item) async {
     try {
       final dto = _mapper.toDto(item);
       await _service.update(item.id.getOrCrash(), dto);
       return right(unit);
     } catch (e) {
-      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+      return left(const [[entity_name]]Failure.unexpected());
     }
   }
 
   @override
-  Future<Either<[[entity_name.capitalize()]]Failure, Unit>> delete(String id) async {
+  Future<Either<[[entity_name]]Failure, Unit>> delete(String id) async {
     try {
       await _service.delete(id);
       return right(unit);
     } catch (e) {
-      return left(const [[entity_name.capitalize()]]Failure.unexpected());
+      return left(const [[entity_name]]Failure.unexpected());
     }
   }
 }

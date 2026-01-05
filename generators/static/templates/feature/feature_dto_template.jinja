@@ -10,16 +10,17 @@
  */
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+[[dto_imports]]
 
-part '[[feature_name]]_dto.freezed.dart';
-part '[[feature_name]]_dto.g.dart';
+part '[[file_name]]_dto.freezed.dart';
+part '[[file_name]]_dto.g.dart';
 
 @freezed
-abstract class [[feature_name.capitalize()]]Dto with _$[[feature_name.capitalize()]]Dto {
-  const factory [[feature_name.capitalize()]]Dto({
+abstract class [[feature_name]]Dto with _$[[feature_name]]Dto {
+  const factory [[feature_name]]Dto({
 [[fields]]
-  }) = _[[feature_name.capitalize()]]Dto;
+  }) = _[[feature_name]]Dto;
 
-  factory [[feature_name.capitalize()]]Dto.fromJson(Map<String, dynamic> json) =>
-      _$[[feature_name.capitalize()]]DtoFromJson(json);
+  factory [[feature_name]]Dto.fromJson(Map<String, dynamic> json) =>
+      _$[[feature_name]]DtoFromJson(json);
 }

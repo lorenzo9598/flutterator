@@ -12,12 +12,12 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part '[[feature_name]]_failure.freezed.dart';
+part '[[file_name]]_failure.freezed.dart';
 
 @freezed
-abstract class [[feature_name.capitalize()]]Failure with _$[[feature_name.capitalize()]]Failure {
-  const factory [[feature_name.capitalize()]]Failure.unexpected() = _Unexpected;
-  const factory [[feature_name.capitalize()]]Failure.insufficientPermission() = _InsufficientPermission;
-  const factory [[feature_name.capitalize()]]Failure.unableToUpdate() = _UnableToUpdate;
-  const factory [[feature_name.capitalize()]]Failure.notFound() = _NotFound;
+abstract class [[feature_name]]Failure with _$[[feature_name]]Failure {
+  const factory [[feature_name]]Failure.unexpected() = _Unexpected;
+  const factory [[feature_name]]Failure.insufficientPermission() = _InsufficientPermission;
+  const factory [[feature_name]]Failure.unableToUpdate() = _UnableToUpdate;
+  const factory [[feature_name]]Failure.notFound() = _NotFound;
 }
