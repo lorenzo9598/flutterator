@@ -46,6 +46,9 @@ from generators.helpers import (
     PROJECT_CONFIG_FILE,
 )
 
+# Version
+VERSION = "3.0.2"
+
 # Rich console for colored output
 console = Console()
 
@@ -143,6 +146,7 @@ def run_flutter_commands(project_path: Path) -> None:
 
 
 @click.group()
+@click.version_option(version=VERSION, prog_name="Flutterator", message="%(prog)s %(version)s")
 def cli():
     """
     🚀 Flutterator - CLI to create and manage Flutter projects with DDD architecture.
