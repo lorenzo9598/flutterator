@@ -1,26 +1,26 @@
 {% if has_login %}
-import 'package:[[project_name]]/features/auth/presentation/login_screen.dart';
+import 'package:[[project_name]]/features/auth/presentation/login_page.dart';
 {% endif %}
-import 'package:[[project_name]]/features/home/home_screen.dart';
+import 'package:[[project_name]]/features/home/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:[[project_name]]/features/splash/splash_screen.dart';
+import 'package:[[project_name]]/features/splash/splash_page.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
 {% if has_login %}
     GoRoute(
-        path: LoginScreen.routeName,
-        builder: (BuildContext context, GoRouterState state) => const LoginScreen(),
+        path: LoginPage.routeName,
+        builder: (BuildContext context, GoRouterState state) => const LoginPage(),
     ),
 {% endif %}
     GoRoute(
-      path: HomeScreen.routeName,
-      builder: (BuildContext context, GoRouterState state) => const HomeScreen(),
+      path: HomePage.routeName,
+      builder: (BuildContext context, GoRouterState state) => const HomePage(),
     ),
     GoRoute(
-      path: SplashScreen.routeName,
-      builder: (BuildContext context, GoRouterState state) => const SplashScreen(),
+      path: SplashPage.routeName,
+      builder: (BuildContext context, GoRouterState state) => const SplashPage(),
     ),
   ],
 );

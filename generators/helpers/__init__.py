@@ -32,11 +32,11 @@ from .component import (
 )
 from .navigation import (
     create_drawer_page,
-    update_home_screen_with_drawer,
+    update_home_page_with_drawer,
     create_drawer_widget,
     update_router_for_drawer_item,
     create_bottom_nav_page,
-    update_home_screen_with_bottom_nav,
+    update_home_page_with_bottom_nav,
     create_bottom_nav_widget,
 )
 from .page import generate_page_file, update_router

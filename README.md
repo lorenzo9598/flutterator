@@ -232,10 +232,10 @@ my_app/
 │   ├── features/               # Features (use cases)
 │   │   ├── home/
 │   │   │   └── presentation/
-│   │   │       └── home_screen.dart
+│   │   │       └── home_page.dart
 │   │   └── splash/
 │   │       └── presentation/
-│   │           └── splash_screen.dart
+│   │           └── splash_page.dart
 │   ├── main.dart              # Entry point
 │   ├── injection.dart         # Dependency injection setup
 │   └── router.dart            # Routing with auto_route
@@ -581,7 +581,7 @@ flutterator add-drawer-item --name help --dry-run
 
 1. ✅ Crea `lib/<nome>/presentation/<nome>_page.dart`
 2. ✅ Crea/Aggiorna `lib/core/presentation/app_drawer.dart`
-3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge drawer)
+3. ✅ Aggiorna `lib/features/home/home_page.dart` (aggiunge drawer)
 4. ✅ Aggiorna `lib/router.dart`
 
 -->
@@ -647,7 +647,7 @@ flutterator add-bottom-nav-item --name profile
 
 1. ✅ Crea `lib/features/home/<nome>_screen.dart`
 2. ✅ Crea/Aggiorna `lib/core/presentation/bottom_nav_bar.dart`
-3. ✅ Aggiorna `lib/features/home/home_screen.dart` (aggiunge BottomNavigationBar)
+3. ✅ Aggiorna `lib/features/home/home_page.dart` (aggiunge BottomNavigationBar)
 
 -->
 ---
@@ -685,8 +685,8 @@ flutterator list
 ╰──────────────────────╯
 
 📄 Pages:
-   /home          → HomeScreen        (lib/features/home/home_screen.dart)
-   /              → SplashScreen      (lib/features/splash/splash_screen.dart)
+   /home          → HomePage        (lib/features/home/home_page.dart)
+   /              → SplashPage      (lib/features/splash/splash_page.dart)
    /settings      → SettingsPage     (lib/features/settings/settings_page.dart)
 
 📦 Domain Models:
@@ -924,7 +924,7 @@ lib/
 │   │   │   ├── auth_event.dart
 │   │   │   └── auth_state.dart
 │   │   └── presentation/        # 🎨 PRESENTATION LAYER
-│   │       └── login_screen.dart
+│   │       └── login_page.dart
 │   │
 │   └── notes/                    # Example feature "note management"
 │       │                          # (uses domain/note)

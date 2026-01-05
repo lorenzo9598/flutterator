@@ -8,7 +8,7 @@ def generate_files(project_name: str, lib_path: Path):
     generate_infrastructure(project_name, lib_path)
 
 def generate_presentation(project_name: str, lib_path: Path):
-    generate_file(project_name, lib_path, "auth/presentation/login_screen_template.jinja", "features/auth/presentation/login_screen.dart")
+    generate_file(project_name, lib_path, "auth/presentation/login_screen_template.jinja", "features/auth/presentation/login_page.dart")
 
 def generate_model(project_name: str, lib_path: Path):
     # Domain entities (shared)
@@ -28,7 +28,6 @@ def generate_application(project_name: str, lib_path: Path):
 def generate_infrastructure(project_name: str, lib_path: Path):
     # Domain entities (shared)
     generate_file(project_name, lib_path, "auth/infrastructure/auth_facade_template.jinja", "domain/auth/infrastructure/auth_facade.dart")
-    generate_file(project_name, lib_path, "auth/infrastructure/firebase_user_mapper_template.jinja", "domain/auth/infrastructure/firebase_user_mapper.dart")
     generate_file(project_name, lib_path, "auth/infrastructure/user_profile_repository_template.jinja", "domain/auth/infrastructure/user_profile_repository.dart")
     generate_file(project_name, lib_path, "auth/infrastructure/user_profile_mapper_template.jinja", "domain/auth/infrastructure/user_profile_mapper.dart")
     generate_file(project_name, lib_path, "auth/infrastructure/user_profile_dto_template.jinja", "domain/auth/infrastructure/user_profile_dto.dart")

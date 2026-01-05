@@ -29,10 +29,10 @@ from generators.helpers import (
     find_domain_models,
     get_model_fields_from_domain,
     create_drawer_page,
-    update_home_screen_with_drawer,
+    update_home_page_with_drawer,
     create_drawer_widget,
     create_bottom_nav_page,
-    update_home_screen_with_bottom_nav,
+    update_home_page_with_bottom_nav,
     create_bottom_nav_widget,
     create_component_layers,
     create_component_form_layers,
@@ -54,7 +54,7 @@ from generators.helpers import (
 )
 
 # Version
-VERSION = "3.1.0"
+VERSION = "3.1.1"
 
 # Rich console for colored output
 console = Console()
@@ -614,7 +614,7 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     Creates/Updates:
       • lib/features/<name>/<name>_page.dart
       • lib/core/presentation/app_drawer.dart
-      • lib/features/home/home_screen.dart (adds drawer)
+      • lib/features/home/home_page.dart (adds drawer)
       • lib/router.dart (new route)
     
     \b
@@ -645,7 +645,7 @@ def add_drawer_item(name, project_path, dry_run, no_build):
         console.print()
         console.print("[bold]📝 Would update/create:[/bold]")
         console.print("   [cyan]├── lib/router.dart[/cyan]")
-        console.print("   [cyan]├── lib/features/home/home_screen.dart[/cyan]")
+        console.print("   [cyan]├── lib/features/home/home_page.dart[/cyan]")
         console.print("   [cyan]└── lib/core/presentation/app_drawer.dart[/cyan]")
         print_dry_run_footer()
         return
@@ -662,14 +662,14 @@ def add_drawer_item(name, project_path, dry_run, no_build):
     create_drawer_page(project_dir, drawer_item_name, project_name)
     
     # Update home screen to include drawer
-    update_home_screen_with_drawer(project_dir, project_name)
+    update_home_page_with_drawer(project_dir, project_name)
     
     # Create drawer widget if it doesn't exist
     create_drawer_widget(project_dir, drawer_item_name, project_name)
     
     print_created_structure(drawer_item_name, [
         ("presentation", [f"{drawer_item_name}_page.dart"])
-    ], ["lib/router.dart", "lib/features/home/home_screen.dart", "lib/core/presentation/app_drawer.dart"])
+    ], ["lib/router.dart", "lib/features/home/home_page.dart", "lib/core/presentation/app_drawer.dart"])
     
     print_success(f"Drawer item '{drawer_item_name}' added successfully!")
 
@@ -689,7 +689,7 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     Creates/Updates:
       • lib/features/home/<name>_screen.dart
       • lib/core/presentation/bottom_nav_bar.dart
-      • lib/features/home/home_screen.dart (adds bottom nav)
+      • lib/features/home/home_page.dart (adds bottom nav)
     
     \b
     Examples:
@@ -721,7 +721,7 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
         console.print(tree)
         console.print()
         console.print("[bold]📝 Would update/create:[/bold]")
-        console.print("   [cyan]├── lib/features/home/home_screen.dart[/cyan]")
+        console.print("   [cyan]├── lib/features/home/home_page.dart[/cyan]")
         console.print("   [cyan]└── lib/core/presentation/bottom_nav_bar.dart[/cyan]")
         print_dry_run_footer()
         return
@@ -738,7 +738,7 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     create_bottom_nav_page(project_dir, bottom_nav_item_name)
     
     # Update home screen to include bottom navigation
-    update_home_screen_with_bottom_nav(project_dir, bottom_nav_item_name, project_name)
+    update_home_page_with_bottom_nav(project_dir, bottom_nav_item_name, project_name)
     
     # Create bottom navigation widget if it doesn't exist
     create_bottom_nav_widget(project_dir, bottom_nav_item_name)
@@ -751,7 +751,7 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
     
     console.print()
     console.print("[bold]📝 Updated files:[/bold]")
-    console.print("   [cyan]→ lib/features/home/home_screen.dart[/cyan]")
+    console.print("   [cyan]→ lib/features/home/home_page.dart[/cyan]")
     console.print("   [cyan]→ lib/core/presentation/bottom_nav_bar.dart[/cyan]")
     console.print(f"   [green]✅ lib/features/home/{bottom_nav_item_name}_screen.dart[/green]")
     
@@ -1099,7 +1099,7 @@ def _list_pages_from_router(project_dir: Path, project_name: str) -> None:
             file_type = 'screen' if 'screen' in match.group(0) else 'page'
             
             # Determine class name from file name
-            # home_screen.dart -> HomeScreen, settings_page.dart -> SettingsPage
+            # home_page.dart -> HomePage, settings_page.dart -> SettingsPage
             class_name = ''.join(word.capitalize() for word in page_file.split('_')) + ('Screen' if file_type == 'screen' else 'Page')
             
             page_classes[class_name] = {
@@ -1109,7 +1109,7 @@ def _list_pages_from_router(project_dir: Path, project_name: str) -> None:
             }
         
         # Extract routes from GoRoute
-        # Pattern: GoRoute(path: HomeScreen.routeName, builder: ... => const HomeScreen(),)
+        # Pattern: GoRoute(path: HomePage.routeName, builder: ... => const HomePage(),)
         # Pattern: GoRoute(path: '/path', builder: ... => const ClassName(),)
         builder_pattern = r"builder:.*?const\s+(\w+)\s*\("
         

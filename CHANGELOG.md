@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.1] - 2025-01-XX
+
+### 🔧 Maintenance
+- Version bump for release
+
+---
+
 ## [3.1.0] - 2025-01-XX
 
 ### ✨ Features
@@ -139,7 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changes to `add-page`
 - **BREAKING**: Pages are now created in `lib/features/{page_name}/` (without `presentation` folder) instead of `lib/{page_name}/presentation/`
 - Router is automatically updated with the correct path
-- Pages `home` and `splash` created with `create` also follow the same structure: `lib/features/home/home_screen.dart` and `lib/features/splash/splash_screen.dart`
+- Pages `home` and `splash` created with `create` also follow the same structure: `lib/features/home/home_page.dart` and `lib/features/splash/splash_page.dart`
 
 #### List Component Templates
 - **Modified**: `component_list_widget_template.jinja` template simplified

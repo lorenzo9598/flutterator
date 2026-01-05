@@ -26,15 +26,15 @@ def create_drawer_page(project_dir: Path, drawer_item_name: str, project_name: s
     update_router(project_dir, drawer_item_name, project_name)
 
 
-def update_home_screen_with_drawer(project_dir: Path, project_name: str) -> None:
+def update_home_page_with_drawer(project_dir: Path, project_name: str) -> None:
     """Update the home screen to include a drawer"""
-    home_screen_path = project_dir / "lib" / "features" / "home" / "home_screen.dart"
+    home_page_path = project_dir / "lib" / "features" / "home" / "home_page.dart"
     
-    if not home_screen_path.exists():
+    if not home_page_path.exists():
         click.echo("⚠️ Home screen not found, creating basic drawer implementation")
         return
     
-    content = home_screen_path.read_text()
+    content = home_page_path.read_text()
     
     # Check if drawer is already implemented
     if "drawer:" in content:
@@ -69,7 +69,7 @@ def update_home_screen_with_drawer(project_dir: Path, project_name: str) -> None
                 "return Scaffold(\n      drawer: const AppDrawer(),"
             )
     
-    home_screen_path.write_text(content)
+    home_page_path.write_text(content)
 
 
 def create_drawer_widget(project_dir: Path, drawer_item_name: str, project_name: str) -> None:
@@ -150,15 +150,15 @@ def create_bottom_nav_page(project_dir: Path, bottom_nav_item_name: str) -> None
     })
 
 
-def update_home_screen_with_bottom_nav(project_dir: Path, bottom_nav_item_name: str, project_name: str) -> None:
+def update_home_page_with_bottom_nav(project_dir: Path, bottom_nav_item_name: str, project_name: str) -> None:
     """Update the home screen to include bottom navigation"""
-    home_screen_path = project_dir / "lib" / "features" / "home" / "home_screen.dart"
+    home_page_path = project_dir / "lib" / "features" / "home" / "home_page.dart"
     
-    if not home_screen_path.exists():
+    if not home_page_path.exists():
         click.echo("⚠️ Home screen not found, creating basic bottom nav implementation")
         return
     
-    content = home_screen_path.read_text()
+    content = home_page_path.read_text()
     
     if "BottomNavigationBar" in content or "BottomNavBar" in content:
         class_name = bottom_nav_item_name.capitalize() + 'Screen'
@@ -197,7 +197,7 @@ def update_home_screen_with_bottom_nav(project_dir: Path, bottom_nav_item_name: 
         capitalized_name = bottom_nav_item_name.replace('_', ' ').title()
         class_name = bottom_nav_item_name.capitalize() + 'Screen'
         
-        existing_content = home_screen_path.read_text()
+        existing_content = home_page_path.read_text()
         has_drawer = "drawer:" in existing_content
         drawer_import_needed = "import 'package:" + project_name + "/core/presentation/app_drawer.dart';" in existing_content
         
@@ -214,16 +214,16 @@ import 'package:{project_name}/features/home/{bottom_nav_item_name}_screen.dart'
         
         content = f"""{imports}
 
-class HomeScreen extends StatefulWidget {{
+class HomePage extends StatefulWidget {{
   static const String routeName = '/home';
 
-  const HomeScreen({{super.key}});
+  const HomePage({{super.key}});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomePage> createState() => _HomePageState();
 }}
 
-class _HomeScreenState extends State<HomeScreen> {{
+class _HomePageState extends State<HomePage> {{
   int _selectedIndex = 0;
   
   final List<Widget> _pages = [
@@ -254,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {{
 }}
 """
     
-    home_screen_path.write_text(content)
+    home_page_path.write_text(content)
 
 
 def create_bottom_nav_widget(project_dir: Path, bottom_nav_item_name: str) -> None:
