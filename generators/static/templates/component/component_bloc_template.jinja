@@ -2,7 +2,6 @@
  * Component BLoC template for UI component state management
  * Generates a lightweight BLoC for component-level logic:
  * - Load and Delete operations (basic component actions)
- * - Injectable for dependency injection
  * - Commented repository calls for customization
  * 
  * This is simpler than feature BLoCs, focused on component-specific
@@ -11,14 +10,12 @@
 
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:injectable/injectable.dart';
 
 part '[[feature_name]]_event.dart';
 part '[[feature_name]]_state.dart';
 
 part '[[feature_name]]_bloc.freezed.dart';
 
-@injectable
 class [[feature_name.capitalize()]]Bloc extends Bloc<[[feature_name.capitalize()]]Event, [[feature_name.capitalize()]]State> {
 
   [[feature_name.capitalize()]]Bloc() : super(const [[feature_name.capitalize()]]State.initial()) {

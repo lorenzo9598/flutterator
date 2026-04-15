@@ -1,0 +1,34 @@
+/*
+ * UserProfile repository interface
+ * Defines the contract for UserProfile data operations:
+ * - Get current user profile
+ * - Update current user profile
+ * - Upload avatar
+ * - Logout
+ * - Uses Either type for error handling (Left = UserProfileFailure, Right = success)
+ * 
+ * This interface allows different implementations (API, local storage, etc.)
+ * while keeping the business logic independent of data source
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:[[project_name]]/domain/user_profile/model/user_profile.dart';
+import 'package:[[project_name]]/domain/user_profile/model/user_profile_failure.dart';
+
+abstract class IUserProfileRepository {
+  /// Get the current user's profile
+  /// Returns the UserProfile if found, otherwise returns UserProfileFailure
+  Future<Either<UserProfileFailure, UserProfile>> getCurrentUserProfile();
+
+  /// Update the current user's profile
+  /// Returns the updated UserProfile or UserProfileFailure if operation fails
+  Future<Either<UserProfileFailure, UserProfile>> updateCurrentUserProfile(UserProfile userProfile);
+
+  /// Upload user avatar
+  /// Uploads the image at filePath to storage and returns the public URL
+  Future<Either<UserProfileFailure, String>> uploadAvatar(String filePath);
+
+  /// Logout user
+  /// Returns the result of the logout operation
+  Future<Either<UserProfileFailure, void>> logout();
+}

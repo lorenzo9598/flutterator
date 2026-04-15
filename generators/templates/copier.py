@@ -46,4 +46,6 @@ def generate_file(project_name: str, lib_path: Path, template_name: str, output_
     })
     
     content = template.render(**template_vars)
-    (lib_path / output_path).write_text(content)
+    output_file = lib_path / output_path
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(content)

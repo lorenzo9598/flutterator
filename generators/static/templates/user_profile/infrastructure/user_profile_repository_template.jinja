@@ -1,0 +1,82 @@
+/*
+ * UserProfile repository implementation
+ * Provides concrete implementation of IUserProfileRepository
+ * 
+ * NOTE: This is a skeleton implementation. Uncomment and implement
+ * the necessary parts to integrate with your backend API or local storage.
+ * 
+ * Implementation options:
+ * 1. API integration: Use Retrofit/Dio to call backend endpoints
+ * 2. Local storage: Use Hive/SharedPreferences/SQLite for offline support
+ * 3. Hybrid: Combine API calls with local caching
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
+import 'package:[[project_name]]/domain/user_profile/model/user_profile.dart';
+import 'package:[[project_name]]/domain/user_profile/model/i_user_profile_repository.dart';
+import 'package:[[project_name]]/domain/user_profile/model/user_profile_failure.dart';
+import 'package:[[project_name]]/domain/user_profile/infrastructure/user_profile_service.dart';
+
+@Injectable(as: IUserProfileRepository)
+class UserProfileRepository implements IUserProfileRepository {
+  final IAuthFacade _authFacade;
+  final UserProfileService _userProfileService;
+
+  UserProfileRepository(
+    this._authFacade,
+    this._userProfileService,
+  );
+
+  @override
+  Future<Either<UserProfileFailure, UserProfile>> getCurrentUserProfile() async {
+    // Example implementation:
+    // try {
+    //   final dto = await _userProfileService.getCurrentUserProfile();
+    //   return right(dto.toDomain());
+    // } catch (e) {
+    //   return left(const UserProfileFailure.unexpected());
+    // }
+
+    return left(const UserProfileFailure.unexpected());
+  }
+
+  @override
+  Future<Either<UserProfileFailure, UserProfile>> updateCurrentUserProfile(UserProfile userProfile) async {
+    // Example implementation:
+    // try {
+    //   final updateData = {
+    //     'name': userProfile.name.getOrCrash(),
+    //     'avatar_url': userProfile.avatarUrl.fold(() => null, (url) => url),
+    //   };
+    //   await _userProfileService.updateCurrentUserProfile(updateData);
+    //   final dto = await _userProfileService.getCurrentUserProfile();
+    //   return right(dto.toDomain());
+    // } catch (e) {
+    //   return left(const UserProfileFailure.unableToUpdate());
+    // }
+
+    return left(const UserProfileFailure.unableToUpdate());
+  }
+
+  @override
+  Future<Either<UserProfileFailure, String>> uploadAvatar(String filePath) async {
+    // Example implementation:
+    // try {
+    //   // Upload file to storage (e.g., Supabase, Firebase Storage)
+    //   // Return the public URL of the uploaded file
+    //   return right('https://example.com/avatar.png');
+    // } catch (e) {
+    //   return left(const UserProfileFailure.unexpected());
+    // }
+
+    return left(const UserProfileFailure.unexpected());
+  }
+
+  @override
+  Future<Either<UserProfileFailure, void>> logout() async {
+    await _authFacade.signOut();
+    return right(unit);
+  }
+}

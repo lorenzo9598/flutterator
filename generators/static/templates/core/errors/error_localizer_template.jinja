@@ -1,0 +1,61 @@
+/*
+ * ErrorLocalizer - Centralized error message handler
+ *
+ * This is the single point where all user-facing error messages are defined.
+ * Each domain failure type has a dedicated localize method with
+ * domain-customized messages.
+ *
+ * TO USE LOCALIZATION (l10n):
+ *   Import your AppLocalizations and replace the hardcoded strings, e.g.:
+ *     final l10n = AppLocalizations.of(context)!;
+ *     return switch (failure) {
+ *       Unexpected() => l10n.errorUnknown,
+ *       NotFound() => l10n.errorModelNotFound,
+ *       ...
+ *     };
+ */
+
+import 'package:flutter/material.dart';
+{% if has_login -%}
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart' as auth_failure;
+{% endif -%}
+{% for df in domain_failures -%}
+import 'package:[[df.import_path]]' as [[df.alias]];
+{% endfor %}
+class ErrorLocalizer {
+{%- if has_login %}
+
+  /// Map AuthFailure to user-friendly error message
+  static String localizeAuthFailure(BuildContext context, auth_failure.AuthFailure failure) {
+    return switch (failure) {
+      auth_failure.CancelledByUser() => 'Cancelled',
+      auth_failure.ServerError() => 'Server error',
+      auth_failure.EmailAlreadyInUse() => 'Email already in use',
+      auth_failure.InvalidEmailAndPasswordCombination() => 'Invalid email and password combination',
+      _ => failure.toString(),
+    };
+  }
+{% endif -%}
+{%- if domain_failures %}
+{% for df in domain_failures %}
+  /// Map [[df.failure_class]] to user-friendly error message
+  static String localize[[df.failure_class]](BuildContext context, [[df.alias]].[[df.failure_class]] failure) {
+    return switch (failure) {
+      [[df.alias]].Unexpected() => 'An unexpected error occurred',
+      [[df.alias]].InsufficientPermission() => 'Insufficient permissions',
+      [[df.alias]].UnableToUpdate() => '[[df.class_name]] update failed',
+      [[df.alias]].NotFound() => '[[df.class_name]] not found',
+      _ => failure.toString(),
+    };
+  }
+{% endfor -%}
+{%- elif not has_login %}
+  /// Maps a failure to a user-friendly error message.
+  ///
+  /// Domain-specific localize methods will be generated automatically
+  /// when you add domain entities with `flutterator add-domain`.
+  static String localizeFailure(BuildContext context, Object failure) {
+    return failure.toString();
+  }
+{% endif -%}
+}

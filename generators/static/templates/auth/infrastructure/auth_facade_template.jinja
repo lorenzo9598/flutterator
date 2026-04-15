@@ -5,26 +5,28 @@ import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
 import 'package:[[project_name]]/domain/auth/model/user.dart' as auth_user;
 import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
 import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
-import 'package:[[project_name]]/domain/auth/model/i_user_profile_repository.dart';
 
 /// NOTE: This class is currently a skeleton implementation. Uncomment and implement
 /// the necessary parts to enable authentication functionality.
 ///
 /// This facade supports multiple authentication providers (Firebase, Google, Apple, etc.).
 /// Implement the specific authentication logic for your chosen provider(s).
+///
+/// To avoid circular dependency with IUserProfileRepository (UserProfileRepository
+/// depends on IAuthFacade), AuthFacade does NOT inject IUserProfileRepository.
+/// When implementing getSignedInUser/sign-in flows that need to sync UserProfile,
+/// resolve IUserProfileRepository lazily (e.g. via GetIt) only when needed.
 
 @Singleton(as: IAuthFacade)
 class AuthFacade implements IAuthFacade {
   // final FirebaseAuth _firebaseAuth; // Uncomment the following line to use Firebase Authentication
   // final FirebaseUserMapper _firebaseUserMapper; // Uncomment the following line to use Firebase Authentication
   final StorageRepository _storageRepository;
-  final IUserProfileRepository _userProfileRepository;
 
   AuthFacade(
     // this._firebaseAuth, // Uncomment the following line to use Firebase Authentication
     // this._firebaseUserMapper, // Uncomment the following line to use Firebase Authentication
     this._storageRepository,
-    this._userProfileRepository,
   );
 
   @override

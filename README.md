@@ -1003,6 +1003,27 @@ pip install -e .
 python flutterator.py --help
 ```
 
+### `flutterator --help` shows only "create" (no add-domain, add-page, etc.)
+
+You are using an **old or different** installation of Flutterator that only exposes the `create` command. The full CLI is a **group** of commands: `create`, `add-domain`, `add-page`, `add-component`, `list`, `config`.
+
+**Fix:**
+
+1. Check which executable runs: `which flutterator`
+2. Use the CLI from this repo:
+   ```bash
+   cd /path/to/flutterator   # this repo root
+   python3 flutterator.py --help
+   ```
+   You should see "Usage: flutterator [OPTIONS] **COMMAND** [ARGS]..." and the list of commands.
+3. Either:
+   - **Option A**: Remove or rename the old `flutterator` from your PATH, then install from this repo: `pip install -e .` (requires pip ≥ 21.3), or
+   - **Option B**: Add an alias so the repo’s CLI wins:
+     ```bash
+     alias flutterator='python3 /path/to/flutterator/flutterator.py'
+     ```
+     (Replace `/path/to/flutterator` with the real path to this repo.)
+
 ### "Not a valid Flutter project"
 
 ```bash

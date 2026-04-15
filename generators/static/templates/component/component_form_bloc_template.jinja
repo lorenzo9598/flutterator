@@ -1,17 +1,19 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:injectable/injectable.dart';
-{% if domain_model_name and domain_folder %}
-import 'package:[[project_name]]/[[domain_folder]]/[[domain_model_name]]/model/value_objects.dart';
+import 'package:[[project_name]]/core/bloc/base_form_bloc.dart';
+{% if domain_value_objects_import %}
+import 'package:[[project_name]]/[[domain_value_objects_import]]';
+{% endif %}
+{% if extra_imports %}
+[[extra_imports]]
 {% endif %}
 
 part '[[component_name]]_form_event.dart';
 part '[[component_name]]_form_state.dart';
 part '[[component_name]]_form_bloc.freezed.dart';
 
-@injectable
-class [[pascal_name]]FormBloc extends Bloc<[[pascal_name]]FormEvent, [[pascal_name]]FormState> {
+class [[pascal_name]]FormBloc extends BaseFormBloc<[[pascal_name]]FormEvent, [[pascal_name]]FormState, String, Unit> {
   [[pascal_name]]FormBloc() : super([[pascal_name]]FormState.initial()) {
 {% for field in field_list %}
 {% if field.name != 'id' %}
@@ -23,18 +25,34 @@ class [[pascal_name]]FormBloc extends Bloc<[[pascal_name]]FormEvent, [[pascal_na
 
 {% for field in field_list %}
 {% if field.name != 'id' %}
+{% if field.is_enum %}
   void _on[[field.pascal_name]]Changed([[field.pascal_name]]Changed event, Emitter<[[pascal_name]]FormState> emit) {
     emit(state.copyWith(
-      [[field.name]]: [[field.pascal_name]](event.[[field.name]]Str),
+      [[field.name]]: [[field.bloc_parse_expr]],
+      showErrorMessages: false,
+    ));
+  }
+{% elif field.has_value_object %}
+  void _on[[field.pascal_name]]Changed([[field.pascal_name]]Changed event, Emitter<[[pascal_name]]FormState> emit) {
+    emit(state.copyWith(
+      [[field.name]]: [[field.pascal_name]]([[field.bloc_parse_expr]]),
       showErrorMessages: false,
     ));
   }
 {% endif %}
+{% endif %}
 {% endfor %}
 
-  void _onSubmit(Submit event, Emitter<[[pascal_name]]FormState> emit) async {
-    emit(state.copyWith(isSubmitting: true, showErrorMessages: false));
-    // TODO: Implement submit logic here
-    emit(state.copyWith(isSubmitting: false));
+  Future<void> _onSubmit(Submit event, Emitter<[[pascal_name]]FormState> emit) async {
+    await handleFormSubmitWithEither<Unit>(
+      emit,
+      // TODO: Replace with actual submit operation
+      Future.value(right(unit)),
+      () => state.copyWith(isSubmitting: true, showErrorMessages: false),
+      (Either<String, Unit> result) => state.copyWith(
+        isSubmitting: false,
+        failureOrSuccessOption: some(result),
+      ),
+    );
   }
 }

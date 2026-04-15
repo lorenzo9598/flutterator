@@ -9,9 +9,19 @@
  * This component expects the BLoC to be provided by a parent widget.
  */
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../application/[[component_name]]_bloc.dart';
+{% if not empty_component %}
+import 'package:[[project_name]]/[[domain_import_prefix]]/model/[[domain_model_name]].dart';
+import 'package:[[project_name]]/[[domain_import_prefix]]/model/[[domain_model_name]]_failure.dart';
+{% endif %}
+import 'package:[[project_name]]/[[component_import_prefix]]/application/[[component_name]]_bloc.dart';
+import 'package:[[project_name]]/widgets/common/error_widget.dart';
+import 'package:[[project_name]]/widgets/common/loading_widget.dart';
+import 'package:[[project_name]]/widgets/common/unknown_state_widget.dart';
+{% if not empty_component %}
+import 'package:[[project_name]]/core/errors/error_localizer.dart';
+{% endif %}
 
 class [[component_pascal]]Component extends StatelessWidget {
   const [[component_pascal]]Component({super.key});
@@ -19,40 +29,64 @@ class [[component_pascal]]Component extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<[[component_pascal]]Bloc, [[component_pascal]]State>(
-      builder: (context, state) {
+      builder: (BuildContext context, [[component_pascal]]State state) {
         return switch (state) {
           Initial() => const Center(child: Text('Welcome')),
-          Loading() => const Center(child: CircularProgressIndicator()),
-          Loaded(:final items) => ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                    title: Text(item.toString()),
-                    trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                        IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                            // Implement: Navigate to edit form
-                        },
+          Loading() => const LoadingWidget(),
+{% if empty_component %}
+          Loaded() => const Center(child: Text('Carica completata')),
+{% else %}
+          Loaded(
+            items: final List<[[domain_model_pascal]]> items,
+            isReloading: final bool isReloading,
+          ) =>
+            Column(
+              children: <Widget>[
+                if (isReloading) const LinearProgressIndicator(minHeight: 2),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final [[domain_model_pascal]] item = items[index];
+                      return ListTile(
+                          title: Text(item.toString()),
+                          trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                              IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                  // Implement: Navigate to edit form
+                              },
+                              ),
+                              IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                  context.read<[[component_pascal]]Bloc>().add(
+                                  [[component_pascal]]Event.deleteRequested(item.id.getOrCrash()),
+                                  );
+                              },
+                            ),
+                          ],
                         ),
-                        IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                            context.read<[[component_pascal]]Bloc>().add(
-                            [[component_pascal]]Event.deleteRequested(item.id.getOrCrash()),
-                            );
-                        },
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
-          Error(:final message) => Center(child: Text('Errore: $message')),
-          _ => const Center(child: Text('Stato sconosciuto')),
+{% endif %}
+{% if empty_component %}
+          Error(:final message) => ErrorWidget(message: 'Errore: $message'),
+{% else %}
+          Error(
+            failure: final [[failure_class]] failure,
+          ) =>
+            ErrorWidget(
+              message: ErrorLocalizer.localize[[failure_class]](context, failure),
+            ),
+{% endif %}
+          _ => const UnknownStateWidget(),
         };
       },
     );

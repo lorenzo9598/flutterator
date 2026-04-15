@@ -4,7 +4,7 @@
  * - Placeholder for analytics service integration
  * - Different handling per log level
  * - Ready for services like Firebase Analytics, Crashlytics, etc.
- * 
+ *
  * Customize the switch cases to integrate with your
  * preferred analytics and crash reporting services
  */
@@ -14,13 +14,15 @@ import 'package:[[project_name]]/logging/logger.dart';
 class AnalyticsLoggingIntegration implements LoggingIntegration {
   const AnalyticsLoggingIntegration();
 
+{% raw %}
   @override
-  // ignore: always_specify_types
-  void log(String message, LoggerLevel level, {ex, st}) async {
+  void log(String message, LoggerLevel level, {dynamic ex, dynamic st}) async {
     switch (level) {
       case LoggerLevel.fatal:
+        // TODO: recordFatal($message, error: $ex, stack: $st);
         break;
       case LoggerLevel.error:
+        // TODO: recordError($message, error: $ex, stack: $st);
         break;
       case LoggerLevel.warning:
         break;
@@ -36,4 +38,5 @@ class AnalyticsLoggingIntegration implements LoggingIntegration {
         break;
     }
   }
+{% endraw %}
 }

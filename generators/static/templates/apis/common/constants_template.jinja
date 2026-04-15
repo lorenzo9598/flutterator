@@ -2,17 +2,28 @@
  * API constants template for centralized configuration
  * Provides a single place for all API-related constants:
  * - Base API URL (configurable per environment)
+ * - Auth / token refresh base URL (often same as apiUrl or your IdP host)
  * - Standard HTTP headers
  * - API key management
- * 
+ *
  * This ensures consistent API communication setup
  * across all network requests in the application
  */
 
 class Constants {
+  /// Main REST API base URL (also used as [Dio.options.baseUrl] in [ApisInjectableModule]).
   static String apiUrl = "";
 
+  /// Base URL for token refresh (e.g. Supabase auth). If empty, [AuthInterceptor] falls back to [apiUrl].
+  static String authUrl = "";
+
+  /// Sent as the `apikey` header on requests and refresh calls (set in your environment).
+  static const String apiKey = '';
+
   static const String apiKeyHeader = "x-api-key";
+  /// Header name used by [AuthInterceptor] for the API key (matches common Supabase-style clients).
+  static const String apiKeyRequestHeader = "apikey";
+
   static const String contentTypeHeader = "Content-type";
   static const String acceptHeader = "Accept";
   static const String authorizationHeader = "Authorization";

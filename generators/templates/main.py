@@ -9,6 +9,7 @@ from .logging.logging_generator import generate_files as generate_logging_files
 from .splash.splash_generator import generate_files as generate_splash_files
 from .storage.storage_generator import generate_files as generate_storage_files
 from ._core.core_generator import generate_files as generate_core_files
+from ._core.core_generator import generate_error_localizer
 
 # from .core import generate_core_files
 # from .model import generate_model
@@ -36,8 +37,8 @@ def generate_files(lib_path, login: bool, project_name: str, primary_color: str 
     # Generate storage files
     generate_storage_files(project_name, lib_path)
 
-    # Generate apis files
-    generate_apis_files(project_name, lib_path)
+    # Generate apis files (auth interceptor aligns with AuthBloc when login is enabled)
+    generate_apis_files(project_name, lib_path, has_login=login)
 
 
     # Generate home files
@@ -49,10 +50,11 @@ def generate_files(lib_path, login: bool, project_name: str, primary_color: str 
 
         # Generate sign-in form files
         generate_sign_in_form_files(project_name, lib_path)
-    
 
+    # Regenerate error_localizer last so it discovers all domain failures
+    # (including user_profile created by auth_generator when login is enabled)
+    generate_error_localizer(project_name, lib_path, domain_folder="domain", has_login=login)
 
-    
     # # Create files in core
     # generate_core_files(project_name, lib_path, login)
 

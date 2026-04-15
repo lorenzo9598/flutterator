@@ -7,15 +7,15 @@
  * - Delete: Remove item
  * 
  * Uses:
- * - Injectable for dependency injection
  * - Freezed for immutable state/events
  * - Repository pattern for data access
  */
 
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:injectable/injectable.dart';
 import 'package:[[feature_import_prefix]]/model/[[feature_name]].dart';
+import 'package:[[feature_import_prefix]]/model/[[feature_name]]_failure.dart';
 import 'package:[[feature_import_prefix]]/model/i_[[feature_name]]_repository.dart';
 
 part '[[feature_name]]_event.dart';
@@ -23,7 +23,6 @@ part '[[feature_name]]_state.dart';
 
 part '[[feature_name]]_bloc.freezed.dart';
 
-@injectable
 class [[feature_name.capitalize()]]Bloc extends Bloc<[[feature_name.capitalize()]]Event, [[feature_name.capitalize()]]State> {
   final I[[feature_name.capitalize()]]Repository _repository;
 
@@ -34,55 +33,70 @@ class [[feature_name.capitalize()]]Bloc extends Bloc<[[feature_name.capitalize()
     on<DeleteRequested>(_onDeleteRequested);
   }
 
-  void _onLoadRequested(LoadRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+  Future<void> _onLoadRequested(LoadRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
     emit(const [[feature_name.capitalize()]]State.loading());
-    final result = await _repository.getAll();
+    final Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>> result =
+        await _repository.getAll();
     result.fold(
-      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-      (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+      ([[feature_name.capitalize()]]Failure failure) =>
+          emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (List<[[feature_name.capitalize()]]> items) =>
+          emit([[feature_name.capitalize()]]State.loaded(items)),
     );
   }
 
-  void _onCreateRequested(CreateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+  Future<void> _onCreateRequested(CreateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
     emit(const [[feature_name.capitalize()]]State.loading());
-    final result = await _repository.create(event.item);
+    final Either<[[feature_name.capitalize()]]Failure, Unit> result = await _repository.create(event.item);
     result.fold(
-      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-      (_) async {
-        final itemsResult = await _repository.getAll();
+      ([[feature_name.capitalize()]]Failure failure) =>
+          emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (Unit _) async {
+        final Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>> itemsResult =
+            await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+          ([[feature_name.capitalize()]]Failure failure) =>
+              emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (List<[[feature_name.capitalize()]]> items) =>
+              emit([[feature_name.capitalize()]]State.loaded(items)),
         );
       },
     );
   }
 
-  void _onUpdateRequested(UpdateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+  Future<void> _onUpdateRequested(UpdateRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
     emit(const [[feature_name.capitalize()]]State.loading());
-    final result = await _repository.update(event.item);
+    final Either<[[feature_name.capitalize()]]Failure, Unit> result = await _repository.update(event.item);
     result.fold(
-      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-      (_) async {
-        final itemsResult = await _repository.getAll();
+      ([[feature_name.capitalize()]]Failure failure) =>
+          emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (Unit _) async {
+        final Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>> itemsResult =
+            await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+          ([[feature_name.capitalize()]]Failure failure) =>
+              emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (List<[[feature_name.capitalize()]]> items) =>
+              emit([[feature_name.capitalize()]]State.loaded(items)),
         );
       },
     );
   }
 
-  void _onDeleteRequested(DeleteRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
+  Future<void> _onDeleteRequested(DeleteRequested event, Emitter<[[feature_name.capitalize()]]State> emit) async {
     emit(const [[feature_name.capitalize()]]State.loading());
-    final result = await _repository.delete(event.id);
+    final Either<[[feature_name.capitalize()]]Failure, Unit> result = await _repository.delete(event.id);
     result.fold(
-      (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-      (_) async {
-        final itemsResult = await _repository.getAll();
+      ([[feature_name.capitalize()]]Failure failure) =>
+          emit([[feature_name.capitalize()]]State.error(failure.toString())),
+      (Unit _) async {
+        final Either<[[feature_name.capitalize()]]Failure, List<[[feature_name.capitalize()]]>> itemsResult =
+            await _repository.getAll();
         itemsResult.fold(
-          (failure) => emit([[feature_name.capitalize()]]State.error(failure.toString())),
-          (items) => emit([[feature_name.capitalize()]]State.loaded(items)),
+          ([[feature_name.capitalize()]]Failure failure) =>
+              emit([[feature_name.capitalize()]]State.error(failure.toString())),
+          (List<[[feature_name.capitalize()]]> items) =>
+              emit([[feature_name.capitalize()]]State.loaded(items)),
         );
       },
     );

@@ -11,11 +11,9 @@
  */
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
 import 'package:[[project_name]]/core/model/entity.dart';
-import 'package:[[project_name]]/core/model/failures.dart';
 import 'package:[[project_name]]/core/model/value_objects.dart';
 
 part 'user_profile.freezed.dart';
@@ -26,17 +24,8 @@ abstract class UserProfile with _$UserProfile implements IEntity {
     required UniqueId id,
     required StringSingleLine name,
     required EmailAddress emailAddress,
-    String? avatarUrl,
+    required Option<String> avatarUrl,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _UserProfile;
-}
-
-extension UserProfileX on UserProfile {
-  Option<ValueFailure<dynamic>> get failureOption {
-    return name.failureOrUnit.andThen(emailAddress.failureOrUnit).fold(
-      (ValueFailure<dynamic> l) => some(l),
-      (Unit r) => none(),
-    );
-  }
 }

@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+
+/// Stato del BLoC non previsto dal widget (fallback).
+class UnknownStateWidget extends StatelessWidget {
+  const UnknownStateWidget({super.key, this.hint});
+
+  /// Testo opzionale per debug o supporto.
+  final String? hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          hint ?? 'Stato non gestito',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}

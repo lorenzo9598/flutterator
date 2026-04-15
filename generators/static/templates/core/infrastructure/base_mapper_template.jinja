@@ -1,0 +1,21 @@
+/// Base mapper that provides default implementations for common methods.
+/// Reduces boilerplate by eliminating duplication of toDomainList and toDtoList.
+abstract class BaseMapper<TDomain, TDto> {
+  /// Converts DTO to Domain Entity - must be implemented in each mapper
+  TDomain toDomain(TDto dto);
+
+  /// Converts Domain Entity to DTO - must be implemented in each mapper
+  TDto toDto(TDomain domain);
+
+  /// Converts a list of DTOs to a list of Domain Entities.
+  /// Default implementation delegates to [toDomain].
+  List<TDomain> toDomainList(List<TDto> dtos) {
+    return dtos.map((TDto dto) => toDomain(dto)).toList();
+  }
+
+  /// Converts a list of Domain Entities to a list of DTOs.
+  /// Default implementation delegates to [toDto].
+  List<TDto> toDtoList(List<TDomain> domains) {
+    return domains.map((TDomain domain) => toDto(domain)).toList();
+  }
+}

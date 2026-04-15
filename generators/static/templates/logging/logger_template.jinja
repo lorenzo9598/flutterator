@@ -5,8 +5,9 @@
  * - Pluggable logging integrations (console, analytics, etc.)
  * - Dependency injection support
  * - Consistent logging interface across the app
- * 
- * Supports different logging backends through LoggingIntegration interface
+ *
+ * For error/fatal, the text passed to integrations includes $message plus
+ * optional lines for $ex and $st when provided.
  */
 
 import 'package:injectable/injectable.dart';
@@ -64,21 +65,34 @@ class Logger {
     _log(message, LoggerLevel.apiRes);
   }
 
+{% raw %}
   void _log(String message, LoggerLevel level, {dynamic ex, dynamic st}) {
-    // First build the __STRING_1__ that will look like __STRING_2__
-    String finalMessage = "";
+    final StringBuffer buffer = StringBuffer();
     final String prefix = _getLogPrefix(level);
     if (prefix.isNotEmpty) {
-      finalMessage += prefix;
-      finalMessage += " ";
+      buffer.write(prefix);
+      buffer.write(' ');
     }
-    finalMessage += message;
+    buffer.write(message);
 
-    // Finally send that message to each integration
-    for (LoggingIntegration integration in _integrations) {
+    if (level == LoggerLevel.error || level == LoggerLevel.fatal) {
+      if (ex != null) {
+        buffer.writeln();
+        buffer.write('Exception: $ex');
+      }
+      if (st != null) {
+        buffer.writeln();
+        buffer.write('StackTrace: $st');
+      }
+    }
+
+    final String finalMessage = buffer.toString();
+
+    for (final LoggingIntegration integration in _integrations) {
       integration.log(finalMessage, level, ex: ex, st: st);
     }
   }
+{% endraw %}
 
   // Returns the log prefix for the given LoggingLevel
   String _getLogPrefix(LoggerLevel level) {

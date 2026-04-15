@@ -15,7 +15,7 @@ from generators.helpers import (
     find_domain_models,
     get_model_fields_from_domain,
     create_drawer_widget,
-    update_home_screen_with_drawer,
+    update_home_page_with_drawer,
     create_drawer_page,
     create_bottom_nav_widget,
     create_component_layers,
@@ -212,7 +212,7 @@ class TestDrawerGeneration:
         """Test updating home screen to include drawer"""
         project_dir = sample_project_structure
 
-        update_home_screen_with_drawer(project_dir, "test_project")
+        update_home_page_with_drawer(project_dir, "test_project")
 
         home_file = project_dir / "lib" / "home" / "presentation" / "home_screen.dart"
         content = home_file.read_text()
@@ -277,7 +277,8 @@ class TestComponentGeneration:
     def test_create_component_layers_form(self, sample_project_structure):
         """Test creating form component layers"""
         project_dir = sample_project_structure
-        component_dir = project_dir / "lib" / "login_form"
+        lib_path = project_dir / "lib"
+        component_dir = lib_path / "login_form"
         component_dir.mkdir(parents=True, exist_ok=True)
 
         field_list = [
@@ -285,7 +286,7 @@ class TestComponentGeneration:
             {"name": "password", "type": "string"}
         ]
 
-        create_component_form_layers(component_dir, "login_form", field_list, "test_project", "")
+        create_component_form_layers(component_dir, "login_form", field_list, "test_project", "", lib_path=lib_path)
 
         # Check form-specific files
         assert (component_dir / "application" / "login_form_form_event.dart").exists()
@@ -298,6 +299,23 @@ class TestComponentGeneration:
         # Check form event content has field change events
         event_content = (component_dir / "application" / "login_form_form_event.dart").read_text()
         assert "emailChanged" in event_content or "EmailChanged" in event_content
+
+        # Check base_form_bloc.dart was created in core/bloc/
+        base_form_bloc_path = lib_path / "core" / "bloc" / "base_form_bloc.dart"
+        assert base_form_bloc_path.exists()
+        base_content = base_form_bloc_path.read_text()
+        assert "abstract class BaseFormBloc" in base_content
+        assert "handleFormSubmitWithEither" in base_content
+
+        # Check generated form bloc extends BaseFormBloc
+        bloc_content = (component_dir / "application" / "login_form_form_bloc.dart").read_text()
+        assert "extends BaseFormBloc" in bloc_content
+        assert "handleFormSubmitWithEither" in bloc_content
+        assert "import 'package:test_project/core/bloc/base_form_bloc.dart'" in bloc_content
+
+        widget_content = (component_dir / "presentation" / "login_form_component.dart").read_text()
+        assert "hide Title" in widget_content
+        assert "value_objects.dart" not in widget_content
 
 
 class TestCLICommands:
@@ -603,6 +621,8 @@ class TestContentVerification:
         assert "Widget" in widget_content
         assert "build" in widget_content
         assert "BlocProvider" in widget_content or "BlocBuilder" in widget_content or "Bloc" in widget_content
+        assert "LoadingWidget" in widget_content
+        assert "UnknownStateWidget" in widget_content
 
     def test_bottom_nav_screen_content(self, sample_project_structure):
         """Test that bottom nav screen has correct content"""
@@ -948,7 +968,7 @@ class TestFeatureModes:
             {"name": "price", "type": "double"}
         ]
         
-        create_domain_entity_layers(domain_dir, "product", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "product", "Product", field_list, "test_project", "domain")
         
         # Should have model and infrastructure
         assert (domain_dir / "model" / "product.dart").exists()
@@ -974,7 +994,7 @@ class TestFeatureModes:
             {"name": "title", "type": "string"}
         ]
         
-        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "todo", "Todo", field_list, "test_project", "domain")
         
         # Now create feature that uses this domain model
         feature_dir = lib_path / "features" / "todo"
@@ -1034,7 +1054,7 @@ class TestFeatureModes:
         ]
         
         from generators.helpers import create_domain_entity_layers
-        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "todo", "Todo", field_list, "test_project", "domain")
         
         with runner.isolated_filesystem():
             import shutil
@@ -1052,7 +1072,7 @@ class TestFeatureModes:
             assert result.exit_code == 0
             
             # Should create component with list functionality
-            component_dir = Path("test_project/lib/todo_list")
+            component_dir = Path("test_project/lib/features/components/todo_list")
             assert (component_dir / "application" / "todo_list_bloc.dart").exists()
             assert (component_dir / "application" / "todo_list_event.dart").exists()
             assert (component_dir / "application" / "todo_list_state.dart").exists()
@@ -1065,17 +1085,25 @@ class TestFeatureModes:
             assert "_repository.update(" in bloc_content
             assert "_repository.delete(" in bloc_content
             
-            # Check that state has List<Model> items
+            # Check that state has List<Model> items and reload flag on Loaded
             state_content = (component_dir / "application" / "todo_list_state.dart").read_text()
             assert "List<Todo>" in state_content or "List<todo>" in state_content
             assert "loaded(List<" in state_content
+            assert "isReloading" in state_content
             
             # Check that event has loadRequested, createRequested, updateRequested, deleteRequested
             event_content = (component_dir / "application" / "todo_list_event.dart").read_text()
             assert "loadRequested()" in event_content
+            assert "reloadRequested()" in event_content
             assert "createRequested(" in event_content
             assert "updateRequested(" in event_content
             assert "deleteRequested(" in event_content
+
+            widget_content = (component_dir / "presentation" / "todo_list_component.dart").read_text()
+            assert "ErrorLocalizer.localizeTodoFailure" in widget_content
+            assert "localizeModelFailure" not in widget_content
+            assert "LoadingWidget" in widget_content
+            assert "UnknownStateWidget" in widget_content
 
 
 class TestComponentWithDomainModels:
@@ -1130,7 +1158,7 @@ abstract class Product with _$Product {
         ]
         
         from generators.helpers import create_domain_entity_layers
-        create_domain_entity_layers(domain_dir, "user", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "user", "User", field_list, "test_project", "domain")
         
         with runner.isolated_filesystem():
             import shutil
@@ -1141,12 +1169,12 @@ abstract class Product with _$Product {
                 "--name", "user_card",
                 "--project-path", "test_project",
                 "--no-build"
-            ], input="1\n")  # Select first model
+            ], input="1\n1\n")  # Single component; first domain model
             
             assert result.exit_code == 0
             
             # Should create component
-            component_dir = Path("test_project/lib/user_card")
+            component_dir = Path("test_project/lib/features/components/user_card")
             assert (component_dir / "application" / "user_card_bloc.dart").exists()
             assert (component_dir / "presentation" / "user_card_component.dart").exists()
             
@@ -1174,7 +1202,7 @@ abstract class Product with _$Product {
         ]
         
         from generators.helpers import create_domain_entity_layers
-        create_domain_entity_layers(domain_dir, "todo", field_list, "test_project", "domain")
+        create_domain_entity_layers(domain_dir, "todo", "Todo", field_list, "test_project", "domain")
         
         # Create entity file with proper structure
         model_dir = domain_dir / "model"
@@ -1199,12 +1227,12 @@ abstract class Todo with _$Todo {
                 "--type", "form",
                 "--project-path", "test_project",
                 "--no-build"
-            ], input="1\n")  # Select first model
+            ], input="1\n\n")  # Select first model; Invio = all form fields
             
             assert result.exit_code == 0
             
             # Should create form component
-            component_dir = Path("test_project/lib/todo_form")
+            component_dir = Path("test_project/lib/features/components/todo_form")
             assert (component_dir / "application" / "todo_form_form_bloc.dart").exists()
             assert (component_dir / "application" / "todo_form_form_event.dart").exists()
             assert (component_dir / "application" / "todo_form_form_state.dart").exists()
@@ -1214,6 +1242,76 @@ abstract class Todo with _$Todo {
             state_content = (component_dir / "application" / "todo_form_form_state.dart").read_text()
             # Should have title field (id is typically skipped in forms)
             assert "title" in state_content.lower() or "Title" in state_content
+
+            widget_content = (component_dir / "presentation" / "todo_form_component.dart").read_text()
+            assert "hide Title" in widget_content
+            assert "domain/todo/model/value_objects.dart" in widget_content
+
+    def test_add_component_form_subset_of_model_fields(self, sample_project_structure):
+        """Form component: interactive selection limits generated fields to chosen model columns."""
+        from flutterator import cli
+        runner = click.testing.CliRunner()
+
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+
+        domain_dir = lib_path / "domain" / "todo"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "title", "type": "string"},
+            {"name": "completed", "type": "bool"},
+        ]
+
+        from generators.helpers import create_domain_entity_layers
+
+        create_domain_entity_layers(domain_dir, "todo", "Todo", field_list, "test_project", "domain")
+
+        model_dir = domain_dir / "model"
+        entity_content = """@freezed
+abstract class Todo with _$Todo {
+  const factory Todo({
+    required UniqueId id,
+    required Title title,
+    required Completed completed,
+  }) = _Todo;
+}
+"""
+        (model_dir / "todo.dart").write_text(entity_content)
+
+        with runner.isolated_filesystem():
+            import shutil
+
+            shutil.copytree(project_dir, "test_project")
+
+            # Model 1 = todo; field index 2 only = title (id=1, title=2, completed=3)
+            result = runner.invoke(
+                cli,
+                [
+                    "add-component",
+                    "--name", "todo_form",
+                    "--type", "form",
+                    "--project-path", "test_project",
+                    "--no-build",
+                ],
+                input="1\n2\n",
+            )
+
+            assert result.exit_code == 0
+
+            component_dir = Path("test_project/lib/features/components/todo_form")
+            state_content = (
+                component_dir / "application" / "todo_form_form_state.dart"
+            ).read_text()
+            assert "Title" in state_content
+            assert "Completed" not in state_content
+
+            event_content = (
+                component_dir / "application" / "todo_form_form_event.dart"
+            ).read_text()
+            assert "TitleChanged" in event_content
+            assert "CompletedChanged" not in event_content
 
     def test_add_component_no_domain_models(self, sample_project_structure):
         """Test add-component fails when no domain models exist"""

@@ -1,0 +1,28 @@
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/apis/common/constants.dart';
+import 'package:[[project_name]]/domain/user_profile/infrastructure/user_profile_dto.dart';
+import 'package:retrofit/retrofit.dart';
+
+part 'user_profile_service.g.dart';
+
+@module
+abstract class UserProfileRemoteModule {
+  @preResolve
+  @LazySingleton()
+  Future<UserProfileService> userProfileService(Dio dio) async {
+    return UserProfileService(dio, baseUrl: Constants.apiUrl);
+  }
+}
+
+@RestApi()
+abstract class UserProfileService {
+  @factoryMethod
+  factory UserProfileService(Dio dio, {String baseUrl}) = _UserProfileService;
+
+  @GET('/get-user-profile')
+  Future<UserProfileDto> getCurrentUserProfile();
+
+  @PATCH('/update-user-profile')
+  Future<void> updateCurrentUserProfile(@Body() Map<String, dynamic> userProfileDto);
+}

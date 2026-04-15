@@ -5,43 +5,35 @@
  * This mapper ensures proper conversion between:
  * - DTO (from/to API)
  * - Domain Entity (business logic)
+ *
+ * Extends BaseMapper which provides default toDomainList/toDtoList implementations.
  */
 
 import 'package:injectable/injectable.dart';
 import 'package:[[project_name]]/core/model/value_objects.dart';
+import 'package:[[project_name]]/core/infrastructure/base_mapper.dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]].dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/value_objects.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
 [[mapper_imports]]
 
-/// Mapper for converting between [[entity_name]] DTO and Domain Entity
 @lazySingleton
-class [[entity_name]]Mapper {
+class [[entity_name]]Mapper extends BaseMapper<[[entity_name]], [[entity_name]]Dto> {
 [[mapper_fields]]
 
   [[entity_name]]Mapper([[mapper_constructor_params]]);
 
-  /// Converts DTO to Domain Entity
+  @override
   [[entity_name]] toDomain([[entity_name]]Dto dto) {
     return [[entity_name]](
 [[from_dto_fields]]
     );
   }
 
-  /// Converts Domain Entity to DTO
+  @override
   [[entity_name]]Dto toDto([[entity_name]] entity) {
     return [[entity_name]]Dto(
 [[to_dto_fields]]
     );
-  }
-
-  /// Converts list of DTOs to list of Domain Entities
-  List<[[entity_name]]> toDomainList(List<[[entity_name]]Dto> dtos) {
-    return dtos.map((dto) => toDomain(dto)).toList();
-  }
-
-  /// Converts list of Domain Entities to list of DTOs
-  List<[[entity_name]]Dto> toDtoList(List<[[entity_name]]> entities) {
-    return entities.map((entity) => toDto(entity)).toList();
   }
 }

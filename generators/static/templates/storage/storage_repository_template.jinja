@@ -2,6 +2,19 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String tokenDataKey = 'token_key';
+const String refreshTokenDataKey = 'refresh_token_key';
+const String guestTokenKey = 'guest_token_key';
+const String isGuestModeKey = 'is_guest_mode_key';
+
+/// Access + optional refresh token bundle (used by [AuthInterceptor] after refresh).
+class TokenData {
+  const TokenData({required this.token, this.refreshToken = ''});
+
+  final String token;
+  final String refreshToken;
+
+  bool get hasRefresh => refreshToken.isNotEmpty;
+}
 
 @Singleton()
 class StorageRepository {
@@ -11,9 +24,11 @@ class StorageRepository {
     return token != null && token.isNotEmpty;
   }
 
-  Future<void> saveToken(String token) async {
+  /// Persists access token and optional refresh token (SharedPreferences — consider flutter_secure_storage for production).
+  Future<void> saveToken(TokenData data) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenDataKey, token);
+    await prefs.setString(tokenDataKey, data.token);
+    await prefs.setString(refreshTokenDataKey, data.refreshToken);
   }
 
   Future<String?> getToken() async {
@@ -21,12 +36,44 @@ class StorageRepository {
     return prefs.getString(tokenDataKey);
   }
 
+  Future<String?> getRefreshToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(refreshTokenDataKey);
+  }
+
   Future<void> removeToken() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenDataKey);
+    await prefs.remove(refreshTokenDataKey);
+  }
+
+  Future<void> saveGuestToken(String guestToken) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(guestTokenKey, guestToken);
+    await prefs.setBool(isGuestModeKey, true);
+    await prefs.remove(tokenDataKey);
+    await prefs.remove(refreshTokenDataKey);
+  }
+
+  Future<String?> getGuestToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(guestTokenKey);
+  }
+
+  Future<bool> isGuestMode() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(isGuestModeKey) ?? false;
+  }
+
+  Future<void> clearGuestToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(guestTokenKey);
+    await prefs.remove(isGuestModeKey);
   }
 
   Future<void> clearAll() async {
+    await removeToken();
+    await clearGuestToken();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }

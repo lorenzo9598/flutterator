@@ -29,6 +29,15 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
+[tool.setuptools]
+py-modules = ["flutterator"]
+
+[tool.setuptools.packages.find]
+include = ["generators*"]
+
+[tool.setuptools.package-data]
+generators = ["static/**/*"]
+
 [project.scripts]
 flutterator = "flutterator:cli"
 

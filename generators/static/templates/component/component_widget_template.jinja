@@ -4,14 +4,24 @@
  * - Reusable UI components across the app
  * - State management through BLoC pattern
  * - Clean separation of concerns
- * 
- * Components are smaller, focused UI pieces that can be
- * composed into larger pages and features
+ *
+ * Default handling for all BLoC states (Initial, Loading, Loaded, Error).
+ * Replace placeholder copy and layout with your real UI.
  */
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_bloc/flutter_bloc.dart';
 [[bloc_import]]
+import 'package:[[project_name]]/widgets/common/error_widget.dart';
+import 'package:[[project_name]]/widgets/common/loading_widget.dart';
+import 'package:[[project_name]]/widgets/common/unknown_state_widget.dart';
+{% if failure_class %}
+import 'package:[[project_name]]/core/errors/error_localizer.dart';
+{% endif %}
+{% if failure_class and domain_model_name %}
+import 'package:[[project_name]]/[[domain_import_prefix]]/model/[[domain_model_name]].dart';
+import 'package:[[project_name]]/[[domain_import_prefix]]/model/[[domain_model_name]]_failure.dart';
+{% endif %}
 
 class [[pascal_name]]Component extends StatelessWidget {
   const [[pascal_name]]Component({super.key});
@@ -19,10 +29,83 @@ class [[pascal_name]]Component extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<[[bloc_name]], [[state_name]]>(
-      builder: (context, state) {
-        return const Center(
-          child: Text('[[component_name|replace("_", " ")|title]] Component'),
-        );
+      builder: (BuildContext context, [[state_name]] state) {
+{% if failure_class and domain_model_name %}
+        return switch (state) {
+          Initial() => const Center(
+                child: Text('In attesa del primo caricamento'),
+              ),
+          Loading() => const LoadingWidget(),
+          Loaded(
+            item: final [[domain_model_pascal]] item,
+            isReloading: final bool isReloading,
+          ) =>
+            Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(child: Text(item.toString())),
+                  ),
+                  if (isReloading)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                ],
+              ),
+          Error(
+            failure: final [[failure_class]] failure,
+          ) =>
+            ErrorWidget(
+                message: ErrorLocalizer.localize[[failure_class]](context, failure),
+              ),
+          _ => const UnknownStateWidget(),
+        };
+{% elif failure_class %}
+        return switch (state) {
+          Initial() => const Center(
+                child: Text('In attesa del primo caricamento'),
+              ),
+          Loading() => const LoadingWidget(),
+          Loaded(:final item, :final isReloading) => Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(child: Text(item.toString())),
+                  ),
+                  if (isReloading)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                ],
+              ),
+          Error(:final failure) => ErrorWidget(
+                message: ErrorLocalizer.localize[[failure_class]](context, failure),
+              ),
+          _ => const UnknownStateWidget(),
+        };
+{% else %}
+        return switch (state) {
+          Initial() => const Center(
+                child: Text('In attesa del primo caricamento'),
+              ),
+          Loading() => const LoadingWidget(),
+          Loaded() => const Center(
+                child: Text('Contenuto caricato (sostituisci con la tua UI)'),
+              ),
+          Error(:final message) => ErrorWidget(
+                message: 'Errore: $message',
+              ),
+          _ => const UnknownStateWidget(),
+        };
+{% endif %}
       },
     );
   }

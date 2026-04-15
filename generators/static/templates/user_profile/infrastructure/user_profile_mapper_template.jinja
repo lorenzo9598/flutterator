@@ -1,0 +1,43 @@
+/*
+ * UserProfile mapper
+ * Maps between UserProfile DTO (API layer) and UserProfile Domain Entity
+ * 
+ * Extends BaseMapper which provides default toDomainList/toDtoList implementations.
+ */
+
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/core/infrastructure/base_mapper.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/domain/user_profile/infrastructure/user_profile_dto.dart';
+import 'package:[[project_name]]/domain/user_profile/model/user_profile.dart';
+
+@lazySingleton
+class UserProfileMapper extends BaseMapper<UserProfile, UserProfileDto> {
+  UserProfileMapper();
+
+  @override
+  UserProfile toDomain(UserProfileDto dto) {
+    return UserProfile(
+      id: UniqueId.fromUniqueString(dto.id),
+      name: StringSingleLine(dto.name),
+      emailAddress: EmailAddress(dto.emailAddress),
+      avatarUrl: dto.avatarUrl != null ? some(dto.avatarUrl!) : none(),
+      createdAt: DateTime.parse(dto.createdAt),
+      updatedAt: DateTime.parse(dto.updatedAt),
+    );
+  }
+
+  @override
+  UserProfileDto toDto(UserProfile entity) {
+    return UserProfileDto(
+      id: entity.id.getOrCrash(),
+      name: entity.name.getOrCrash(),
+      emailAddress: entity.emailAddress.getOrCrash(),
+      avatarUrl: entity.avatarUrl.fold(() => null, (String url) => url),
+      createdAt: entity.createdAt.toIso8601String(),
+      updatedAt: entity.updatedAt.toIso8601String(),
+    );
+  }
+}

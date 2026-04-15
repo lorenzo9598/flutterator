@@ -1,9 +1,9 @@
 /*
  * Repository implementation template
  * Provides concrete implementation of repository interface with:
+ * - BaseRepositoryMixin for centralized error handling
  * - Service for API calls
  * - Mapper for DTO-Domain conversions
- * - Error handling with Either types
  * - Injectable dependency registration
  * 
  * This repository acts as a bridge between the domain layer and the API layer
@@ -11,14 +11,16 @@
 
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/core/infrastructure/base_repository_mixin.dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]].dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]]_failure.dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/i_[[file_name]]_repository.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_service.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_mapper.dart';
 
 @Injectable(as: I[[entity_name]]Repository)
-class [[entity_name]]Repository implements I[[entity_name]]Repository {
+class [[entity_name]]Repository with BaseRepositoryMixin<[[entity_name]]Failure> implements I[[entity_name]]Repository {
   final [[entity_name]]Service _service;
   final [[entity_name]]Mapper _mapper;
 
@@ -28,56 +30,61 @@ class [[entity_name]]Repository implements I[[entity_name]]Repository {
   );
 
   @override
-  Future<Either<[[entity_name]]Failure, List<[[entity_name]]>>> getAll() async {
-    try {
-      final dtos = await _service.getAll();
-      final domain = _mapper.toDomainList(dtos);
-      return right(domain);
-    } catch (e) {
-      return left(const [[entity_name]]Failure.unexpected());
-    }
+  Future<Either<[[entity_name]]Failure, List<[[entity_name]]>>> getAll() {
+    return handleListCall(
+      serviceCall: () => _service.getAll(),
+      mapToDomainList: (List<[[entity_name]]Dto> dtos) => _mapper.toDomainList(dtos),
+      onUnexpected: () => const [[entity_name]]Failure.unexpected(),
+      onNotFound: () => const [[entity_name]]Failure.notFound(),
+      onInsufficientPermission: () => const [[entity_name]]Failure.insufficientPermission(),
+    );
   }
 
   @override
-  Future<Either<[[entity_name]]Failure, [[entity_name]]>> getById(String id) async {
-    try {
-      final dto = await _service.getById(id);
-      final domain = _mapper.toDomain(dto);
-      return right(domain);
-    } catch (e) {
-      return left(const [[entity_name]]Failure.unexpected());
-    }
+  Future<Either<[[entity_name]]Failure, [[entity_name]]>> getById(String id) {
+    return handleSimpleCall(
+      serviceCall: () => _service.getById(id),
+      mapToDomain: ([[entity_name]]Dto dto) => _mapper.toDomain(dto),
+      onUnexpected: () => const [[entity_name]]Failure.unexpected(),
+      onNotFound: () => const [[entity_name]]Failure.notFound(),
+      onInsufficientPermission: () => const [[entity_name]]Failure.insufficientPermission(),
+    );
   }
 
   @override
-  Future<Either<[[entity_name]]Failure, Unit>> create([[entity_name]] item) async {
-    try {
-      final dto = _mapper.toDto(item);
-      await _service.create(dto);
-      return right(unit);
-    } catch (e) {
-      return left(const [[entity_name]]Failure.unexpected());
-    }
+  Future<Either<[[entity_name]]Failure, Unit>> create([[entity_name]] item) {
+    return handleUnitCall(
+      serviceCall: () async {
+        final [[entity_name]]Dto dto = _mapper.toDto(item);
+        await _service.create(dto);
+      },
+      onUnexpected: () => const [[entity_name]]Failure.unexpected(),
+      onNotFound: () => const [[entity_name]]Failure.notFound(),
+      onInsufficientPermission: () => const [[entity_name]]Failure.insufficientPermission(),
+    );
   }
 
   @override
-  Future<Either<[[entity_name]]Failure, Unit>> update([[entity_name]] item) async {
-    try {
-      final dto = _mapper.toDto(item);
-      await _service.update(item.id.getOrCrash(), dto);
-      return right(unit);
-    } catch (e) {
-      return left(const [[entity_name]]Failure.unexpected());
-    }
+  Future<Either<[[entity_name]]Failure, Unit>> update([[entity_name]] item) {
+    return handleUnitCall(
+      serviceCall: () async {
+        final [[entity_name]]Dto dto = _mapper.toDto(item);
+        await _service.update(item.id.getOrCrash(), dto);
+      },
+      onUnexpected: () => const [[entity_name]]Failure.unexpected(),
+      onNotFound: () => const [[entity_name]]Failure.notFound(),
+      onInsufficientPermission: () => const [[entity_name]]Failure.insufficientPermission(),
+      onUnableToUpdate: () => const [[entity_name]]Failure.unableToUpdate(),
+    );
   }
 
   @override
-  Future<Either<[[entity_name]]Failure, Unit>> delete(String id) async {
-    try {
-      await _service.delete(id);
-      return right(unit);
-    } catch (e) {
-      return left(const [[entity_name]]Failure.unexpected());
-    }
+  Future<Either<[[entity_name]]Failure, Unit>> delete(String id) {
+    return handleUnitCall(
+      serviceCall: () => _service.delete(id),
+      onUnexpected: () => const [[entity_name]]Failure.unexpected(),
+      onNotFound: () => const [[entity_name]]Failure.notFound(),
+      onInsufficientPermission: () => const [[entity_name]]Failure.insufficientPermission(),
+    );
   }
 }

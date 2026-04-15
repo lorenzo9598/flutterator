@@ -1,0 +1,78 @@
+import 'package:dartz/dartz.dart';
+import 'package:[[project_name]]/core/infrastructure/repository_error_handler.dart';
+
+/// Mixin that provides common helper methods for repositories.
+///
+/// Eliminates duplicated code across repositories by implementing
+/// common patterns for API calls with centralized error handling.
+///
+/// **Type Parameter**:
+/// - [TFailure]: The failure type specific to the repository
+mixin BaseRepositoryMixin<TFailure> {
+  /// Helper for simple calls (service -> mapper -> domain).
+  ///
+  /// Handles:
+  /// - Service call execution
+  /// - DTO -> Domain mapping
+  /// - Error handling with conversion to [TFailure]
+  Future<Either<TFailure, TDomain>> handleSimpleCall<TDto, TDomain>({
+    required Future<TDto> Function() serviceCall,
+    required TDomain Function(TDto) mapToDomain,
+    required TFailure Function() onUnexpected,
+    required TFailure Function() onNotFound,
+    required TFailure Function() onInsufficientPermission,
+    TFailure Function()? onBadRequest,
+  }) {
+    return RepositoryErrorHandler.handleCall<TDomain, TFailure>(
+      call: () async {
+        final TDto dto = await serviceCall();
+        return mapToDomain(dto);
+      },
+      onUnexpected: onUnexpected,
+      onNotFound: onNotFound,
+      onInsufficientPermission: onInsufficientPermission,
+      onBadRequest: onBadRequest,
+    );
+  }
+
+  /// Helper for calls that return lists.
+  Future<Either<TFailure, List<TDomain>>> handleListCall<TDto, TDomain>({
+    required Future<List<TDto>> Function() serviceCall,
+    required List<TDomain> Function(List<TDto>) mapToDomainList,
+    required TFailure Function() onUnexpected,
+    required TFailure Function() onNotFound,
+    required TFailure Function() onInsufficientPermission,
+  }) {
+    return RepositoryErrorHandler.handleCall<List<TDomain>, TFailure>(
+      call: () async {
+        final List<TDto> dtos = await serviceCall();
+        return mapToDomainList(dtos);
+      },
+      onUnexpected: onUnexpected,
+      onNotFound: onNotFound,
+      onInsufficientPermission: onInsufficientPermission,
+    );
+  }
+
+  /// Helper for calls that return Unit (delete, update without response).
+  Future<Either<TFailure, Unit>> handleUnitCall({
+    required Future<void> Function() serviceCall,
+    required TFailure Function() onUnexpected,
+    required TFailure Function() onNotFound,
+    required TFailure Function() onInsufficientPermission,
+    TFailure Function()? onBadRequest,
+    TFailure Function()? onUnableToDelete,
+    TFailure Function()? onUnableToUpdate,
+  }) {
+    return RepositoryErrorHandler.handleCall<Unit, TFailure>(
+      call: () async {
+        await serviceCall();
+        return unit;
+      },
+      onUnexpected: onUnexpected,
+      onNotFound: onNotFound,
+      onInsufficientPermission: onInsufficientPermission,
+      onBadRequest: onBadRequest ?? onUnableToDelete ?? onUnableToUpdate,
+    );
+  }
+}

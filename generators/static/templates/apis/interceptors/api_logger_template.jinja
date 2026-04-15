@@ -2,8 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:[[project_name]]/injection.dart';
 import 'package:[[project_name]]/logging/logger.dart';
 
+{% raw %}
+/// Dio interceptor that logs requests/responses through [Logger] (apiReq / apiRes / warning / error).
+///
+/// Same idea as a classic OkHttp-style logger: toggles for request line, headers, body, response, errors.
 class ApiLogger extends Interceptor {
-  final bool showRequest;
   ApiLogger({
     this.showRequest = false,
     this.request = false,
@@ -14,6 +17,8 @@ class ApiLogger extends Interceptor {
     this.error = true,
   });
 
+  final bool showRequest;
+
   /// Print request [Options]
   bool request;
 
@@ -23,7 +28,7 @@ class ApiLogger extends Interceptor {
   /// Print request data [Options.data]
   bool requestBody;
 
-  /// Print [Response.data]
+  /// Print [Response.data] (via [Response.toString] when enabled)
   bool responseBody;
 
   /// Print [Response.headers]
@@ -33,14 +38,12 @@ class ApiLogger extends Interceptor {
   bool error;
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (showRequest) {
       _printKV(options.method, options.uri);
     }
     if (request) {
-      // _println(__STRING_3__);
       _printKV(options.method, options.uri);
-      //options.headers;
       _printKV('method', options.method);
       _printKV('responseType', options.responseType.toString());
       _printKV('followRedirects', options.followRedirects);
@@ -52,34 +55,31 @@ class ApiLogger extends Interceptor {
     }
     if (requestHeader) {
       _println('headers:');
-      options.headers.forEach((String key, dynamic v) => _printKV(' [[key]]', v));
+      options.headers.forEach((String key, dynamic v) => _printKV(' $key', v));
     }
     if (requestBody) {
       _println('data:');
       _printAll(options.data);
     }
-    // _println(__STRING_15__);
 
     handler.next(options);
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) async {
-    // _println(__STRING_16__);
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
     _printResponse(response);
     handler.next(response);
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     if (error) {
-      // _println(__STRING_17__, statusCode: err.response?.statusCode);
-      // // _println(__STRING_18__);
-      // if (err.response != null) {
-      //   _printResponse(err.response!);
-      // }
-      _println('[[err]]', statusCode: err.response?.statusCode);
-      _printKV('Message', "[[err_response_statusMessage]]", statusCode: err.response?.statusCode);
+      final String method = err.requestOptions.method;
+      _println('$method Dio error:', statusCode: err.response?.statusCode);
+      if (err.response != null) {
+        _printResponse(err.response!);
+      }
+      _println('$err', statusCode: err.response?.statusCode);
     }
 
     handler.next(err);
@@ -87,7 +87,9 @@ class ApiLogger extends Interceptor {
 
   void _printResponse(Response<dynamic> response) {
     final int? statusCode = response.statusCode;
-    _printKV(statusCode?.toString() ?? "No status", response.requestOptions.uri, statusCode: statusCode);
+    final String method = response.requestOptions.method;
+    final String statusText = statusCode?.toString() ?? 'No status';
+    _printKV('$method $statusText', response.requestOptions.uri, statusCode: statusCode);
     if (responseHeader) {
       _printKV('statusCode', statusCode, statusCode: statusCode);
       if (response.isRedirect == true) {
@@ -95,31 +97,39 @@ class ApiLogger extends Interceptor {
       }
 
       _println('headers:', statusCode: statusCode);
-      response.headers.forEach((String key, List<String> v) => _printKV(' [[key]]', v.join('\r\n\t'), statusCode: statusCode));
+      response.headers.forEach(
+        (String key, List<String> v) => _printKV(' $key', v.join('\r\n\t'), statusCode: statusCode),
+      );
     }
     if (responseBody) {
       _println('Response Text:', statusCode: statusCode);
       _printAll(response.toString(), statusCode: statusCode);
     }
-    // _println(__STRING_29__, statusCode: statusCode);
   }
 
   void _printKV(String key, Object? v, {int? statusCode}) {
-    _println('[[key]]: [[v]]', statusCode: statusCode);
+    _println('$key: $v', statusCode: statusCode);
   }
 
   void _println(String value, {int? statusCode}) {
     final Logger logger = getIt<Logger>();
-    statusCode != null
-        ? (statusCode > 399 && statusCode < 600)
-            ? statusCode == 401
-                ? logger.logWarning(value)
-                : logger.logError(value)
-            : logger.logApiRes(value)
-        : logger.logApiReq(value);
+    if (statusCode != null) {
+      if (statusCode > 399 && statusCode < 600) {
+        if (statusCode == 401) {
+          logger.logWarning(value);
+        } else {
+          logger.logError(value);
+        }
+      } else {
+        logger.logApiRes(value);
+      }
+    } else {
+      logger.logApiReq(value);
+    }
   }
 
-  void _printAll(dynamic msg, {int? statusCode}) {
+  void _printAll(Object? msg, {int? statusCode}) {
     msg.toString().split('\n').forEach((String x) => _println(x, statusCode: statusCode));
   }
 }
+{% endraw %}

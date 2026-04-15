@@ -1,68 +1,172 @@
 /*
- * Authentication interceptor template for API requests
- * Automatically handles authentication for HTTP requests:
- * - Adds bearer tokens to request headers
- * - Token refresh logic for expired tokens
- * - Storage integration for token management
- * - Queued interceptor to prevent race conditions
- * 
- * This ensures all authenticated API calls include proper
- * authorization headers without manual intervention
+ * Authentication interceptor for API requests (Potluck-style):
+ * - Guest mode: x-guest-token, clears Authorization
+ * - User mode: Bearer access token, clears x-guest-token
+ * - apikey + x-locale headers
+ * - On 401: refresh via POST to /token?grant_type=refresh_token (Supabase-style), retry once, persist tokens
+ * - Optional [AuthBloc] sign-out when refresh fails (generated only with `create --login`).
  */
 
-// ignore_for_file: always_specify_types
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:[[project_name]]/apis/common/constants.dart';
+import 'package:[[project_name]]/injection.dart';
 import 'package:[[project_name]]/storage/storage_repository.dart';
-// import __STRING_3__;
+{% if has_login %}
+import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
+{% endif %}
 
-/// Interceptor to send the bearer access token
+/// Queued interceptor: bearer / guest headers + refresh on 401.
 class AuthInterceptor extends QueuedInterceptor {
-  final Dio dioAuth;
-  final Dio dio;
   AuthInterceptor(String baseUrl)
-      : dioAuth = Dio()..options.baseUrl = Constants.apiUrl,
+      : dioAuth = Dio()
+          ..options.baseUrl =
+              Constants.authUrl.isNotEmpty ? Constants.authUrl : baseUrl,
         dio = Dio()..options.baseUrl = baseUrl;
 
-  @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // Load your token here and pass to the header
-    String? accessToken = await StorageRepository().getToken();
-    String token = 'Bearer [[accessToken]]';
-    options.headers.addAll({Constants.authorizationHeader: token});
-    return handler.next(options);
+  final Dio dioAuth;
+  final Dio dio;
+
+{% if has_login %}
+  AuthBloc? _getAuthBloc() {
+    try {
+      return getIt<AuthBloc>();
+    } on Object catch (_) {
+      return null;
+    }
   }
 
-  // You can also perform some actions in the response or onError.
+  void _triggerSignOut() {
+    final AuthBloc? authBloc = _getAuthBloc();
+    if (authBloc != null) {
+      authBloc.add(const AuthEvent.signedOut());
+    } else {
+      Future<void>.delayed(const Duration(milliseconds: 100), () {
+        final AuthBloc? retry = _getAuthBloc();
+        retry?.add(const AuthEvent.signedOut());
+      });
+    }
+  }
+{% else %}
+  void _triggerSignOut() {
+    // Auth UI not generated (create without --login). Clear tokens only, or wire your own sign-out.
+  }
+{% endif %}
+
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    response.extra = {};
-    return handler.next(response);
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final StorageRepository storageRepo = getIt<StorageRepository>();
+    bool isGuest = await storageRepo.isGuestMode();
+    String? guestToken = await storageRepo.getGuestToken();
+
+    if (guestToken != null && guestToken.isNotEmpty && !isGuest) {
+      await storageRepo.saveGuestToken(guestToken);
+      isGuest = true;
+    }
+
+    final bool shouldUseGuestMode = isGuest || (guestToken != null && guestToken.isNotEmpty);
+
+    if (shouldUseGuestMode) {
+      options.headers.remove(Constants.authorizationHeader);
+      if (guestToken != null && guestToken.isNotEmpty) {
+        options.headers['x-guest-token'] = guestToken;
+      }
+    } else {
+      final String? accessToken = await storageRepo.getToken();
+      if (accessToken != null && accessToken.isNotEmpty) {
+        options.headers.remove('x-guest-token');
+        options.headers[Constants.authorizationHeader] = 'Bearer $accessToken';
+      } else {
+        options.headers.remove(Constants.authorizationHeader);
+        guestToken = await storageRepo.getGuestToken();
+        if (guestToken != null && guestToken.isNotEmpty) {
+          options.headers['x-guest-token'] = guestToken;
+        }
+      }
+    }
+
+    if (Constants.apiKey.isNotEmpty) {
+      options.headers[Constants.apiKeyRequestHeader] = Constants.apiKey;
+    }
+
+    final String deviceLocale = PlatformDispatcher.instance.locale.languageCode;
+    final String locale =
+        (deviceLocale == 'it' || deviceLocale == 'en') ? deviceLocale : 'en';
+    options.headers['x-locale'] = locale;
+
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+    response.extra = <String, dynamic>{};
+    handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      try {
-        // TODO: Method to refresh the token
-        // Uncomment the following code to use Firebase Authentication
-        // final String? newToken = await FirebaseAuth.instance.currentUser?.getIdToken(true);
-        const String? newToken = null;
+      final StorageRepository storage = getIt<StorageRepository>();
+      final bool isGuest = await storage.isGuestMode();
+      if (isGuest) {
+        handler.next(err);
+        return;
+      }
 
-        if (newToken == null) {
-          StorageRepository().removeToken();
-          return handler.next(err);
+      try {
+        final String? refreshToken = await storage.getRefreshToken();
+        if (refreshToken == null || refreshToken.isEmpty) {
+          await storage.removeToken();
+          _triggerSignOut();
+          handler.next(err);
+          return;
         }
 
-        final Map<String, dynamic> headers = err.requestOptions.headers;
-        String token = 'Bearer [[newToken]]';
-        headers.addAll({Constants.authorizationHeader: token});
+        final Response<dynamic> refreshResponse = await dioAuth.post<dynamic>(
+          '/token?grant_type=refresh_token',
+          data: <String, dynamic>{'refresh_token': refreshToken},
+          options: Options(
+            headers: <String, dynamic>{
+              Constants.apiKeyRequestHeader: Constants.apiKey,
+              Constants.contentTypeHeader: 'application/json',
+            },
+          ),
+        );
 
-        final options = Options(
+        final Object? refreshBodyRaw = refreshResponse.data;
+        if (refreshBodyRaw is! Map<dynamic, dynamic>) {
+          await storage.removeToken();
+          _triggerSignOut();
+          handler.next(err);
+          return;
+        }
+        final Map<String, dynamic> refreshBody =
+            Map<String, dynamic>.from(refreshBodyRaw);
+        final String? newToken = refreshBody['access_token'] as String?;
+        final String? newRefresh = refreshBody['refresh_token'] as String?;
+
+        if (newToken == null || newToken.isEmpty) {
+          await storage.removeToken();
+          _triggerSignOut();
+          handler.next(err);
+          return;
+        }
+
+        final Map<String, dynamic> headers =
+            Map<String, dynamic>.from(err.requestOptions.headers);
+        headers[Constants.authorizationHeader] = 'Bearer $newToken';
+        if (Constants.apiKey.isNotEmpty) {
+          headers[Constants.apiKeyRequestHeader] = Constants.apiKey;
+        }
+        headers[Constants.contentTypeHeader] = 'application/json';
+
+        final String deviceLocale = PlatformDispatcher.instance.locale.languageCode;
+        final String locale =
+            (deviceLocale == 'it' || deviceLocale == 'en') ? deviceLocale : 'en';
+        headers['x-locale'] = locale;
+
+        final Options options = Options(
           method: err.requestOptions.method,
           headers: headers,
         );
@@ -73,18 +177,31 @@ class AuthInterceptor extends QueuedInterceptor {
           queryParameters: err.requestOptions.queryParameters,
           options: options,
         );
+
         if (retryResponse.statusCode != 401) {
-          StorageRepository().saveToken(newToken);
-          return handler.resolve(retryResponse);
-        } else {
-          StorageRepository().removeToken();
-          return handler.reject(err);
+          await storage.saveToken(
+            TokenData(
+              token: newToken,
+              refreshToken: (newRefresh != null && newRefresh.isNotEmpty)
+                  ? newRefresh
+                  : refreshToken,
+            ),
+          );
+          handler.resolve(retryResponse);
+          return;
         }
-      } catch (ex) {
-        StorageRepository().removeToken();
+
+        await storage.removeToken();
+        _triggerSignOut();
+        handler.reject(err);
+        return;
+      } on Object catch (_) {
+        await storage.removeToken();
+        _triggerSignOut();
         handler.next(err);
+        return;
       }
     }
-    return handler.next(err);
+    handler.next(err);
   }
 }

@@ -41,6 +41,7 @@ def create_folder_structure(lib_path, login):
         "features/splash",
         "logging",
         "storage",
+        "widgets/common",
     ]
 
     # Add auth folders if login is enabled

@@ -1,0 +1,32 @@
+import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
+
+/// Base BLoC per form con pattern comuni di submit.
+///
+/// Estende [Bloc] e fornisce helper methods specifici per gestire
+/// il submit di form con validazione e gestione errori.
+///
+/// **Pattern utilizzato**: Template Method Pattern
+///
+/// **Type Parameters**:
+/// - [Event]: Tipo degli eventi del BLoC
+/// - [State]: Tipo dello stato del BLoC
+/// - [Failure]: Tipo dei failure (da dartz Either)
+/// - [Success]: Tipo del valore di successo
+abstract class BaseFormBloc<Event, State, Failure, Success> extends Bloc<Event, State> {
+  BaseFormBloc(super.initialState);
+
+  /// Helper per gestire submit con Either<Failure, Success> direttamente nello stato.
+  /// Utile quando lo stato contiene Option<Either<Failure, Success>>.
+  Future<void> handleFormSubmitWithEither<SuccessType>(
+    Emitter<State> emit,
+    Future<Either<Failure, SuccessType>> operation,
+    State Function() getSubmittingState,
+    State Function(Either<Failure, SuccessType> result) getResultState,
+  ) async {
+    emit(getSubmittingState());
+
+    final Either<Failure, SuccessType> result = await operation;
+    emit(getResultState(result));
+  }
+}

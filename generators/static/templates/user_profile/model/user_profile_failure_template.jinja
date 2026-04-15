@@ -1,0 +1,11 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'user_profile_failure.freezed.dart';
+
+@freezed
+abstract class UserProfileFailure with _$UserProfileFailure {
+  const factory UserProfileFailure.unexpected() = Unexpected;
+  const factory UserProfileFailure.insufficientPermission() = InsufficientPermission;
+  const factory UserProfileFailure.unableToUpdate() = UnableToUpdate;
+  const factory UserProfileFailure.notFound() = NotFound;
+}

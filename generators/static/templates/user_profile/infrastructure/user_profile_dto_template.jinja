@@ -1,0 +1,27 @@
+/*
+ * UserProfile DTO (Data Transfer Object)
+ * Used for API communication when syncing UserProfile with backend
+ * 
+ * DTOs represent the data structure expected by the API
+ * and are mapped to/from domain entities via UserProfileMapper
+ */
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'user_profile_dto.freezed.dart';
+part 'user_profile_dto.g.dart';
+
+@freezed
+abstract class UserProfileDto with _$UserProfileDto {
+  const factory UserProfileDto({
+    required String id,
+    required String name,
+    required String emailAddress,
+    @JsonKey(name: 'avatar_url') String? avatarUrl,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+  }) = _UserProfileDto;
+
+  factory UserProfileDto.fromJson(Map<String, dynamic> json) =>
+      _$UserProfileDtoFromJson(json);
+}

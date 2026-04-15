@@ -8,8 +8,10 @@ import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
 import 'package:[[project_name]]/features/auth/sign_in_form/application/sign_in_form_bloc.dart';
 import 'package:[[project_name]]/features/home/home_page.dart';
 import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/core/errors/error_localizer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:[[project_name]]/core/model/failures.dart';
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
 import 'package:dartz/dartz.dart' as dz;
 
 class SignInForm extends StatelessWidget {
@@ -25,15 +27,7 @@ class SignInForm extends StatelessWidget {
             either.fold(
               (AuthFailure failure) {
                 FlushbarHelper.createError(
-                  message: switch (failure) {
-                    // Use localized strings here in your apps
-                    CancelledByUser() => 'Cancelled',
-                    ServerError() => 'Server error',
-                    EmailAlreadyInUse() => 'Email already in use',
-                    InvalidEmailAndPasswordCombination() => 'Invalid email and password combination',
-                    // TODO: Handle this case.
-                    AuthFailure() => throw UnimplementedError(),
-                  },
+                  message: ErrorLocalizer.localizeAuthFailure(context, failure),
                 ).show(context);
               },
               (_) {
@@ -74,12 +68,9 @@ class SignInForm extends StatelessWidget {
                       onChanged: (String value) {
                         context.read<SignInFormBloc>().add(SignInFormEvent.emailChanged(value));
                       },
-                      validator: (_) {
-                        return context.read<SignInFormBloc>().state.emailAddress.value.fold(
-                              (ValueFailure<String> f) => switch (f) {
-                                ValueFailure.invalidEmail => 'Invalid email',
-                                _ => null,
-                              },
+                      validator: (String? value) {
+                        return EmailAddress(value ?? '').value.fold(
+                              (ValueFailure<String> failure) => failure.title(context, failure),
                               (_) => null,
                             );
                       },
@@ -97,12 +88,9 @@ class SignInForm extends StatelessWidget {
                       onChanged: (String value) {
                         context.read<SignInFormBloc>().add(SignInFormEvent.passwordChanged(value));
                       },
-                      validator: (_) {
-                        return context.read<SignInFormBloc>().state.password.value.fold(
-                              (ValueFailure<String> f) => switch (f) {
-                                ValueFailure.shortPassword => 'Short password',
-                                _ => null,
-                              },
+                      validator: (String? value) {
+                        return Password(value ?? '').value.fold(
+                              (ValueFailure<String> failure) => failure.title(context, failure),
                               (_) => null,
                             );
                       },
@@ -121,11 +109,8 @@ class SignInForm extends StatelessWidget {
                           context.read<SignInFormBloc>().add(SignInFormEvent.confirmPasswordChanged(value));
                         },
                         validator: (String? value) {
-                          return context.read<SignInFormBloc>().state.confirmPassword.value.fold(
-                                (ValueFailure<String> f) => switch (f) {
-                                  ValueFailure.passwordsDoNotMatch => 'Passwords do not match',
-                                  _ => null,
-                                },
+                          return ConfirmPassword(context.read<SignInFormBloc>().state.password.rawValue, value ?? '').value.fold(
+                                (ValueFailure<String> failure) => failure.title(context, failure),
                                 (_) => null,
                               );
                         },

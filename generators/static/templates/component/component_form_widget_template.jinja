@@ -1,16 +1,16 @@
-/*
- * Form component widget template
- * Generates a form widget with automatic TextField generation based on domain model fields
- * - Automatic field generation from domain model
- * - Validation based on ValueObjects
- * - BLoC integration for state management
- */
-
 import 'package:caravaggio_ui/caravaggio_ui.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Title;
 import 'package:flutter_bloc/flutter_bloc.dart';
+{% if field_list %}
 import 'package:[[project_name]]/core/model/failures.dart';
+{% endif %}
+{% if domain_value_objects_import %}
+import 'package:[[project_name]]/[[domain_value_objects_import]]';
+{% endif %}
 [[bloc_import]]
+{% if extra_imports %}
+[[extra_imports]]
+{% endif %}
 
 class [[pascal_name]]Component extends StatelessWidget {
   const [[pascal_name]]Component({super.key});
@@ -18,7 +18,7 @@ class [[pascal_name]]Component extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<[[bloc_name]], [[state_name]]>(
-      builder: (context, state) {
+      builder: (BuildContext context, [[state_name]] state) {
         return Form(
           autovalidateMode: state.showErrorMessages ? AutovalidateMode.always : AutovalidateMode.disabled,
           child: SingleChildScrollView(
@@ -29,6 +29,7 @@ class [[pascal_name]]Component extends StatelessWidget {
                 children: <Widget>[
 {% for field in field_list %}
 {% if field.name != 'id' %}
+{% if field.control_type == 'text' %}
                   CTextField.bordered(
                     decoration: const CFieldDecoration(
                       labelText: '[[field.label]]',
@@ -36,14 +37,69 @@ class [[pascal_name]]Component extends StatelessWidget {
                     onChanged: (String value) {
                       context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(value));
                     },
-                    validator: (_) {
-                      return context.read<[[bloc_name]]>().state.[[field.name]].value.fold(
-                            (ValueFailure<String> f) => f.toString(),
+                    validator: (String? value) {
+                      return [[field.pascal_name]](value ?? '').value.fold(
+                            (ValueFailure<String> failure) => failure.title(context, failure),
                             (_) => null,
                           );
                     },
                   ),
                   const SizedBox(height: 8),
+{% elif field.control_type == 'number' %}
+                  CTextField.bordered(
+                    decoration: const CFieldDecoration(
+                      labelText: '[[field.label]]',
+                    ),
+                    keyboardType: [[field.keyboard_type]],
+                    onChanged: (String value) {
+                      context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(value));
+                    },
+                    validator: (String? value) {
+                      return [[field.pascal_name]]([[field.validator_input_expr]]).value.fold(
+                            (ValueFailure<[[field.mapped_field_type]]> failure) => failure.title(context, failure),
+                            (_) => null,
+                          );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+{% elif field.control_type == 'checkbox' %}
+                  CCheckbox(
+                    controller: CCheckboxController(initialValue: state.[[field.name]].getOrCrash()),
+                    label: '[[field.label]]',
+                    onChanged: (bool? value) {
+                      if (value != null) {
+                        context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(value));
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+{% elif field.control_type == 'date' %}
+                  CDatePicker(
+                    mode: CustomDatePickerMode.single,
+                    onChanged: (List<DateTime> dates) {
+                      if (dates.isNotEmpty) {
+                        context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(dates.first));
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+{% elif field.control_type == 'dropdown' %}
+                  CDropdown<[[field.enum_class]]>.bordered(
+                    items: [[field.enum_class]].values
+                        .map(([[field.enum_class]] e) =>
+                            CDropdownItemModel<[[field.enum_class]]>(value: e, text: e.name))
+                        .toList(),
+                    decoration: const CFieldDecoration(
+                      labelText: '[[field.label]]',
+                    ),
+                    onChanged: ([[field.enum_class]]? value) {
+                      if (value != null) {
+                        context.read<[[bloc_name]]>().add([[pascal_name]]FormEvent.[[field.name]]Changed(value));
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+{% endif %}
 {% endif %}
 {% endfor %}
                   CButton.elevated(
@@ -72,4 +128,3 @@ class [[pascal_name]]Component extends StatelessWidget {
     );
   }
 }
-

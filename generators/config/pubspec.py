@@ -11,6 +11,7 @@ def update_pubspec(flutter_name, has_login):
         "dartz",
         "freezed_annotation", 
         "flutter_bloc",
+        "provider",
         "injectable",
         "get_it",
         "bloc",

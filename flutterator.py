@@ -27,6 +27,9 @@ from generators.helpers import (
     create_presentation_feature_layers,
     create_domain_entity_layers,
     find_domain_models,
+    find_domain_models_with_class_names,
+    find_enums,
+    find_enums_with_info,
     get_model_fields_from_domain,
     create_drawer_page,
     update_home_page_with_drawer,
@@ -44,6 +47,7 @@ from generators.helpers import (
     parse_fields_string,
     pascal_case_to_snake_case,
     to_pascal_case_preserve,
+    pascal_case_to_camel_case,
     # Configuration
     FlutteratorConfig,
     load_config,
@@ -52,6 +56,7 @@ from generators.helpers import (
     show_config,
     PROJECT_CONFIG_FILE,
 )
+from generators.helpers.utils import to_camel_case
 
 # Version
 VERSION = "3.1.1"
@@ -133,6 +138,65 @@ def print_created_structure(name: str, structure: list[tuple[str, list[str]]], u
             console.print(f"   [cyan]→ {file}[/cyan]")
 
 
+def prompt_select_form_model_fields(all_fields: list[dict]) -> list[dict]:
+    """Ask which domain model fields to include in the form; keeps model field order."""
+    if not all_fields:
+        return all_fields
+
+    console.print("[bold cyan]Quali campi del modello vuoi mostrare nel form?[/bold cyan]")
+    for i, field in enumerate(all_fields, start=1):
+        console.print(f"  {i}. [green]{field['name']}[/green] : [magenta]{field['type']}[/magenta]")
+    console.print("  [dim](Invio senza numeri = tutti i campi)[/dim]")
+    console.print()
+
+    while True:
+        raw = click.prompt(
+            "Indici separati da virgola (es. 1,3) oppure Invio per tutti",
+            default="",
+            show_default=False,
+        )
+        raw = (raw or "").strip()
+        if not raw:
+            return list(all_fields)
+
+        parts = [p.strip() for p in raw.split(",") if p.strip()]
+        if not parts:
+            return list(all_fields)
+
+        indices = []
+        parse_ok = True
+        for p in parts:
+            try:
+                n = int(p)
+            except ValueError:
+                console.print("[red]Inserisci solo numeri interi separati da virgola.[/red]")
+                parse_ok = False
+                break
+            if n < 1 or n > len(all_fields):
+                console.print(
+                    f"[red]Indice non valido: {n}. Usa un numero tra 1 e {len(all_fields)}.[/red]"
+                )
+                parse_ok = False
+                break
+            indices.append(n - 1)
+        if not parse_ok:
+            continue
+
+        seen = set()
+        ordered = []
+        for idx in indices:
+            if idx not in seen:
+                seen.add(idx)
+                ordered.append(idx)
+
+        selected = [all_fields[i] for i in ordered]
+        if not selected:
+            console.print("[red]Seleziona almeno un campo.[/red]")
+            continue
+
+        return selected
+
+
 def run_flutter_commands(project_path: Path) -> None:
     """Run flutter pub get and build_runner build after project modifications"""
     try:
@@ -142,7 +206,7 @@ def run_flutter_commands(project_path: Path) -> None:
         # Check if build_runner is available before running it
         try:
             print_step("Running build_runner build...")
-            subprocess.run(["dart", "run", "build_runner", "build"], cwd=project_path, check=True, capture_output=True)
+            subprocess.run(["dart", "run", "build_runner", "build", "--delete-conflicting-outputs"], cwd=project_path, check=True, capture_output=True)
         except subprocess.CalledProcessError:
             print_warning("build_runner not available or failed. You may need to add it as a dev dependency.")
         
@@ -170,6 +234,7 @@ def cli():
       create              Create a new Flutter project
       add-page            Add a simple page
       add-domain          Add a domain entity (model + infrastructure only)
+      add-enum            Add a Dart enum to the domain
       add-component       Add a reusable component (form, list, or single)
       list                List pages and domain models
       config              Manage configuration
@@ -475,7 +540,7 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
     elif not dry_run:
         # Interactive mode for fields
         console.print("[bold cyan]Adding fields interactively. Type 'done' when finished.[/bold cyan]")
-        console.print("[dim]Tip: Use PascalCase for model names (e.g., NoteItem), List<ModelName> for lists[/dim]")
+        console.print("[dim]Tip: Use PascalCase for model names (e.g., NoteItem), List<ModelName> for lists, Type? for nullable (e.g., String?, int?)[/dim]")
         while True:
             field_name = click.prompt("Field name (or 'done')", default="done")
             if field_name.lower() == 'done':
@@ -487,7 +552,7 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
                 print_error(f"Invalid field name: {name_error}")
                 continue
             
-            field_type = click.prompt("Field type (e.g., string, int, List<ModelName>)", default="string")
+            field_type = click.prompt("Field type (e.g., string, int, String?, List<ModelName>)", default="string")
             
             # Validate field type
             is_valid_type, type_error, normalized_type = validate_field_type(field_type, lib_path, folder)
@@ -551,6 +616,16 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
     # Pass both folder_name (for paths) and class_name (for class names)
     create_domain_entity_layers(domain_dir, entity_folder_name, entity_class_name, field_list, project_name, folder)
     
+    # Regenerate error_localizer with the newly added domain failure
+    from generators.templates._core.core_generator import generate_error_localizer, infer_has_login
+
+    generate_error_localizer(
+        project_name,
+        lib_path,
+        domain_folder=folder,
+        has_login=infer_has_login(lib_path),
+    )
+    
     # Show created structure
     print_created_structure(entity_folder_name, [
         ("model", [
@@ -575,6 +650,126 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
         print_info("Skipping flutter pub get and build_runner (--no-build)")
     
     print_success(f"Domain entity '{entity_class_name}' added successfully!")
+
+
+@cli.command()
+@click.option('--name', help='Enum name in PascalCase (e.g., EventStatus, Priority)')
+@click.option('--values', help='Comma-separated enum values (e.g., "pending,active,done")')
+@click.option('--folder', help='Domain folder (default from config)')
+@click.option('--project-path', default='.', help='Path to Flutter project')
+@click.option('--dry-run', is_flag=True, help='Preview without creating files')
+def add_enum(name, values, folder, project_path, dry_run):
+    """
+    Add a Dart enum to the domain.
+
+    \b
+    Creates a single enum file in lib/<domain_folder>/enums/.
+    Once created, enum types can be used as field types in add-domain.
+
+    \b
+    Examples:
+      flutterator add-enum --name EventStatus --values "pending,active,done"
+
+      flutterator add-enum --name Priority --values "low,medium,high"
+
+      flutterator add-enum --name EventStatus --values "pending,active,done" --dry-run
+    """
+    from generators.templates.copier import generate_file as _gen_file
+
+    project_dir = Path(project_path)
+    lib_path, project_name = validate_flutter_project(project_dir)
+
+    # Load configuration
+    cfg = load_config(project_dir)
+
+    # Interactive mode - ask for missing parameters
+    if not name:
+        if dry_run:
+            print_error("--name is required with --dry-run")
+            sys.exit(1)
+        name = click.prompt("Enum name (PascalCase)")
+
+    # Validate enum name
+    is_valid, error_msg = validate_entity_name(name)
+    if not is_valid:
+        print_error(error_msg)
+        sys.exit(1)
+
+    # Normalise: PascalCase → snake_case for file, preserve PascalCase for class
+    if name and name[0].isupper() and '_' not in name:
+        enum_file_stem = pascal_case_to_snake_case(name)
+        enum_class_name = name
+    else:
+        enum_file_stem = name.lower().replace(' ', '_').replace('-', '_')
+        enum_class_name = to_pascal_case_preserve(enum_file_stem)
+
+    # Use folder from CLI or config
+    if folder is None:
+        folder = cfg.domain_folder if cfg.domain_folder else "domain"
+
+    # Parse values
+    if not values:
+        if dry_run:
+            print_error("--values is required with --dry-run")
+            sys.exit(1)
+        values = click.prompt("Enum values (comma-separated, e.g. pending,active,done)")
+
+    raw_values = [v.strip() for v in values.split(',') if v.strip()]
+
+    if not raw_values:
+        print_error("At least one enum value is required.")
+        sys.exit(1)
+
+    # Validate and normalise each value
+    normalised_values = []
+    seen_lower = set()
+    for val in raw_values:
+        norm = to_camel_case(val) if '_' in val else val
+        is_valid_val, val_err = validate_field_name(norm)
+        if not is_valid_val:
+            print_error(f"Invalid enum value '{val}': {val_err}")
+            sys.exit(1)
+        if norm.lower() in seen_lower:
+            print_error(f"Duplicate enum value '{norm}'.")
+            sys.exit(1)
+        seen_lower.add(norm.lower())
+        normalised_values.append(norm)
+
+    values_str = ", ".join(normalised_values)
+    enums_dir = lib_path / folder / "enums"
+    output_file = enums_dir / f"{enum_file_stem}.dart"
+    relative_path = f"lib/{folder}/enums/{enum_file_stem}.dart"
+
+    # Check for existing file
+    if output_file.exists() and not dry_run:
+        if not click.confirm(f"⚠️  {relative_path} already exists. Overwrite?"):
+            print_info("Aborted.")
+            return
+
+    # Dry-run mode
+    if dry_run:
+        print_dry_run_header()
+        console.print(f"[bold]📦 Would create enum:[/bold] [cyan]{enum_class_name}[/cyan]")
+        console.print(f"   [dim]File:[/dim] [blue]{relative_path}[/blue]")
+        console.print(f"   [dim]Values:[/dim] [green]{values_str}[/green]")
+        console.print()
+        print_dry_run_tree(f"lib/{folder}/enums", [
+            ("", [f"{enum_file_stem}.dart"])
+        ])
+        print_dry_run_footer()
+        return
+
+    # Create file
+    enums_dir.mkdir(parents=True, exist_ok=True)
+    _gen_file(project_name, enums_dir, "domain/enum_template.jinja", f"{enum_file_stem}.dart", {
+        "enum_name": enum_class_name,
+        "values": values_str,
+    })
+
+    console.print(f"[bold cyan]📦 Created enum: {enum_class_name}[/bold cyan]")
+    console.print(f"   [dim]File:[/dim] [blue]{relative_path}[/blue]")
+    console.print(f"   [dim]Values:[/dim] [green]{values_str}[/green]")
+    print_success(f"Enum '{enum_class_name}' added successfully! You can now use it as a field type in add-domain.")
 
 
 # @cli.command()  # Disabled - use add-domain + add-component --type list instead
@@ -785,7 +980,7 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     
     FORM COMPONENT (--type form):
       Creates a form with field validation and submission handling.
-      Requires --fields to define form inputs.
+      With a domain model, you are asked which model fields to include in the form.
       • application/  - Form BLoC, events, states
       • presentation/ - Form widget
     
@@ -896,46 +1091,58 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
             console.print("[red]Invalid choice. Please select 1, 2, or 3.[/red]")
     
     # Select domain model
-    available_models = find_domain_models(lib_path, cfg.domain_folder)
-    if not available_models:
-        print_error(f"No domain models found in {cfg.domain_folder}/ folder.")
-        print_error("Create a domain model first using: flutterator add-domain --name <model_name>")
-        sys.exit(1)
-    
+    models_info = find_domain_models_with_class_names(lib_path, cfg.domain_folder)
+    available_models = sorted(models_info.keys())
     domain_model_name = None
+    domain_model_folder = None
     if not dry_run:
-        console.print(f"[bold cyan]Available domain models:[/bold cyan]")
-        for i, model in enumerate(available_models, 1):
-            console.print(f"  {i}. {model}")
+        console.print(f"[bold cyan]Select domain model:[/bold cyan]")
+        console.print(f"  0. [dim](Vuoto) - componente senza modello[/dim]")
+        for i, model_key in enumerate(available_models, 1):
+            info = models_info[model_key]
+            console.print(f"  {i}. {info['class_name']} ({model_key})")
         console.print()
         
         while True:
-            choice = click.prompt(f"Select domain model (1-{len(available_models)})", type=int)
-            if 1 <= choice <= len(available_models):
-                domain_model_name = available_models[choice - 1]
+            choice = click.prompt(f"Select domain model (0-{len(available_models)})", type=int)
+            if choice == 0:
+                domain_model_name = None
+                domain_model_folder = None
                 break
-            console.print("[red]Invalid choice. Please try again.[/red]")
+            elif 1 <= choice <= len(available_models):
+                domain_model_name = available_models[choice - 1]
+                domain_model_folder = models_info[domain_model_name]['folder']
+                break
+            console.print(f"[red]Invalid choice. Please select 0-{len(available_models)}.[/red]")
     else:
-        # Dry run: use first available model
-        domain_model_name = available_models[0]
+        # Dry run: use first available model if any, otherwise use empty (Vuoto)
+        if available_models:
+            domain_model_name = available_models[0]
+            domain_model_folder = models_info[domain_model_name]['folder']
+        else:
+            domain_model_name = None
+            domain_model_folder = None
     
     # Build base path for display
     base_path = f"lib/{folder}/{component_name}" if folder else f"lib/{component_name}"
     
-    # Get fields from domain model (for form components)
+    # Get fields from domain model (for form components with a model)
     field_list = []
-    if component_type == 'form':
+    if component_type == 'form' and domain_model_name is not None:
         try:
-            field_list = get_model_fields_from_domain(lib_path, cfg.domain_folder, domain_model_name)
+            field_list = get_model_fields_from_domain(lib_path, cfg.domain_folder, domain_model_name, domain_model_folder)
         except Exception as e:
             print_error(f"Error reading domain model: {e}")
             sys.exit(1)
+        if not dry_run and field_list:
+            field_list = prompt_select_form_model_fields(field_list)
     
     # Dry-run mode: show what would be created
     if dry_run:
         print_dry_run_header()
         console.print(f"[bold]🔧 Would add component:[/bold] [cyan]{component_name}[/cyan]")
-        console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
+        model_label = domain_model_name if domain_model_name else "(Vuoto)"
+        console.print(f"   [dim]Using domain model:[/dim] [blue]{model_label}[/blue]")
         console.print(f"   [dim]Type:[/dim] [magenta]{component_type.capitalize()} component[/magenta]")
         if component_type == 'form' and field_list:
             fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
@@ -981,7 +1188,8 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
         return
     
     console.print(f"[bold cyan]🔧 Adding {component_type} component: {component_name}[/bold cyan]")
-    console.print(f"   [dim]Using domain model:[/dim] [blue]{domain_model_name}[/blue]")
+    model_label = domain_model_name if domain_model_name else "(Vuoto)"
+    console.print(f"   [dim]Using domain model:[/dim] [blue]{model_label}[/blue]")
     if component_type == 'form' and field_list:
         fields_str = ', '.join([f"[green]{field['name']}[/green]:[magenta]{field['type']}[/magenta]" for field in field_list])
         console.print(f"   [dim]Fields:[/dim] {fields_str}")
@@ -1003,7 +1211,7 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     
     if component_type == 'form':
         # Create all layers with domain model fields
-        create_component_form_layers(component_dir, component_name, field_list, project_name, folder, domain_model_name, cfg.domain_folder)
+        create_component_form_layers(component_dir, component_name, field_list, project_name, folder, domain_model_name, cfg.domain_folder, domain_model_folder, lib_path=lib_path)
         # Show created structure
         print_created_structure(component_name, [
             ("application", [f"{component_name}_form_bloc.dart", f"{component_name}_form_event.dart", f"{component_name}_form_state.dart"]),
@@ -1011,7 +1219,7 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
         ])
     elif component_type == 'list':
         # Create all layers with list functionality (CRUD operations)
-        create_component_list_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder)
+        create_component_list_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder, domain_model_folder, lib_path)
         # Show created structure
         print_created_structure(component_name, [
             ("application", [f"{component_name}_bloc.dart", f"{component_name}_event.dart", f"{component_name}_state.dart"]),
@@ -1019,7 +1227,7 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
         ])
     else:  # single
         # Create all layers with domain model reference
-        create_component_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder)
+        create_component_layers(component_dir, component_name, project_name, folder, domain_model_name, cfg.domain_folder, domain_model_folder, lib_path)
         # Show created structure
         print_created_structure(component_name, [
             ("application", [f"{component_name}_bloc.dart", f"{component_name}_event.dart", f"{component_name}_state.dart"]),
@@ -1205,14 +1413,15 @@ def _list_pages_from_router(project_dir: Path, project_name: str) -> None:
 
 def _list_domain_models(lib_path: Path, domain_folder: str) -> None:
     """List all domain models."""
-    models = find_domain_models(lib_path, domain_folder)
+    models_info = find_domain_models_with_class_names(lib_path, domain_folder)
     
-    if models:
+    if models_info:
         console.print()
         console.print("[bold blue]📦 Domain Models:[/bold blue]")
-        for model in sorted(models):
-            model_path = f"lib/{domain_folder}/{model}/model/{model}.dart"
-            console.print(f"   [cyan]{model:<20}[/cyan] [dim]({model_path})[/dim]")
+        for file_stem in sorted(models_info.keys()):
+            info = models_info[file_stem]
+            model_path = f"lib/{domain_folder}/{info['folder']}/model/{file_stem}.dart"
+            console.print(f"   [cyan]{info['class_name']:<20}[/cyan] [dim]({model_path})[/dim]")
     else:
         console.print()
         console.print(f"[dim]📦 No domain models found in {domain_folder}/ folder[/dim]")

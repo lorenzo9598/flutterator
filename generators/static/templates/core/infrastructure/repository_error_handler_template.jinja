@@ -1,0 +1,44 @@
+import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
+
+/// Centralized error handler for repository operations.
+/// Maps DioException HTTP status codes to typed failure objects.
+class RepositoryErrorHandler {
+  /// Executes a repository call and maps errors to [TFailure] automatically.
+  static Future<Either<TFailure, T>> handleCall<T, TFailure>({
+    required Future<T> Function() call,
+    required TFailure Function() onUnexpected,
+    required TFailure Function() onNotFound,
+    required TFailure Function() onInsufficientPermission,
+    TFailure Function()? onBadRequest,
+    TFailure Function()? onUnauthorized,
+  }) async {
+    try {
+      final T result = await call();
+      return right(result);
+    } on DioException catch (e, _) {
+      final int? statusCode = e.response?.statusCode;
+
+      switch (statusCode) {
+        case 400:
+          if (onBadRequest != null) {
+            return left(onBadRequest());
+          }
+          return left(onUnexpected());
+        case 401:
+          if (onUnauthorized != null) {
+            return left(onUnauthorized());
+          }
+          return left(onInsufficientPermission());
+        case 403:
+          return left(onInsufficientPermission());
+        case 404:
+          return left(onNotFound());
+        default:
+          return left(onUnexpected());
+      }
+    } on Object catch (e) {
+      return left(onUnexpected());
+    }
+  }
+}

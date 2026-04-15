@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:[[project_name]]/injection.dart';
+import 'package:[[model_import_prefix]]/model/[[model_file_stem]].dart';
 import '../application/[[feature_name]]_bloc.dart';
 
 class [[feature_name.capitalize()]]Page extends StatelessWidget {
@@ -23,9 +24,9 @@ class [[feature_name.capitalize()]]Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt.get<[[feature_name.capitalize()]]Bloc>(),
+      create: (BuildContext context) => getIt.get<[[feature_name.capitalize()]]Bloc>(),
       child: Builder(
-        builder: (context) {
+        builder: (BuildContext context) {
           return  Scaffold(
             appBar: AppBar(
               title: const Text('[[feature_name.replace("_", " ").capitalize()]]'),
@@ -39,14 +40,14 @@ class [[feature_name.capitalize()]]Page extends StatelessWidget {
               ],
             ),
             body: BlocBuilder<[[feature_name.capitalize()]]Bloc, [[feature_name.capitalize()]]State>(
-              builder: (context, state) {
+              builder: (BuildContext context, [[feature_name.capitalize()]]State state) {
                 return switch (state) {
                   Initial() => const Center(child: Text('Welcome')),
                   Loading() => const Center(child: CircularProgressIndicator()),
                   Loaded(:final items) => ListView.builder(
                       itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
+                      itemBuilder: (BuildContext context, int index) {
+                        final [[model_class_pascal]] item = items[index];
                         return ListTile(
                             title: Text(item.toString()),
                             trailing: Row(

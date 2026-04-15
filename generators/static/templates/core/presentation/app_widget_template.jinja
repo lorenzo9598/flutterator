@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/single_child_widget.dart' show SingleChildWidget;
 {% if has_login %}
 import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
 import 'package:[[project_name]]/injection.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
 {% endif %}
 import 'package:[[project_name]]/router.dart';
 
@@ -13,10 +15,9 @@ class AppWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      // ignore: always_specify_types
-      providers: [
+      providers: <SingleChildWidget>[
 {% if has_login %}
-        BlocProvider<AuthBloc>(create: (BuildContext context) => getIt<AuthBloc>()..add(const AuthCheckRequested())),
+        BlocProvider<AuthBloc>(create: (BuildContext context) => AuthBloc(getIt<IAuthFacade>())..add(const AuthCheckRequested())),
 {% endif %}
         // Add blocs here if needed
       ],
