@@ -1,47 +1,196 @@
-name: Publish to PyPI
+name: Release on tag
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Verify tag matches pyproject.toml version
+      - name: Resolve release tag from pyproject.toml
+        id: meta
         env:
-          GIT_TAG: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           python <<'PY'
           import os
           import sys
           import tomllib
 
-          tag = os.environ["GIT_TAG"]
           with open("pyproject.toml", "rb") as f:
               version = tomllib.load(f)["project"]["version"]
-          expected = f"v{version}"
-          if tag != expected:
-              print(
-                  f"::error::Git tag {tag!r} must be {expected!r} "
-                  f"(pyproject.toml project.version is {version!r})"
-              )
-              sys.exit(1)
-          print(f"OK: tag {tag} matches project.version {version!r}")
+          tag = f"v{version}"
+          event = os.environ["EVENT_NAME"]
+          ref_name = os.environ["REF_NAME"]
+
+          if event == "push":
+              if ref_name != tag:
+                  print(
+                      f"::error::Pushed tag {ref_name!r} must be {tag!r} "
+                      f"(pyproject.toml project.version is {version!r})"
+                  )
+                  sys.exit(1)
+              print(f"OK: tag {ref_name} matches project.version {version!r}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"tag={tag}\n")
+              fh.write(f"version={version}\n")
+          print(f"Release tag resolved to {tag}")
           PY
 
-      - name: Install build
+      - name: Create and push tag from pyproject (workflow_dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          git fetch origin --tags --quiet
+          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
+            echo "::error::Tag ${TAG} already exists on remote. Bump project.version in pyproject.toml or delete the remote tag."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created and pushed tag ${TAG} (same run continues with zip, GitHub Release, PyPI)."
+
+      - name: Make build script executable
+        run: chmod +x build.sh
+
+      - name: Run build script (zip distribution)
+        run: ./build.sh
+
+      - name: Upload distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutterator-distribution
+          path: dist/flutterator-*.zip
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Flutterator ${{ steps.meta.outputs.tag }}
+          body: |
+            🚀 **Flutterator ${{ steps.meta.outputs.tag }}**
+
+            Release generated from commit: ${{ github.sha }}
+
+            ## 📦 Installation:
+
+            **macOS/Linux:**
+            ```bash
+            # 1. Download and extract
+            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.tag }}/flutterator.zip"
+            unzip flutterator.zip
+            cd flutterator-${{ steps.meta.outputs.tag }}
+
+            # 2. Add to PATH (add to ~/.zshrc or ~/.bashrc)
+            echo 'export PATH="$HOME/path/to/flutterator-${{ steps.meta.outputs.tag }}/bin:$PATH"' >> ~/.zshrc
+            source ~/.zshrc
+
+            # 3. First run will auto-install dependencies
+            flutterator --help
+            ```
+
+            **Windows:**
+            ```cmd
+            REM 1. Download and extract flutterator.zip
+            REM 2. Add flutterator-version\bin to PATH in System Environment Variables
+            REM 3. First run will auto-install dependencies
+            flutterator --help
+            ```
+
+            ## ✨ Features:
+            - ✅ **Auto-install dependencies** - First run installs everything automatically
+            - ✅ Flutter project creation with DDD Architecture
+            - ✅ Complete feature generation (BLoC + Freezed + Injectable)
+            - ✅ Rich CLI output with colors
+            - ✅ Configuration via `flutterator.yaml`
+            - ✅ Cross-platform (Windows, macOS, Linux)
+
+            ## 📋 Commands:
+            - `create` - New Flutter project
+            - `add-feature` - Add DDD feature
+            - `add-page` - Add simple page
+            - `add-component` - Add reusable component
+            - `init` - Initialize in existing project
+            - `list` - List project resources
+            - `config` - Manage configuration
+          draft: false
+          prerelease: false
+          files: dist/flutterator.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Latest Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          name: Flutterator Latest (${{ steps.meta.outputs.tag }})
+          body: |
+            🚀 **Flutterator - Latest Stable (${{ steps.meta.outputs.tag }})**
+
+            This release always points to the latest stable version.
+
+            ## 🔗 Direct download (link fisso):
+            ```
+            https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip
+            ```
+
+            ## 📦 Quick install (macOS/Linux):
+            ```bash
+            # Download and extract
+            curl -L -o flutterator.zip "https://github.com/${{ github.repository }}/releases/download/latest/flutterator.zip"
+            unzip flutterator.zip
+            cd flutterator-*
+
+            # Add to PATH (replace with your actual path)
+            echo 'export PATH="$HOME/path/to/flutterator-*/bin:$PATH"' >> ~/.zshrc
+            source ~/.zshrc
+
+            # First run auto-installs dependencies
+            flutterator --help
+            ```
+
+            ## 📦 Quick install (Windows):
+            ```cmd
+            REM Download flutterator.zip and extract
+            REM Add flutterator-*\bin to PATH in System Environment Variables
+            REM First run auto-installs dependencies
+            flutterator --help
+            ```
+
+            ---
+            Version: ${{ steps.meta.outputs.tag }}
+            Updated: ${{ steps.date.outputs.date }}
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: dist/flutterator.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install build (PyPI)
         run: python -m pip install --upgrade pip build
 
       - name: Build sdist and wheel
