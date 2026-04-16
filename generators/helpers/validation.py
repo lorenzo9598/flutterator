@@ -60,32 +60,64 @@ def validate_field_name(field_name: str) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
+def _find_matching_angle_bracket(field_type: str, open_idx: int) -> int:
+    """Return index of the `>` that closes the `<` at *open_idx*, or -1 if unbalanced."""
+    depth = 0
+    for j in range(open_idx, len(field_type)):
+        ch = field_type[j]
+        if ch == '<':
+            depth += 1
+        elif ch == '>':
+            depth -= 1
+            if depth == 0:
+                return j
+    return -1
+
+
 def parse_field_type(field_type: str) -> Tuple[str, Optional[str], Optional[str]]:
     """
-    Parse a field type, handling generics like List<NoteItem> and Map<String, int>.
-    
+    Parse a field type, handling generics like List<NoteItem>, List<String?>, Map<String, int>.
+
+    Uses balanced angle brackets so inner types may include `?` (e.g. List<String?>).
+
     Args:
         field_type: The field type string (e.g., "List<NoteItem>", "Map<String, int>", "string")
-        
+
     Returns:
         Tuple of (base_type, generic_param1, generic_param2).
         generic_param1/2 are None if not a generic type.
         For Map<K, V>: returns (Map, K, V).
-        For List<T>/Set<T>/Option<T>: returns (List, T, None).
+        For List<T>/Set<T>: returns (List, T, None).
     """
     field_type = field_type.strip()
-    
-    # Two-param generics (e.g., Map<String, int>)
-    two_param_match = re.match(r'^(\w+)\s*<\s*(\w+)\s*,\s*(\w+)\s*>$', field_type)
-    if two_param_match:
-        return two_param_match.group(1), two_param_match.group(2), two_param_match.group(3)
-    
-    # Single-param generics (e.g., List<NoteItem>)
-    single_param_match = re.match(r'^(\w+)\s*<\s*(\w+)\s*>$', field_type)
-    if single_param_match:
-        return single_param_match.group(1), single_param_match.group(2), None
-    
-    return field_type, None, None
+    m_head = re.match(r'^(\w+)\s*<', field_type)
+    if not m_head:
+        return field_type, None, None
+    base = m_head.group(1)
+    open_idx = field_type.find('<')
+
+    close_idx = _find_matching_angle_bracket(field_type, open_idx)
+    if close_idx == -1 or close_idx != len(field_type) - 1:
+        return field_type, None, None
+
+    inner = field_type[open_idx + 1:close_idx].strip()
+    if base.lower() == 'map':
+        depth = 0
+        split_at = -1
+        for k, ch in enumerate(inner):
+            if ch == '<':
+                depth += 1
+            elif ch == '>':
+                depth -= 1
+            elif ch == ',' and depth == 0:
+                split_at = k
+                break
+        if split_at == -1:
+            return field_type, None, None
+        k_type = inner[:split_at].strip()
+        v_type = inner[split_at + 1:].strip()
+        return base, k_type, v_type
+    return base, inner, None
 
 
 def validate_field_type(field_type: str, lib_path: Optional[Path] = None, domain_folder: str = "domain") -> Tuple[bool, Optional[str], Optional[str]]:
@@ -109,9 +141,9 @@ def validate_field_type(field_type: str, lib_path: Optional[Path] = None, domain
     # Detect nullable suffix (e.g., String?, int?, SomeModel?)
     is_nullable = field_type.endswith('?')
     if is_nullable:
-        base_field_type = field_type[:-1]
+        base_field_type = field_type[:-1].strip()
     else:
-        base_field_type = field_type
+        base_field_type = field_type.strip()
     
     base_type, generic_param1, generic_param2 = parse_field_type(base_field_type)
     
@@ -129,30 +161,40 @@ def validate_field_type(field_type: str, lib_path: Optional[Path] = None, domain
         return NORMALIZE_PRIMITIVE.get(t.lower(), t)
     
     def _resolve_generic_type(gtype: str) -> Tuple[bool, Optional[str], Optional[str]]:
-        """Resolve a generic type parameter: primitive, known VO, enum, or domain model."""
+        """Resolve a generic type parameter: primitive, known VO, enum, or domain model.
+
+        Inner nullability is allowed (e.g. ``String?``, ``Todo?`` inside ``List<...>``).
+        """
+        gtype = gtype.strip()
+        inner_nullable = gtype.endswith('?')
+        g_base = gtype[:-1].strip() if inner_nullable else gtype
+
+        def _with_inner_null(norm: str) -> str:
+            return f"{norm}?" if inner_nullable else norm
+
         # Dart top types (e.g. Map<String, dynamic> for JSON blobs)
-        if gtype.lower() == 'dynamic':
-            return True, None, 'dynamic'
-        if gtype.lower() == 'object':
-            return True, None, 'Object'
-        if gtype.lower() in VALID_PRIMITIVE_TYPES:
-            return True, None, _normalize_primitive(gtype)
-        if gtype in KNOWN_VALUE_OBJECT_TYPES:
-            return True, None, gtype
+        if g_base.lower() == 'dynamic':
+            return True, None, _with_inner_null('dynamic')
+        if g_base.lower() == 'object':
+            return True, None, _with_inner_null('Object')
+        if g_base.lower() in VALID_PRIMITIVE_TYPES:
+            return True, None, _with_inner_null(_normalize_primitive(g_base))
+        if g_base in KNOWN_VALUE_OBJECT_TYPES:
+            return True, None, _with_inner_null(g_base)
         if lib_path:
             known_enums = find_enums(lib_path, domain_folder)
-            if gtype in known_enums:
-                return True, None, gtype
+            if g_base in known_enums:
+                return True, None, _with_inner_null(g_base)
             available_models = find_domain_models(lib_path, domain_folder)
             models_with_classes = find_domain_models_with_class_names(lib_path, domain_folder)
-            if gtype in available_models:
-                return True, None, models_with_classes[gtype]['class_name']
+            if g_base in available_models:
+                return True, None, _with_inner_null(models_with_classes[g_base]['class_name'])
             for _stem, info in models_with_classes.items():
-                if info['class_name'] == gtype:
-                    return True, None, gtype
+                if info['class_name'] == g_base:
+                    return True, None, _with_inner_null(g_base)
             available_str = ', '.join([f"{k} ({v['class_name']})" for k, v in models_with_classes.items()]) if models_with_classes else 'none'
-            return False, f"Model '{gtype}' not found in domain. Available models: {available_str}. Create it first using: flutterator add-domain --name {gtype.lower()}", None
-        return False, f"Model '{gtype}' cannot be validated (lib_path not provided). Please ensure the project path is correct.", None
+            return False, f"Model '{g_base}' not found in domain. Available models: {available_str}. Create it first using: flutterator add-domain --name {g_base.lower()}", None
+        return False, f"Model '{g_base}' cannot be validated (lib_path not provided). Please ensure the project path is correct.", None
     
     def _with_nullable(normalized: str) -> str:
         return f"{normalized}?" if is_nullable else normalized

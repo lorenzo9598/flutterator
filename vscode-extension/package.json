@@ -1,9 +1,27 @@
 {
   "name": "flutterator",
   "displayName": "Flutterator",
-  "description": "Run Flutterator CLI from Command Palette, Quick Input wizards, and Explorer context menus.",
-  "version": "0.1.0",
-  "publisher": "flutterator",
+  "description": "Interfaccia VS Code per il Flutterator CLI. Richiede il comando flutterator sul PC: pip install flutterator (e PATH che include lo script) oppure impostare flutterator.executablePath con il percorso completo dell'eseguibile.",
+  "version": "0.1.1",
+  "publisher": "lorenzobusi",
+  "license": "MIT",
+  "homepage": "https://pypi.org/project/flutterator/",
+  "bugs": {
+    "url": "https://github.com/lorenzo9598/flutterator/issues"
+  },
+  "icon": "media/logo.png",
+  "keywords": [
+    "flutter",
+    "ddd",
+    "codegen",
+    "cli",
+    "flutterator"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lorenzo9598/flutterator.git",
+    "directory": "vscode-extension"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -26,7 +44,7 @@
         "flutterator.executablePath": {
           "type": "string",
           "default": "flutterator",
-          "description": "Path to the flutterator executable (must be on PATH or an absolute path)."
+          "description": "Command or absolute path to the Flutterator CLI. Default assumes flutterator is on PATH (after pip install flutterator). Use an absolute path if the CLI is not on PATH."
         }
       }
     },
@@ -112,11 +130,14 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish:vsce": "vsce publish"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.1",
     "typescript": "^5.3.3"
   }
 }

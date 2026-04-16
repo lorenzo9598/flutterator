@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.5] - 2026-04-16
+
+### 📚 Documentation
+
+- **CHANGELOG**: added release notes for **3.1.5** and completed the **3.1.2–3.1.4** history in this file.
+- **`vscode-extension/CHANGELOG.md`**: CLI alignment notes updated for **3.1.5**.
+
+### 🔧 Maintenance
+
+- **Versioning**: `pyproject.toml` and `VERSION` in `flutterator.py` set to **3.1.5** so `flutterator --version` matches the published package.
+
+---
+
+## [3.1.4] - 2026-04-16
+
+### ✨ Improvements
+
+- **`--fields` help (`add-domain`, `add-component`)**: documents nullable types (`string?`, `String?`, `List<T>?`, …) and reminds to **quote** the whole `--fields` value in **zsh** when types contain `?` (avoids `no matches found` from glob expansion).
+
+### 🧪 Tests
+
+- **`test_map_field_type`**: assertion for unknown primitive keys aligned with `map_field_type` passthrough behaviour.
+- **Nullable validation**: coverage for `String?`, `List<String?>`, `Map<String, String?>`, and `parse_fields_string` with multiple nullable fields.
+
+---
+
+## [3.1.3] - 2026-04-16
+
+### ✨ Improvements
+
+- **`parse_field_type`**: parses generics with **balanced angle brackets** so inner types can include `?` (e.g. `List<String?>`, `Map<String, String?>`).
+- **`validate_field_type`**: `_resolve_generic_type` resolves **nullable generic parameters** (e.g. `String?`, domain types with `?` as `List` / `Map` type arguments).
+- **Nullable stripping**: normalises nullable bases with stray whitespace (e.g. `String ?` → `String` before validation).
+
+---
+
+## [3.1.2] - 2026-04-16
+
+### ✨ Features
+
+- **`add-component --type form`**: allows an **empty form scaffold** when there is no domain model and no `--fields` (interactive domain model **0 – Vuoto**, or `--domain-model none` on the CLI). Generates submit-only form BLoC/widget to extend manually.
+
+### 📚 Documentation
+
+- **`add-component` docstring**: describes empty form behaviour when omitting model and fields.
+
+---
+
 ## [3.1.1] - 2025-01-XX
 
 ### 🔧 Maintenance

@@ -6,6 +6,8 @@
 [![Flutter](https://img.shields.io/badge/Flutter-Compatible-02569B.svg)](https://flutter.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+**Sito:** [flutterator.com](https://flutterator.com/) · **Repository:** [github.com/lorenzo9598/flutterator](https://github.com/lorenzo9598/flutterator)
+
 ---
 
 ## 📑 Table of Contents
@@ -16,6 +18,7 @@
 - [Available Commands](#-available-commands)
   - [`create`](#flutterator-create) - Create new project
   - [`add-domain`](#flutterator-add-domain) - Add domain entity (model + infrastructure)
+  - [`add-enum`](#flutterator-add-enum) - Add domain enum
   - [`add-page`](#flutterator-add-page) - Add simple page
   - [`add-component`](#flutterator-add-component) - Add reusable component (form, list, single)
   - [`list`](#flutterator-list) - List project resources
@@ -23,6 +26,7 @@
 - [Global Flags](#-global-flags)
 - [Configuration](#-configuration)
 - [Generated Architecture](#-generated-architecture)
+- [Core: value objects and errors](#core-value-objects-and-errors)
 - [Testing](#-testing)
 - [Troubleshooting](#-troubleshooting)
 
@@ -72,7 +76,7 @@ flutterator add-component --name todo_list --type list
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/lorenzobusi/flutterator.git
+git clone https://github.com/lorenzo9598/flutterator.git
 cd flutterator
 
 # 2. Create virtual environment
@@ -154,10 +158,11 @@ flutterator add-domain --name product --fields "name:string,price:double" --dry-
 | Command         | Description                               | Typical Use       |
 | --------------- | ----------------------------------------- | ----------------- |
 | `create`        | Create new Flutter DDD project            | Project start     |
-| `add-domain`    | Add domain entity (model, infrastructure) | New functionality |
-| `add-component` | Add component (form, list, single)        | New functionality |
+| `add-domain`    | Add domain entity (model, infrastructure) | Shared domain model |
+| `add-enum`      | Add Dart enum under domain                | Types used in models |
+| `add-component` | Add component (form, list, single)        | UI + BLoC         |
 | `add-page`      | Add simple page                           | Static pages      |
-| `list`          | List project resources                    | Overview          |
+| `list`          | List pages (router) and domain models     | Overview          |
 | `config`        | Manage configuration                      | Customization     |
 
 ---
@@ -267,6 +272,7 @@ flutterator add-domain [OPTIONS]
 | `--folder`       | string | ❌        | from config | Domain folder (default: "domain") |
 | `--dry-run`      | flag   | ❌        | `false`     | Preview without creating          |
 | `--no-build`     | flag   | ❌        | `false`     | Skip flutter pub get              |
+| `--non-interactive` | flag | ❌     | `false`     | No field prompts; use `--fields` or id-only (CI/tools) |
 | `--project-path` | string | ❌        | `.`         | Project path                      |
 
 #### Usage Modes
@@ -319,6 +325,55 @@ lib/domain/todo/
     ├── todo_service.dart
     ├── todo_mapper.dart
     └── todo_repository.dart
+```
+
+#### Field types and `--fields`
+
+Use `--fields` as a comma-separated list of `name:type`. **Commas inside angle brackets belong to the type** (e.g. `meta:Map<String,dynamic>,items:List<TodoItem>` is two fields).
+
+**Recommended order:** create enums with `add-enum` and any **referenced domain entities** before an entity that uses them in `List<Other>`, `Map<String, Other>`, or a bare `Other` field—Flutterator validates types against files under your configured domain folder.
+
+| Category | Examples in `--fields` | Generated domain usage |
+| -------- | ------------------------ | ------------------------ |
+| Primitives | `title:string`, `count:int`, `price:double`, `done:bool`, `at:datetime` | Wrapped value objects where applicable (`String` → `Title`-style VO) |
+| Nullable | `subtitle:string?`, `note:Note?`, `tags:List<String>?` | `Option<T>` or nullable collections per generator rules |
+| `UniqueId` | `id` is auto-added; optional `UniqueId` fields | Known value object |
+| Collections | `tags:List<String>`, `ids:Set<int>`, `scores:Map<String,int>`, `data:Map<String,dynamic>` | `List` / `Set` / `Map` with validated inner types |
+| Domain model | `author:User` (PascalCase, must exist) | Nested entity + mapper/DTO wiring |
+| Enum | `status:OrderStatus` (PascalCase; use `add-enum` first) | Dart enum + serialization mapping |
+
+The same type grammar applies to **`add-component --type form --fields "..."`** when you pass inline fields instead of sourcing them from a domain model.
+
+`add-domain` also regenerates `lib/core/errors/error_localizer.dart` so each entity’s `{Name}Failure` gets a matching `localize{Name}Failure` helper (see [Core: value objects and errors](#core-value-objects-and-errors)).
+
+---
+
+### `flutterator add-enum`
+
+**Adds a Dart enum file** under `lib/<domain_folder>/enums/` so you can reference it from `add-domain --fields`.
+
+#### Syntax
+
+```bash
+flutterator add-enum [OPTIONS]
+```
+
+#### Options
+
+| Option           | Type   | Required | Default     | Description |
+| ---------------- | ------ | -------- | ----------- | ----------- |
+| `--name`         | string | ✅        | -           | Enum name (PascalCase, e.g. `OrderStatus`) |
+| `--values`       | string | ❌        | -           | Comma-separated values (e.g. `pending,active,done`) |
+| `--folder`       | string | ❌        | from config | Domain root folder |
+| `--dry-run`      | flag   | ❌        | `false`     | Preview without creating |
+| `--force`        | flag   | ❌        | `false`     | Overwrite existing file without prompt |
+| `--project-path` | string | ❌        | `.`         | Project path |
+
+#### Example
+
+```bash
+flutterator add-enum --name OrderStatus --values "pending,shipped,delivered"
+flutterator add-domain --name order --fields "id:string,status:OrderStatus,total:double"
 ```
 
 ---
@@ -407,9 +462,12 @@ flutterator add-component [OPTIONS]
 | `--name`     | string | ✅        | -                     | Component name                       |
 | `--type`     | choice | ❌        | -                     | Type: `form`, `list`, or `single`    |
 | `--fields`   | string | ❌        | -                     | Form fields (requires `--type form`) |
-| `--folder`   | string | ❌        | `features/components` | Destination folder                   |
+| `--domain-model` | string | ❌     | -                     | Domain entity file stem, or `none` (skips model prompt; non-interactive) |
+| `--use-all-model-fields` | flag | ❌ | `false` | With form + domain model, include every field (skip selection prompt) |
+| `--folder`   | string | ❌        | from config         | Destination folder (e.g. `shared/widgets`) |
 | `--dry-run`  | flag   | ❌        | `false`               | Preview without creating             |
 | `--no-build` | flag   | ❌        | `false`               | Skip flutter pub get                 |
+| `--project-path` | string | ❌    | `.`                   | Project path                         |
 
 #### Three Component Types
 
@@ -891,10 +949,13 @@ Flutterator generates projects following **DDD (Domain-Driven Design)** architec
 ```
 lib/
 ├── core/                        # 🔧 CORE - Shared code
-│   ├── model/                   # Value objects, common failures
+│   ├── model/                   # Value objects, validation failures, errors
 │   │   ├── value_objects.dart
-│   │   ├── value_failures.dart
+│   │   ├── failures.dart        # ValueFailure<T> (Freezed)
+│   │   ├── errors.dart          # UnexpectedValueError
 │   │   └── value_validators.dart
+│   ├── errors/
+│   │   └── error_localizer.dart # Maps domain *Failure to UI strings
 │   ├── infrastructure/          # DI modules, helpers
 │   │   └── firebase_injectable_module.dart
 │   └── presentation/            # Common widgets
@@ -955,6 +1016,22 @@ lib/
 
 ---
 
+## Core: value objects and errors
+
+Generated projects share a small **core** model for validated inputs and user-visible failures.
+
+| File | Role |
+| ---- | ---- |
+| `lib/core/model/value_validators.dart` | Pure functions returning `Either<ValueFailure<T>, T>` (e.g. max length, not empty). Composed with `flatMap` inside each domain value object factory. |
+| `lib/core/model/value_objects.dart` | Abstract `ValueObject<T>` holding `Either<ValueFailure<T>, T>`, plus helpers like `getOrCrash()`, `failureOrUnit`, and shared types (`UniqueId`, …). |
+| `lib/core/model/failures.dart` | Freezed `ValueFailure<T>` variants (**validation** errors: empty string, list too long, invalid email, …). Extension `ValueFailureX` can expose default `title` / `message` strings. |
+| `lib/core/model/errors.dart` | `UnexpectedValueError` — thrown when code calls `getOrCrash()` on an invalid value object. |
+| `lib/core/errors/error_localizer.dart` | Maps each domain entity’s `{Entity}Failure` (in `lib/.../model/*_failure.dart`) to a user-facing string via `localize{Entity}Failure`. Regenerated when you add domain entities; optional `localizeAuthFailure` when auth exists. Template comments show how to swap strings for **l10n**. |
+
+**Domain `*Failure` vs `ValueFailure`:** `{Entity}Failure` (e.g. `TodoFailure`) models **business / IO** problems (not found, permission denied, …) used by repositories and BLoCs. `ValueFailure` models **invalid field input** at the value-object layer.
+
+---
+
 ## 📚 Flutter Generated Dependencies
 
 Generated projects use these standard Flutter dependencies:
@@ -1005,7 +1082,7 @@ python flutterator.py --help
 
 ### `flutterator --help` shows only "create" (no add-domain, add-page, etc.)
 
-You are using an **old or different** installation of Flutterator that only exposes the `create` command. The full CLI is a **group** of commands: `create`, `add-domain`, `add-page`, `add-component`, `list`, `config`.
+You are using an **old or different** installation of Flutterator that only exposes the `create` command. The full CLI is a **group** of commands: `create`, `add-domain`, `add-enum`, `add-page`, `add-component`, `list`, `config`.
 
 **Fix:**
 

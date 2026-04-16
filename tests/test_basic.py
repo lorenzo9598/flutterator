@@ -109,7 +109,7 @@ def test_to_pascal_case_preserve():
 def test_nullable_collection_types_validate_and_dto():
     """Nullable List/Set/Map must validate and map to DTO types (List<T>? -> List<TDto>?)."""
     from pathlib import Path
-    from generators.helpers.validation import validate_field_type
+    from generators.helpers.validation import validate_field_type, parse_fields_string
     from generators.helpers.utils import map_field_type_to_dto
 
     lib = Path("/nonexistent/lib")  # primitives only; no domain scan needed for these
@@ -124,6 +124,20 @@ def test_nullable_collection_types_validate_and_dto():
     assert ok and err is None and norm == "Map<String, dynamic>"
     ok, err, norm = validate_field_type("Map<String, Object>?", lib, "domain")
     assert ok and norm == "Map<String, Object>?"
+
+    ok, err, norm = validate_field_type("String?", lib, "domain")
+    assert ok and err is None and norm == "String?"
+
+    ok, err, norm = validate_field_type("List<String?>", lib, "domain")
+    assert ok and err is None and norm == "List<String?>"
+
+    ok, err, norm = validate_field_type("Map<String, String?>", lib, "domain")
+    assert ok and err is None and norm == "Map<String, String?>"
+
+    assert parse_fields_string("bio:String?,count:int?") == [
+        ("bio", "String?"),
+        ("count", "int?"),
+    ]
 
     assert map_field_type_to_dto("List<int>?") == "List<int>?"
     assert map_field_type_to_dto("Map<String, double>?", None) == "Map<String, double>?"
@@ -140,4 +154,4 @@ def test_map_field_type():
     assert map_field_type("double") == "double"
     assert map_field_type("date") == "DateTime"
     assert map_field_type("datetime") == "DateTime"
-    assert map_field_type("unknown") == "String"  # Default
+    assert map_field_type("unknown") == "unknown"

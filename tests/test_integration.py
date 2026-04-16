@@ -413,6 +413,44 @@ class TestCLICommands:
             assert result.exit_code == 0
             assert "DRY-RUN MODE" in result.output
 
+    def test_add_component_form_empty_without_domain_model(self, sample_project_structure):
+        """Form with --domain-model none and no --fields creates an empty form scaffold."""
+        from flutterator import cli
+        import shutil
+
+        runner = click.testing.CliRunner()
+        project_dir = sample_project_structure
+
+        with runner.isolated_filesystem():
+            shutil.copytree(project_dir, "test_project")
+            with patch("flutterator.run_flutter_commands"):
+                result = runner.invoke(
+                    cli,
+                    [
+                        "add-component",
+                        "--name",
+                        "shell_form",
+                        "--type",
+                        "form",
+                        "--folder",
+                        "features/forms",
+                        "--domain-model",
+                        "none",
+                        "--project-path",
+                        "test_project",
+                        "--no-build",
+                    ],
+                )
+            assert result.exit_code == 0, result.output
+            base = Path("test_project/lib/features/forms/shell_form")
+            assert (base / "application" / "shell_form_form_event.dart").exists()
+            assert (base / "application" / "shell_form_form_state.dart").exists()
+            assert (base / "application" / "shell_form_form_bloc.dart").exists()
+            assert (base / "presentation" / "shell_form_component.dart").exists()
+            event_src = (base / "application" / "shell_form_form_event.dart").read_text()
+            assert "submit()" in event_src.lower()
+            assert "changed(" not in event_src.lower()
+
     def test_add_page_help(self):
         """Test add-page command help"""
         from flutterator import cli

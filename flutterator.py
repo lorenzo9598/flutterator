@@ -59,7 +59,7 @@ from generators.helpers import (
 from generators.helpers.utils import to_camel_case
 
 # Version
-VERSION = "3.1.1"
+VERSION = "3.1.5"
 
 # Rich console for colored output
 console = Console()
@@ -457,7 +457,14 @@ def add_page(name, project_path, dry_run, no_build):
 
 @cli.command()
 @click.option('--name', help='Domain entity name (e.g., todo, user, product)')
-@click.option('--fields', help='Fields as name:type,name:type (e.g., "title:string,done:bool,priority:int")')
+@click.option(
+    '--fields',
+    help=(
+        'Fields as name:type,name:type (e.g., "title:string,done:bool"). '
+        'Nullable: string?, String?, int?, List<T>?, Map<K,V>?. '
+        'In zsh, quote the value if types contain ? (otherwise the shell reports "no matches found").'
+    ),
+)
 @click.option('--folder', help='Domain folder (default from config)')
 @click.option('--project-path', default='.', help='Path to Flutter project')
 @click.option('--dry-run', is_flag=True, help='Preview without creating files')
@@ -973,7 +980,13 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
 
 @cli.command()
 @click.option('--name', help='Component name (e.g., user_card, login_form)')
-@click.option('--fields', help='Form fields as name:type,name:type (only for form type)')
+@click.option(
+    '--fields',
+    help=(
+        'Form fields as name:type,name:type (only for --type form). '
+        'Nullable: string?, String?, List<T>?, etc. Quote the whole argument in zsh when using ?.'
+    ),
+)
 @click.option('--type', type=click.Choice(['form', 'list', 'single'], case_sensitive=False), help='Component type: form, list, or single')
 @click.option('--folder', help='Target folder (e.g., components, shared)')
 @click.option('--project-path', default='.', help='Path to Flutter project')
@@ -1021,6 +1034,7 @@ def add_component(
     FORM COMPONENT (--type form):
       Creates a form with field validation and submission handling.
       With a domain model, you are asked which model fields to include in the form.
+      With no model and no --fields, you get an empty form scaffold (Submit only) to fill in manually.
       • application/  - Form BLoC, events, states
       • presentation/ - Form widget
     
@@ -1213,13 +1227,6 @@ def add_component(
             print_error(str(e))
             sys.exit(1)
 
-    if component_type == 'form' and not dry_run and not field_list:
-        print_error(
-            "Form component requires fields: use a domain model (--domain-model) "
-            "or pass --fields name:type,..."
-        )
-        sys.exit(1)
-    
     # Dry-run mode: show what would be created
     if dry_run:
         print_dry_run_header()
