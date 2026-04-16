@@ -306,8 +306,12 @@ def config(project_path, init_config, show):
 
 
 @cli.command()
-@click.option('--name', prompt='Project name', help='Project name (lowercase, underscores allowed)')
-@click.option('--login', is_flag=True, prompt='Does the project have login?', help='Include login/auth functionality')
+@click.option('--name', default=None, help='Project name (lowercase, underscores allowed)')
+@click.option(
+    '--login/--no-login',
+    default=None,
+    help='Include login/auth. Omit to be asked interactively after the project name.',
+)
 def create(name, login):
     """
     Create a new Flutter project with DDD architecture.
@@ -323,13 +327,18 @@ def create(name, login):
     Examples:
       # Basic project
       flutterator create --name my_app
-    
+      
       # Project with authentication
       flutterator create --name my_app --login
-    
+      
       # Non-interactive mode
       flutterator create --name my_app --no-login
     """
+    if name is None:
+        name = click.prompt('Project name')
+    if login is None:
+        login = click.confirm('Does the project have login?', default=False)
+
     # Project name validation
     if not name.replace('_', '').replace('-', '').isalnum():
         print_error("The project name must contain only letters, numbers, _ and -")
@@ -453,7 +462,12 @@ def add_page(name, project_path, dry_run, no_build):
 @click.option('--project-path', default='.', help='Path to Flutter project')
 @click.option('--dry-run', is_flag=True, help='Preview without creating files')
 @click.option('--no-build', is_flag=True, help='Skip flutter pub get')
-def add_domain(name, fields, folder, project_path, dry_run, no_build):
+@click.option(
+    '--non-interactive',
+    is_flag=True,
+    help='No field prompts; use --fields or only auto-added id field (for tools/CI)',
+)
+def add_domain(name, fields, folder, project_path, dry_run, no_build, non_interactive):
     """
     Add a domain entity (model + infrastructure only).
     
@@ -537,6 +551,9 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
         except ValueError as e:
             print_error(str(e))
             sys.exit(1)
+    elif non_interactive and not dry_run:
+        if not fields:
+            print_info("No --fields in non-interactive mode; entity will use default id field only.")
     elif not dry_run:
         # Interactive mode for fields
         console.print("[bold cyan]Adding fields interactively. Type 'done' when finished.[/bold cyan]")
@@ -658,7 +675,8 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build):
 @click.option('--folder', help='Domain folder (default from config)')
 @click.option('--project-path', default='.', help='Path to Flutter project')
 @click.option('--dry-run', is_flag=True, help='Preview without creating files')
-def add_enum(name, values, folder, project_path, dry_run):
+@click.option('--force', is_flag=True, help='Overwrite existing enum file without prompting')
+def add_enum(name, values, folder, project_path, dry_run, force):
     """
     Add a Dart enum to the domain.
 
@@ -741,7 +759,7 @@ def add_enum(name, values, folder, project_path, dry_run):
     relative_path = f"lib/{folder}/enums/{enum_file_stem}.dart"
 
     # Check for existing file
-    if output_file.exists() and not dry_run:
+    if output_file.exists() and not dry_run and not force:
         if not click.confirm(f"⚠️  {relative_path} already exists. Overwrite?"):
             print_info("Aborted.")
             return
@@ -961,7 +979,29 @@ def add_bottom_nav_item(name, project_path, dry_run, no_build):
 @click.option('--project-path', default='.', help='Path to Flutter project')
 @click.option('--dry-run', is_flag=True, help='Preview without creating files')
 @click.option('--no-build', is_flag=True, help='Skip flutter pub get')
-def add_component(name, fields, type, folder, project_path, dry_run, no_build):
+@click.option(
+    '--domain-model',
+    'domain_model_opt',
+    default=None,
+    help='Skip model prompt: domain entity file stem, or "none" for no model (non-interactive)',
+)
+@click.option(
+    '--use-all-model-fields',
+    'use_all_model_fields',
+    is_flag=True,
+    help='With --type form and a domain model, include all model fields (skip field selection prompt)',
+)
+def add_component(
+    name,
+    fields,
+    type,
+    folder,
+    project_path,
+    dry_run,
+    no_build,
+    domain_model_opt,
+    use_all_model_fields,
+):
     """
     Add a reusable component with optional BLoC.
     
@@ -1095,14 +1135,31 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     available_models = sorted(models_info.keys())
     domain_model_name = None
     domain_model_folder = None
-    if not dry_run:
+    if domain_model_opt is not None:
+        raw = domain_model_opt.strip()
+        if raw.lower() in ('', 'none'):
+            domain_model_name = None
+            domain_model_folder = None
+        else:
+            match_key = None
+            for k in available_models:
+                if k == raw or k.lower() == raw.lower():
+                    match_key = k
+                    break
+            if match_key is None:
+                known = ', '.join(available_models) if available_models else '(none)'
+                print_error(f"Unknown domain model '{raw}'. Known: {known}")
+                sys.exit(1)
+            domain_model_name = match_key
+            domain_model_folder = models_info[match_key]['folder']
+    elif not dry_run:
         console.print(f"[bold cyan]Select domain model:[/bold cyan]")
         console.print(f"  0. [dim](Vuoto) - componente senza modello[/dim]")
         for i, model_key in enumerate(available_models, 1):
             info = models_info[model_key]
             console.print(f"  {i}. {info['class_name']} ({model_key})")
         console.print()
-        
+
         while True:
             choice = click.prompt(f"Select domain model (0-{len(available_models)})", type=int)
             if choice == 0:
@@ -1126,16 +1183,42 @@ def add_component(name, fields, type, folder, project_path, dry_run, no_build):
     # Build base path for display
     base_path = f"lib/{folder}/{component_name}" if folder else f"lib/{component_name}"
     
-    # Get fields from domain model (for form components with a model)
+    # Get fields for form components (from domain model, or --fields when no model)
     field_list = []
+    domain_folder_for_field_types = cfg.domain_folder if cfg.domain_folder else "domain"
     if component_type == 'form' and domain_model_name is not None:
         try:
             field_list = get_model_fields_from_domain(lib_path, cfg.domain_folder, domain_model_name, domain_model_folder)
         except Exception as e:
             print_error(f"Error reading domain model: {e}")
             sys.exit(1)
-        if not dry_run and field_list:
+        if not dry_run and field_list and not use_all_model_fields:
             field_list = prompt_select_form_model_fields(field_list)
+    elif component_type == 'form' and fields:
+        try:
+            parsed_fields = parse_fields_string(fields)
+            for field_name, field_type in parsed_fields:
+                is_valid_name, name_error = validate_field_name(field_name)
+                if not is_valid_name:
+                    print_error(f"Invalid field name '{field_name}': {name_error}")
+                    sys.exit(1)
+                is_valid_type, type_error, normalized_type = validate_field_type(
+                    field_type, lib_path, domain_folder_for_field_types
+                )
+                if not is_valid_type:
+                    print_error(f"Invalid field type '{field_type}' for field '{field_name}': {type_error}")
+                    sys.exit(1)
+                field_list.append({"name": field_name, "type": normalized_type})
+        except ValueError as e:
+            print_error(str(e))
+            sys.exit(1)
+
+    if component_type == 'form' and not dry_run and not field_list:
+        print_error(
+            "Form component requires fields: use a domain model (--domain-model) "
+            "or pass --fields name:type,..."
+        )
+        sys.exit(1)
     
     # Dry-run mode: show what would be created
     if dry_run:

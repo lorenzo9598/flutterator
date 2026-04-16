@@ -1,0 +1,122 @@
+{
+  "name": "flutterator",
+  "displayName": "Flutterator",
+  "description": "Run Flutterator CLI from Command Palette, Quick Input wizards, and Explorer context menus.",
+  "version": "0.1.0",
+  "publisher": "flutterator",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:flutterator.create",
+    "onCommand:flutterator.addPage",
+    "onCommand:flutterator.addDomain",
+    "onCommand:flutterator.addComponent",
+    "onCommand:flutterator.addEnum",
+    "onCommand:flutterator.showOutput"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Flutterator",
+      "properties": {
+        "flutterator.executablePath": {
+          "type": "string",
+          "default": "flutterator",
+          "description": "Path to the flutterator executable (must be on PATH or an absolute path)."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "flutterator.create",
+        "title": "Flutterator: Create"
+      },
+      {
+        "command": "flutterator.addPage",
+        "title": "Flutterator: Add Page"
+      },
+      {
+        "command": "flutterator.addDomain",
+        "title": "Flutterator: Add Domain"
+      },
+      {
+        "command": "flutterator.addComponent",
+        "title": "Flutterator: Add Component"
+      },
+      {
+        "command": "flutterator.addEnum",
+        "title": "Flutterator: Add Enum"
+      },
+      {
+        "command": "flutterator.showOutput",
+        "title": "Flutterator: Show Output"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "submenu": "flutterator.submenu",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@100"
+        }
+      ],
+      "flutterator.submenu": [
+        {
+          "command": "flutterator.addPage",
+          "when": "explorerResourceIsFolder",
+          "args": [
+            "${resource}"
+          ]
+        },
+        {
+          "command": "flutterator.addDomain",
+          "when": "explorerResourceIsFolder",
+          "args": [
+            "${resource}"
+          ]
+        },
+        {
+          "command": "flutterator.addComponent",
+          "when": "explorerResourceIsFolder",
+          "args": [
+            "${resource}"
+          ]
+        },
+        {
+          "command": "flutterator.addEnum",
+          "when": "explorerResourceIsFolder",
+          "args": [
+            "${resource}"
+          ]
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "flutterator.submenu",
+        "label": "Flutterator"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "flutterator.showOutput",
+        "key": "ctrl+shift+alt+f",
+        "mac": "cmd+shift+alt+f"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -357,6 +357,62 @@ class TestCLICommands:
         assert result.exit_code != 0
         assert "must contain only letters, numbers, _ and -" in result.output
 
+    def test_add_domain_non_interactive_no_fields(self, sample_project_structure):
+        """add-domain --non-interactive with no --fields uses id-only entity (no prompts)."""
+        from flutterator import cli
+        import shutil
+
+        runner = click.testing.CliRunner()
+        project_dir = sample_project_structure
+
+        with runner.isolated_filesystem():
+            shutil.copytree(project_dir, "test_project")
+            with patch("flutterator.run_flutter_commands"):
+                result = runner.invoke(
+                    cli,
+                    [
+                        "add-domain",
+                        "--name",
+                        "empty_entity",
+                        "--non-interactive",
+                        "--project-path",
+                        "test_project",
+                        "--no-build",
+                    ],
+                )
+            assert result.exit_code == 0
+            assert (Path("test_project") / "lib" / "domain" / "empty_entity" / "model").exists()
+
+    def test_add_component_domain_model_none_dry_run(self, sample_project_structure):
+        """add-component with explicit --domain-model skips prompts (dry-run)."""
+        from flutterator import cli
+        import shutil
+
+        runner = click.testing.CliRunner()
+        project_dir = sample_project_structure
+
+        with runner.isolated_filesystem():
+            shutil.copytree(project_dir, "test_project")
+            result = runner.invoke(
+                cli,
+                [
+                    "add-component",
+                    "--name",
+                    "solo_card",
+                    "--type",
+                    "single",
+                    "--folder",
+                    "features",
+                    "--domain-model",
+                    "none",
+                    "--project-path",
+                    "test_project",
+                    "--dry-run",
+                ],
+            )
+            assert result.exit_code == 0
+            assert "DRY-RUN MODE" in result.output
+
     def test_add_page_help(self):
         """Test add-page command help"""
         from flutterator import cli
@@ -365,18 +421,6 @@ class TestCLICommands:
         result = runner.invoke(cli, ["add-page", "--help"])
         assert result.exit_code == 0
         assert "--name" in result.output
-        assert "--dry-run" in result.output
-
-    # def test_add_feature_help(self):  # DISABLED: add-feature command removed
-        """Test add-feature command help"""
-        from flutterator import cli
-        runner = click.testing.CliRunner()
-        
-        result = runner.invoke(cli, ["add-feature", "--help"])
-        assert result.exit_code == 0
-        assert "--name" in result.output
-        assert "--fields" in result.output
-        assert "--folder" in result.output
         assert "--dry-run" in result.output
 
 

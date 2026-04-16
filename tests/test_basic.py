@@ -120,6 +120,11 @@ def test_nullable_collection_types_validate_and_dto():
     ok, err, norm = validate_field_type("Map<String, int>?", lib, "domain")
     assert ok and norm == "Map<String, int>?"
 
+    ok, err, norm = validate_field_type("Map<String, dynamic>", lib, "domain")
+    assert ok and err is None and norm == "Map<String, dynamic>"
+    ok, err, norm = validate_field_type("Map<String, Object>?", lib, "domain")
+    assert ok and norm == "Map<String, Object>?"
+
     assert map_field_type_to_dto("List<int>?") == "List<int>?"
     assert map_field_type_to_dto("Map<String, double>?", None) == "Map<String, double>?"
 

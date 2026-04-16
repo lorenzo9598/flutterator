@@ -130,6 +130,11 @@ def validate_field_type(field_type: str, lib_path: Optional[Path] = None, domain
     
     def _resolve_generic_type(gtype: str) -> Tuple[bool, Optional[str], Optional[str]]:
         """Resolve a generic type parameter: primitive, known VO, enum, or domain model."""
+        # Dart top types (e.g. Map<String, dynamic> for JSON blobs)
+        if gtype.lower() == 'dynamic':
+            return True, None, 'dynamic'
+        if gtype.lower() == 'object':
+            return True, None, 'Object'
         if gtype.lower() in VALID_PRIMITIVE_TYPES:
             return True, None, _normalize_primitive(gtype)
         if gtype in KNOWN_VALUE_OBJECT_TYPES:
@@ -234,7 +239,7 @@ def validate_field_type(field_type: str, lib_path: Optional[Path] = None, domain
         suggestions.append('UniqueId')
     
     suggestion_msg = f" Did you mean '{suggestions[0]}'?" if suggestions else ""
-    return False, f"Unknown type '{field_type}'. Valid types: String, int, double, bool, DateTime, UniqueId, List<T>, Set<T>, Map<K,V>, enum names, or domain model names (PascalCase). Nullable: String?, Model?, List<T>?, Map<K,V>?, etc.{suggestion_msg}", None
+    return False, f"Unknown type '{field_type}'. Valid types: String, int, double, bool, DateTime, UniqueId, dynamic, Object, List<T>, Set<T>, Map<K,V> (e.g. Map<String, dynamic>), enum names, or domain model names (PascalCase). Nullable: String?, Model?, List<T>?, Map<K,V>?, etc.{suggestion_msg}", None
 
 
 def validate_entity_name(name: str) -> Tuple[bool, Optional[str]]:

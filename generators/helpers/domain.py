@@ -234,7 +234,7 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
         if is_nullable and _is_enum(base_type_raw):
             mapper_needs_dartz = True
             from_dto_fields.append(f"      {field_name}: dto.{field_name} != null ? some({base_type_raw}.values.byName(dto.{field_name}!)) : none()")
-            to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (v) => v.name)")
+            to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, ({base_type_raw} v) => v.name)")
             info = enums_info.get(base_type_raw)
             if info:
                 ei = f"import 'package:{project_name}/{info['folder']}/{info['file_stem']}.dart';"
@@ -309,18 +309,18 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
             mapper_needs_dartz = True
             if base_type_raw in PRIMITIVE_TYPES:
                 from_dto_fields.append(f"      {field_name}: dto.{field_name} != null ? some({capitalized_name}(dto.{field_name}!)) : none()")
-                to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (v) => v.getOrCrash())")
+                to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, ({capitalized_name} v) => v.getOrCrash())")
             elif base_type_raw in KNOWN_VALUE_OBJECTS:
                 from_dto_fields.append(f"      {field_name}: dto.{field_name} != null ? some(UniqueId.fromUniqueString(dto.{field_name}!)) : none()")
-                to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (v) => v.getOrCrash())")
+                to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (UniqueId v) => v.getOrCrash())")
             elif _is_domain_model_local(base_type_raw):
                 mvn, found = _find_mapper_dep(base_type_raw)
                 if found:
                     from_dto_fields.append(f"      {field_name}: dto.{field_name} != null ? some({mvn}.toDomain(dto.{field_name}!)) : none()")
-                    to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (v) => {mvn}.toDto(v))")
+                    to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, ({base_type_raw} v) => {mvn}.toDto(v))")
                 else:
                     from_dto_fields.append(f"      {field_name}: dto.{field_name} != null ? some(dto.{field_name}!) : none()")
-                    to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, (v) => v)")
+                    to_dto_fields.append(f"      {field_name}: entity.{field_name}.fold(() => null, ({base_type_raw} v) => v)")
             continue
         
         ft_parse = field_type[:-1] if field_type.endswith('?') else field_type
