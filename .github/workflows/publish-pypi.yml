@@ -19,38 +19,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Resolve release tag from pyproject.toml
-        id: meta
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          python <<'PY'
-          import os
-          import sys
-          import tomllib
-
-          with open("pyproject.toml", "rb") as f:
-              version = tomllib.load(f)["project"]["version"]
-          tag = f"v{version}"
-          event = os.environ["EVENT_NAME"]
-          ref_name = os.environ["REF_NAME"]
-
-          if event == "push":
-              if ref_name != tag:
-                  print(
-                      f"::error::Pushed tag {ref_name!r} must be {tag!r} "
-                      f"(pyproject.toml project.version is {version!r})"
-                  )
-                  sys.exit(1)
-              print(f"OK: tag {ref_name} matches project.version {version!r}")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              fh.write(f"tag={tag}\n")
-              fh.write(f"version={version}\n")
-          print(f"Release tag resolved to {tag}")
-          PY
-
       - name: Create and push tag from pyproject (workflow_dispatch only)
         if: github.event_name == 'workflow_dispatch'
         run: |
