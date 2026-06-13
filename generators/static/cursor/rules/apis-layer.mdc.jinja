@@ -1,0 +1,16 @@
+---
+globs: lib/apis/**
+alwaysApply: false
+---
+
+# APIs layer
+
+- `lib/apis/clients/` — Retrofit service interfaces
+- `lib/apis/interceptors/` — Dio interceptors (auth token, logging)
+- `lib/apis/common/`, `lib/apis/core/` — shared API utilities
+
+## Rules
+
+- No UI in `lib/apis/`.
+- Register new services via `@injectable` modules; run `build_runner` after changes.
+- Coordinate router/DI changes with `integration-wiring` subagent when adding endpoints for a new epic.

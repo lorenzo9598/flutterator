@@ -1,0 +1,32 @@
+# [[project_name]]
+
+Flutter project generated with **Flutterator** (DDD / clean architecture).
+
+## Stack
+
+- `flutter_bloc`, `freezed`, `injectable`, `get_it`, `go_router`, `dio`, `retrofit`, `dartz`, `caravaggio_ui`
+
+## Where code goes
+
+| Need | Location |
+|------|----------|
+| Shared domain entity | `lib/domain/<entity>/model/` + `infrastructure/` |
+| Enum | `lib/domain/enums/` |
+| Feature with BLoC | `lib/features/<feature>/application/` + `presentation/` |
+| Reusable UI component | `lib/features/components/<name>/` |
+| App-wide widgets | `lib/widgets/common/` |
+
+## How to build features
+
+Use skill **`/epic-delivery`** with a high-level description. Epics are tracked in `docs/epics/`.
+
+Agents write Dart **directly** — do not run `flutterator` CLI.
+
+## Documentation
+
+- Architecture: `docs/architecture/`
+- Layer-specific: `lib/domain/AGENTS.md`, `lib/features/AGENTS.md`, `lib/widgets/AGENTS.md`
+
+## Quality
+
+Run `flutter analyze` before completing work. Run `build_runner` after Freezed/Injectable changes.

@@ -1,0 +1,42 @@
+# Reference implementations — [[project_name]]
+
+Use these generated files as canonical examples when implementing new code.
+
+## Shell
+
+| Area | Path |
+|------|------|
+| Entry | `lib/main.dart` |
+| DI | `lib/injection.dart` |
+| Routing | `lib/router.dart` |
+| App widget | `lib/core/presentation/app_widget.dart` |
+| Error messages | `lib/core/errors/error_localizer.dart` |
+
+## Features (generated at create)
+
+| Feature | Application | Presentation |
+|---------|-------------|--------------|
+| Splash | — | `lib/features/splash/` |
+| Home | — | `lib/features/home/` |
+
+{% if login %}
+## Auth (login enabled)
+
+| Layer | Path |
+|-------|------|
+| Domain | `lib/domain/auth/model/`, `lib/domain/auth/infrastructure/` |
+| Feature | `lib/features/auth/application/`, `lib/features/auth/presentation/` |
+| Sign-in form | `lib/features/auth/sign_in_form/application/`, `.../presentation/` |
+{% endif %}
+
+## Shared widgets
+
+- `lib/widgets/common/loading_widget.dart`
+- `lib/widgets/common/error_widget.dart`
+- `lib/widgets/common/unknown_state_widget.dart`
+
+## APIs
+
+- `lib/apis/` — clients, interceptors, injectable module
+
+When adding new code, match naming, imports, and patterns from the closest reference above.

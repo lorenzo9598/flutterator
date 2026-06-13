@@ -1,0 +1,32 @@
+# DDD layers — [[project_name]]
+
+## Allowed dependencies
+
+```
+presentation → application → domain (interfaces)
+infrastructure → domain (model)
+apis → domain (DTOs)
+core ← all layers (shared types, errors)
+```
+
+## Layer rules
+
+| Layer | Path | Contains | Must not contain |
+|-------|------|----------|------------------|
+| Domain model | `lib/domain/<e>/model/` | Entity, failure, `I*Repository`, VOs | Widgets, BLoC, Dio |
+| Domain infra | `lib/domain/<e>/infrastructure/` | DTO, service, mapper, repository impl | Widgets, BLoC |
+| Application | `lib/features/<f>/application/` | BLoC, events, states | Widgets |
+| Presentation | `lib/features/<f>/presentation/` | Pages, components | Direct infra imports |
+| APIs | `lib/apis/` | HTTP, interceptors | UI |
+| Core | `lib/core/` | Shared errors, app shell | Feature-specific logic |
+
+## Anti-patterns
+
+- UI or `BuildContext` in `domain/`
+- Importing `*_repository.dart` (impl) from presentation — use `i_*_repository.dart`
+- Business logic in widgets — keep in BLoC
+- Skipping `error_localizer` when adding new `*_failure.dart`
+
+## Enums
+
+Place under `lib/domain/enums/<name>.dart`. Reference from entities and DTOs.

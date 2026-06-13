@@ -25,7 +25,7 @@ def run_cmd(cmd, capture_output=False):
         click.echo("❌ Comando non trovato. Assicurati che sia installato e nel PATH.")
         sys.exit(1)
 
-def init(flutter_name, login):
+def init(flutter_name, login, cursor_setup=True):
     # Controlla se esiste già una cartella con lo stesso nome del progetto
     project_dir = Path(flutter_name)
     if project_dir.exists():
@@ -63,6 +63,10 @@ def init(flutter_name, login):
     # Copy assets to the lib/assets folder
     copy_assets(flutter_name)
 
+    if cursor_setup:
+        from generators.cursor import copy_cursor_ecosystem
+        copy_cursor_ecosystem(project_path, login, flutter_name)
+        click.echo("\n📎 Cursor ecosystem (rules, agents, skills) added.")
 
     click.echo("\n✅ Project created successfully!")
     click.echo(f"\n📋 Summary:")

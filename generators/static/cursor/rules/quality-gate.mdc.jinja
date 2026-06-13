@@ -1,0 +1,14 @@
+---
+description: After substantial Dart changes, run quality checks — flutter analyze, build_runner when codegen files changed, dart format.
+alwaysApply: false
+---
+
+# Quality gate
+
+Before marking work complete:
+
+1. Run `flutter analyze` (or `dart analyze`) in project root and fix relevant issues.
+2. If Freezed, Injectable, Retrofit, or json_serializable files changed, run:
+   `dart run build_runner build --delete-conflicting-outputs`
+3. Optionally run `dart format .`
+4. Do not leave analyzer errors in files you modified.

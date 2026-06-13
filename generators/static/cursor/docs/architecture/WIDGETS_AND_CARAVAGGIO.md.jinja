@@ -1,0 +1,43 @@
+# Widgets and CaravaggioUI — [[project_name]]
+
+## CaravaggioUI (required)
+
+This project uses `caravaggio_ui`. Initialize in `main.dart` via `CaravaggioUI.initialize(...)`.
+
+For presentation code:
+
+```dart
+import 'package:caravaggio_ui/caravaggio_ui.dart';
+```
+
+Prefer CaravaggioUI buttons, inputs, and typography over raw Material widgets when equivalents exist.
+
+## Widget locations
+
+| Type | Path | Use when |
+|------|------|----------|
+| App-wide shared | `lib/widgets/common/` | Loading, error, empty states — **reuse first** |
+| Cross-feature component | `lib/features/components/<name>/` | Reusable UI with its own BLoC (list/single/form) |
+| Feature-local | `lib/features/<feature>/presentation/widgets/` | Widget used only in one feature |
+| Pages | `lib/features/<feature>/presentation/*_page.dart` | Routed screens |
+
+## Existing shared widgets
+
+- `LoadingWidget` — `lib/widgets/common/loading_widget.dart`
+- `ErrorWidget` — `lib/widgets/common/error_widget.dart`
+- `UnknownStateWidget` — `lib/widgets/common/unknown_state_widget.dart`
+
+Import with `package:[[project_name]]/widgets/common/...`.
+
+## Reuse policy
+
+1. Check `lib/widgets/common/` before creating loading/error UI.
+2. Check `lib/features/components/` before building similar list/form UIs.
+3. Extract to `features/components/` when a second feature needs the same UI.
+4. Keep feature-specific layout in `presentation/widgets/`.
+
+## Presentation patterns
+
+- `BlocBuilder` with typed `switch` on Freezed states.
+- Use `ErrorLocalizer` for failure messages.
+- `MultiBlocProvider` with explicit `List<SingleChildWidget>` typing.

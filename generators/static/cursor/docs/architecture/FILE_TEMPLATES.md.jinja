@@ -1,0 +1,53 @@
+# File templates — [[project_name]]
+
+## Domain entity `<entity>` (snake_case folder)
+
+### model/
+
+| File | Purpose |
+|------|---------|
+| `<entity>.dart` | Freezed entity |
+| `<entity>_failure.dart` | Freezed failure union |
+| `i_<entity>_repository.dart` | Repository interface (`Either<Failure, T>`) |
+| `value_objects.dart` | Value objects for fields |
+| `value_validators.dart` | Field validators |
+
+### infrastructure/
+
+| File | Purpose |
+|------|---------|
+| `<entity>_dto.dart` | JSON DTO |
+| `<entity>_service.dart` | Retrofit API client |
+| `<entity>_mapper.dart` | DTO ↔ entity |
+| `<entity>_repository.dart` | `@Injectable` repository impl |
+
+## Feature `<feature>` with BLoC
+
+### application/
+
+| File | Purpose |
+|------|---------|
+| `<name>_bloc.dart` | BLoC |
+| `<name>_event.dart` | Freezed events |
+| `<name>_state.dart` | Freezed states |
+
+### presentation/
+
+| File | Purpose |
+|------|---------|
+| `<name>_page.dart` | Route page |
+| `<name>_component.dart` | Embeddable component |
+
+## Reusable component (`lib/features/components/<name>/`)
+
+Same `application/` + `presentation/` structure as a feature.
+
+## Enum
+
+`lib/domain/enums/<enum_snake>.dart` — PascalCase enum class.
+
+## Integration (after layers)
+
+- `lib/router.dart` — GoRouter routes
+- `lib/injection.dart` — GetIt / injectable init
+- `lib/core/errors/error_localizer.dart` — user-facing failure messages

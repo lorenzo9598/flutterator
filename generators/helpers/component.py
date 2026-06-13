@@ -115,11 +115,8 @@ def create_component_form_layers(component_dir: Path, component_name: str, field
         domain_model_name: Optional domain model name / file stem (if using domain model)
         domain_folder: Optional domain folder name (e.g., 'domain')
         domain_model_folder: Optional containing folder for the model. Defaults to domain_model_name.
-        lib_path: Path to lib/ directory (used to generate core/bloc/base_form_bloc.dart)
+        lib_path: Path to lib/ directory (used to discover enums)
     """
-    if lib_path is not None:
-        ensure_base_form_bloc(project_name, lib_path)
-
     # Discover enums for type-aware form generation
     from .feature import find_enums_with_info
     known_enums: set = set()

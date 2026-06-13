@@ -300,18 +300,13 @@ class TestComponentGeneration:
         event_content = (component_dir / "application" / "login_form_form_event.dart").read_text()
         assert "emailChanged" in event_content or "EmailChanged" in event_content
 
-        # Check base_form_bloc.dart was created in core/bloc/
-        base_form_bloc_path = lib_path / "core" / "bloc" / "base_form_bloc.dart"
-        assert base_form_bloc_path.exists()
-        base_content = base_form_bloc_path.read_text()
-        assert "abstract class BaseFormBloc" in base_content
-        assert "handleFormSubmitWithEither" in base_content
-
-        # Check generated form bloc extends BaseFormBloc
+        # Check generated form bloc uses standard Bloc (same as single/list/sign_in_form)
         bloc_content = (component_dir / "application" / "login_form_form_bloc.dart").read_text()
-        assert "extends BaseFormBloc" in bloc_content
-        assert "handleFormSubmitWithEither" in bloc_content
-        assert "import 'package:test_project/core/bloc/base_form_bloc.dart'" in bloc_content
+        assert "extends Bloc<" in bloc_content
+        assert "extends BaseFormBloc" not in bloc_content
+        assert "import 'package:bloc/bloc.dart'" in bloc_content
+        assert "import 'package:flutter_bloc/flutter_bloc.dart'" not in bloc_content
+        assert "import 'package:test_project/core/bloc/base_form_bloc.dart'" not in bloc_content
 
         widget_content = (component_dir / "presentation" / "login_form_component.dart").read_text()
         assert "hide Title" in widget_content
@@ -1061,6 +1056,63 @@ class TestFeatureModes:
         # Should NOT have application or presentation
         assert not (domain_dir / "application").exists()
         assert not (domain_dir / "presentation").exists()
+
+    def test_create_domain_entity_no_repo(self, sample_project_structure):
+        """Test creating domain entity without repository (deserialization-only)."""
+        project_dir = sample_project_structure
+        lib_path = project_dir / "lib"
+        domain_dir = lib_path / "domain" / "address"
+        domain_dir.mkdir(parents=True, exist_ok=True)
+
+        field_list = [
+            {"name": "id", "type": "string"},
+            {"name": "street", "type": "string"},
+            {"name": "city", "type": "string"},
+        ]
+
+        create_domain_entity_layers(
+            domain_dir, "address", "Address", field_list, "test_project", "domain", no_repo=True
+        )
+
+        assert (domain_dir / "model" / "address.dart").exists()
+        assert (domain_dir / "model" / "address_failure.dart").exists()
+        assert not (domain_dir / "model" / "i_address_repository.dart").exists()
+        assert (domain_dir / "infrastructure" / "address_dto.dart").exists()
+        assert (domain_dir / "infrastructure" / "address_mapper.dart").exists()
+        assert not (domain_dir / "infrastructure" / "address_service.dart").exists()
+        assert not (domain_dir / "infrastructure" / "address_repository.dart").exists()
+
+    def test_add_domain_no_repo_cli(self, sample_project_structure):
+        """add-domain --no-repo skips repository and service files."""
+        from flutterator import cli
+        import shutil
+
+        runner = click.testing.CliRunner()
+        project_dir = sample_project_structure
+
+        with runner.isolated_filesystem():
+            shutil.copytree(project_dir, "test_project")
+            with patch("flutterator.run_flutter_commands"):
+                result = runner.invoke(
+                    cli,
+                    [
+                        "add-domain",
+                        "--name",
+                        "nested_item",
+                        "--fields",
+                        "label:string",
+                        "--no-repo",
+                        "--project-path",
+                        "test_project",
+                        "--no-build",
+                    ],
+                )
+            assert result.exit_code == 0
+            entity_dir = Path("test_project") / "lib" / "domain" / "nested_item"
+            assert (entity_dir / "model" / "nested_item.dart").exists()
+            assert not (entity_dir / "model" / "i_nested_item_repository.dart").exists()
+            assert (entity_dir / "infrastructure" / "nested_item_mapper.dart").exists()
+            assert not (entity_dir / "infrastructure" / "nested_item_repository.dart").exists()
 
     def test_create_presentation_feature_layers(self, sample_project_structure):
         """Test creating only presentation feature layers"""

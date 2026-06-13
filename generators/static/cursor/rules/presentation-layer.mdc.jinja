@@ -1,0 +1,13 @@
+---
+globs: lib/features/**/presentation/**
+alwaysApply: false
+---
+
+# Presentation layer
+
+- Location: `lib/features/<feature>/presentation/` or `lib/features/components/<name>/presentation/`
+- Pages: `<name>_page.dart`. Components: `<name>_component.dart`.
+- Use `MultiBlocProvider` with typed `providers` list.
+- Import shared states from `lib/widgets/common/` (LoadingWidget, ErrorWidget, UnknownStateWidget).
+- Map failures via `ErrorLocalizer` from `lib/core/errors/error_localizer.dart`.
+- New routes: update `lib/router.dart` (prefer `integration-wiring` subagent).

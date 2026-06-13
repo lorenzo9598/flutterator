@@ -1,7 +1,6 @@
+import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:[[project_name]]/core/bloc/base_form_bloc.dart';
 {% if domain_value_objects_import %}
 import 'package:[[project_name]]/[[domain_value_objects_import]]';
 {% endif %}
@@ -13,7 +12,7 @@ part '[[component_name]]_form_event.dart';
 part '[[component_name]]_form_state.dart';
 part '[[component_name]]_form_bloc.freezed.dart';
 
-class [[pascal_name]]FormBloc extends BaseFormBloc<[[pascal_name]]FormEvent, [[pascal_name]]FormState, String, Unit> {
+class [[pascal_name]]FormBloc extends Bloc<[[pascal_name]]FormEvent, [[pascal_name]]FormState> {
   [[pascal_name]]FormBloc() : super([[pascal_name]]FormState.initial()) {
 {% for field in field_list %}
 {% if field.name != 'id' %}
@@ -44,15 +43,14 @@ class [[pascal_name]]FormBloc extends BaseFormBloc<[[pascal_name]]FormEvent, [[p
 {% endfor %}
 
   Future<void> _onSubmit(Submit event, Emitter<[[pascal_name]]FormState> emit) async {
-    await handleFormSubmitWithEither<Unit>(
-      emit,
-      // TODO: Replace with actual submit operation
-      Future.value(right(unit)),
-      () => state.copyWith(isSubmitting: true, showErrorMessages: false),
-      (Either<String, Unit> result) => state.copyWith(
-        isSubmitting: false,
-        failureOrSuccessOption: some(result),
-      ),
-    );
+    emit(state.copyWith(isSubmitting: true, showErrorMessages: false));
+
+    // TODO: Replace with actual submit operation
+    final Either<String, Unit> result = await Future.value(right(unit));
+
+    emit(state.copyWith(
+      isSubmitting: false,
+      failureOrSuccessOption: some(result),
+    ));
   }
 }

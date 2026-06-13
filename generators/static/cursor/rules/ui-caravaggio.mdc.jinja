@@ -1,0 +1,14 @@
+---
+globs: lib/**/presentation/**,lib/widgets/**
+alwaysApply: false
+---
+
+# UI — CaravaggioUI and widget reuse
+
+Read `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` before creating UI.
+
+- Use **CaravaggioUI** (`package:caravaggio_ui/caravaggio_ui.dart`) for buttons, inputs, typography where available.
+- Reuse `lib/widgets/common/` widgets before creating new loading/error states.
+- Cross-feature reusable components: `lib/features/components/<name>/` with `application/` + `presentation/`.
+- Feature-local widgets only: `lib/features/<feature>/presentation/widgets/`.
+- Do not duplicate widget policy in comments — follow the architecture doc.

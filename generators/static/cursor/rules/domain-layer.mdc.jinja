@@ -1,0 +1,20 @@
+---
+globs: lib/domain/**
+alwaysApply: false
+---
+
+# Domain layer
+
+Domain entities live under `lib/domain/<entity>/`:
+
+**model/** — `<entity>.dart`, `<entity>_failure.dart`, `i_<entity>_repository.dart`, `value_objects.dart`, `value_validators.dart`
+
+**infrastructure/** — `<entity>_dto.dart`, `<entity>_service.dart`, `<entity>_mapper.dart`, `<entity>_repository.dart`
+
+Enums: `lib/domain/enums/<enum_snake>.dart`
+
+## Rules
+
+- No widgets, no BLoC, no `BuildContext` in domain.
+- Repository interface in `model/`; implementation in `infrastructure/`.
+- After adding a new `*_failure.dart`, update `lib/core/errors/error_localizer.dart` with a `localize*Failure` method (or delegate to `integration-wiring` subagent).

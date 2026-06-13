@@ -1,0 +1,16 @@
+---
+globs: lib/domain/auth/**,lib/features/auth/**
+alwaysApply: false
+---
+
+# Login / auth context
+
+This project was created with `--login`. Auth-related paths:
+
+- Domain: `lib/domain/auth/model/`, `lib/domain/auth/infrastructure/`
+- Feature: `lib/features/auth/application/`, `lib/features/auth/presentation/`
+- Sign-in form: `lib/features/auth/sign_in_form/application/`, `.../presentation/`
+- API interceptor: `lib/apis/interceptors/`
+- `ErrorLocalizer.localizeAuthFailure` in `lib/core/errors/error_localizer.dart`
+
+Follow existing auth patterns when extending authentication flows.

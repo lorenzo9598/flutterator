@@ -52,8 +52,8 @@ class ErrorLocalizer {
 {%- elif not has_login %}
   /// Maps a failure to a user-friendly error message.
   ///
-  /// Domain-specific localize methods will be generated automatically
-  /// when you add domain entities with `flutterator add-domain`.
+  /// Domain-specific localize methods are added when new domain failures
+  /// are introduced (see integration-wiring subagent or docs/architecture/).
   static String localizeFailure(BuildContext context, Object failure) {
     return failure.toString();
   }

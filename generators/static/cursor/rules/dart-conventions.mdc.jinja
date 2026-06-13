@@ -1,0 +1,14 @@
+---
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Dart conventions
+
+- File names: `snake_case.dart`. Classes: `PascalCase`.
+- Suffixes: `*_page.dart`, `*_bloc.dart`, `*_event.dart`, `*_state.dart`, `*_failure.dart`, `*_repository.dart`, `*_dto.dart`, `*_mapper.dart`, `*_service.dart`.
+- Use `package:[[project_name]]/...` imports (`always_use_package_imports`).
+- Specify types explicitly in `fold`, `catch`, `BlocBuilder`, and `switch` on Freezed states.
+- Freezed + json_serializable + injectable: after editing annotated files run:
+  `dart run build_runner build --delete-conflicting-outputs`
+- Respect `analysis_options.yaml` in project root.

@@ -312,7 +312,13 @@ def config(project_path, init_config, show):
     default=None,
     help='Include login/auth. Omit to be asked interactively after the project name.',
 )
-def create(name, login):
+@click.option(
+    '--no-cursor',
+    is_flag=True,
+    default=False,
+    help='Skip generating .cursor/ rules, agents, skills, and docs/architecture.',
+)
+def create(name, login, no_cursor):
     """
     Create a new Flutter project with DDD architecture.
     
@@ -352,7 +358,7 @@ def create(name, login):
         border_style="cyan"
     ))
 
-    init(flutter_name, login)
+    init(flutter_name, login, cursor_setup=not no_cursor)
     
     # Run flutter commands after project creation
     run_flutter_commands(Path(flutter_name))
@@ -474,14 +480,19 @@ def add_page(name, project_path, dry_run, no_build):
     is_flag=True,
     help='No field prompts; use --fields or only auto-added id field (for tools/CI)',
 )
-def add_domain(name, fields, folder, project_path, dry_run, no_build, non_interactive):
+@click.option(
+    '--no-repo',
+    is_flag=True,
+    help='Skip repository interface, Retrofit service, and repository (DTO + mapper only)',
+)
+def add_domain(name, fields, folder, project_path, dry_run, no_build, non_interactive, no_repo):
     """
     Add a domain entity (model + infrastructure only).
     
     \b
     Creates:
-      • lib/<domain_folder>/<name>/model/ - Entity, failure, repository interface
-      • lib/<domain_folder>/<name>/infrastructure/ - DTO, service, mapper, repository
+      • lib/<domain_folder>/<name>/model/ - Entity, failure, repository interface (unless --no-repo)
+      • lib/<domain_folder>/<name>/infrastructure/ - DTO, mapper; with repo also service + repository
     
     \b
     Domain entities are shared business entities that can be used by multiple features.
@@ -500,6 +511,9 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
       
       # Custom domain folder
       flutterator add-domain --name note --fields "title:string" --folder shared/domain
+      
+      # Nested/deserialization-only entity (no API repository)
+      flutterator add-domain --name address --fields "street:string,city:string" --no-repo
     """
     project_dir = Path(project_path)
     lib_path, project_name = validate_flutter_project(project_dir)
@@ -593,6 +607,23 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
     
     # Build base path for display (use folder name for paths)
     base_path = f"lib/{folder}/{entity_folder_name}"
+
+    model_files = [
+        f"{entity_folder_name}.dart",
+        f"{entity_folder_name}_failure.dart",
+        "value_objects.dart",
+        "value_validators.dart",
+    ]
+    if not no_repo:
+        model_files.insert(2, f"i_{entity_folder_name}_repository.dart")
+
+    infra_files = [
+        f"{entity_folder_name}_dto.dart",
+        f"{entity_folder_name}_mapper.dart",
+    ]
+    if not no_repo:
+        infra_files[1:1] = [f"{entity_folder_name}_service.dart"]
+        infra_files.append(f"{entity_folder_name}_repository.dart")
     
     # Dry-run mode: show what would be created
     if dry_run:
@@ -607,19 +638,8 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
         console.print()
         
         print_dry_run_tree(base_path, [
-            ("model", [
-                f"{entity_folder_name}.dart",
-                f"{entity_folder_name}_failure.dart",
-                f"i_{entity_folder_name}_repository.dart",
-                "value_objects.dart",
-                "value_validators.dart"
-            ]),
-            ("infrastructure", [
-                f"{entity_folder_name}_dto.dart",
-                f"{entity_folder_name}_service.dart",
-                f"{entity_folder_name}_mapper.dart",
-                f"{entity_folder_name}_repository.dart"
-            ])
+            ("model", model_files),
+            ("infrastructure", infra_files),
         ])
         print_dry_run_footer()
         return
@@ -638,7 +658,15 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
     
     # Create domain entity layers (model + infrastructure only)
     # Pass both folder_name (for paths) and class_name (for class names)
-    create_domain_entity_layers(domain_dir, entity_folder_name, entity_class_name, field_list, project_name, folder)
+    create_domain_entity_layers(
+        domain_dir,
+        entity_folder_name,
+        entity_class_name,
+        field_list,
+        project_name,
+        folder,
+        no_repo=no_repo,
+    )
     
     # Regenerate error_localizer with the newly added domain failure
     from generators.templates._core.core_generator import generate_error_localizer, infer_has_login
@@ -652,19 +680,8 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
     
     # Show created structure
     print_created_structure(entity_folder_name, [
-        ("model", [
-            f"{entity_folder_name}.dart",
-            f"{entity_folder_name}_failure.dart",
-            f"i_{entity_folder_name}_repository.dart",
-            "value_objects.dart",
-            "value_validators.dart"
-        ]),
-        ("infrastructure", [
-            f"{entity_folder_name}_dto.dart",
-            f"{entity_folder_name}_service.dart",
-            f"{entity_folder_name}_mapper.dart",
-            f"{entity_folder_name}_repository.dart"
-        ])
+        ("model", model_files),
+        ("infrastructure", infra_files),
     ])
     
     # Run Flutter commands (respecting --no-build and config)

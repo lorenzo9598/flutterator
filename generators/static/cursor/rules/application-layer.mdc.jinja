@@ -1,0 +1,12 @@
+---
+globs: lib/features/**/application/**
+alwaysApply: false
+---
+
+# Application layer (BLoC)
+
+- Location: `lib/features/<feature>/application/`
+- Files: `<name>_bloc.dart`, `<name>_event.dart`, `<name>_state.dart` (Freezed).
+- BLoC depends on `I*Repository` from domain — never on infrastructure implementations directly.
+- No Flutter widgets or `BuildContext` in application layer.
+- Use explicit types in `BlocBuilder` and state `switch` expressions.

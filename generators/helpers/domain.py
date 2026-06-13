@@ -18,7 +18,16 @@ from .feature import (
 )
 
 
-def create_domain_entity_layers(domain_dir: Path, entity_folder_name: str, entity_class_name: str, field_list: list[dict], project_name: str, folder: Optional[str]) -> None:
+def create_domain_entity_layers(
+    domain_dir: Path,
+    entity_folder_name: str,
+    entity_class_name: str,
+    field_list: list[dict],
+    project_name: str,
+    folder: Optional[str],
+    *,
+    no_repo: bool = False,
+) -> None:
     """Create model and infrastructure layers for a domain entity
     
     Args:
@@ -28,6 +37,8 @@ def create_domain_entity_layers(domain_dir: Path, entity_folder_name: str, entit
         field_list: List of field dictionaries
         project_name: Name of the project
         folder: Domain folder path
+        no_repo: If True, skip repository interface, Retrofit service, and repository impl
+            (entity, DTO, and mapper only — e.g. nested types for deserialization).
     
     Domain entities do NOT include application or presentation layers.
     They are meant to be shared across multiple features.
@@ -186,14 +197,15 @@ def create_domain_entity_layers(domain_dir: Path, entity_folder_name: str, entit
         "dto_imports": dto_imports
     })
     
-    # Create repository interface
-    i_repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}.dart';
+    if not no_repo:
+        # Create repository interface
+        i_repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}.dart';
 import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failure.dart';
 """
-    generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{entity_folder_name}_repository.dart", {
-        "feature_name": entity_class_name,
-        "i_repo_import": i_repo_import
-    })
+        generate_file(project_name, model_dir, "feature/i_feature_repository_template.jinja", f"i_{entity_folder_name}_repository.dart", {
+            "feature_name": entity_class_name,
+            "i_repo_import": i_repo_import
+        })
 
     # Generate mapper fields for DTO-Domain conversions
     from_dto_fields = []
@@ -403,14 +415,15 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
     from_dto_fields_str = ",\n".join(from_dto_fields)
     to_dto_fields_str = ",\n".join(to_dto_fields)
     
-    # Create Service (Retrofit)
-    generate_file(project_name, infra_dir, "domain/domain_service_template.jinja", f"{entity_folder_name}_service.dart", {
-        "entity_name": entity_class_name,  # Use class name for template (PascalCase)
-        "file_name": entity_folder_name,  # Use folder name for file references (snake_case)
-        "entity_name_camel": pascal_case_to_camel_case(entity_class_name),  # camelCase for variable names
-        "kebab_name": pascal_case_to_kebab_case(entity_class_name),  # kebab-case for API routes
-        "import_prefix": import_prefix
-    })
+    if not no_repo:
+        # Create Service (Retrofit)
+        generate_file(project_name, infra_dir, "domain/domain_service_template.jinja", f"{entity_folder_name}_service.dart", {
+            "entity_name": entity_class_name,  # Use class name for template (PascalCase)
+            "file_name": entity_folder_name,  # Use folder name for file references (snake_case)
+            "entity_name_camel": pascal_case_to_camel_case(entity_class_name),  # camelCase for variable names
+            "kebab_name": pascal_case_to_kebab_case(entity_class_name),  # kebab-case for API routes
+            "import_prefix": import_prefix
+        })
     
     # Create Mapper
     # Build mapper imports and constructor parameters
@@ -436,16 +449,17 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
         "mapper_constructor_params": mapper_constructor_params
     })
     
-    # Create Repository (uses Service + Mapper)
-    repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}.dart';
+    if not no_repo:
+        # Create Repository (uses Service + Mapper)
+        repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}.dart';
 import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failure.dart';
 import 'package:{project_name}/{import_prefix}/model/i_{entity_folder_name}_repository.dart';
 import 'package:{project_name}/{import_prefix}/infrastructure/{entity_folder_name}_service.dart';
 import 'package:{project_name}/{import_prefix}/infrastructure/{entity_folder_name}_mapper.dart';
 """
-    generate_file(project_name, infra_dir, "domain/domain_repository_template.jinja", f"{entity_folder_name}_repository.dart", {
-        "entity_name": entity_class_name,  # Use class name for template (PascalCase)
-        "file_name": entity_folder_name,  # Use folder name for file references (snake_case)
-        "import_prefix": import_prefix,
-        "repo_import": repo_import
-    })
+        generate_file(project_name, infra_dir, "domain/domain_repository_template.jinja", f"{entity_folder_name}_repository.dart", {
+            "entity_name": entity_class_name,  # Use class name for template (PascalCase)
+            "file_name": entity_folder_name,  # Use folder name for file references (snake_case)
+            "import_prefix": import_prefix,
+            "repo_import": repo_import
+        })
