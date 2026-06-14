@@ -18,10 +18,12 @@ Implement a **small** epic end-to-end in a single context.
 
 - `docs/architecture/FILE_TEMPLATES.md`
 - `docs/architecture/REFERENCE_IMPLEMENTATIONS.md`
-- `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` for UI
+- `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` for widget policy
+- `docs/architecture/CARAVAGGIO_COMPONENTS.md` for UI components
 
 ## Do not
 
 - Modify `router.dart`, `injection.dart`, or `error_localizer.dart` — leave to `integration-wiring`.
 - Use `flutterator` CLI.
 - Add widgets to `domain/`.
+- Use Material `Scaffold` on pages — use `CustomScaffold`.

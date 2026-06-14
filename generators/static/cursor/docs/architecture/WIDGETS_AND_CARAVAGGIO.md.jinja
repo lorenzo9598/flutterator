@@ -2,42 +2,75 @@
 
 ## CaravaggioUI (required)
 
-This project uses `caravaggio_ui`. Initialize in `main.dart` via `CaravaggioUI.initialize(...)`.
-
-For presentation code:
+This project uses `caravaggio_ui` **1.0.6**. Initialize in `main.dart` via `CaravaggioUI.initialize(...)`.
 
 ```dart
 import 'package:caravaggio_ui/caravaggio_ui.dart';
 ```
 
-Prefer CaravaggioUI buttons, inputs, and typography over raw Material widgets when equivalents exist.
+**Component catalog:** read `docs/architecture/CARAVAGGIO_COMPONENTS.md` before creating or editing presentation UI.
+
+Prefer CaravaggioUI components over raw Material widgets when equivalents exist (see catalog mapping table).
+
+## Pages — CustomScaffold (required)
+
+All routed pages **must** use `CustomScaffold` from `lib/widgets/common/custom_scaffold.dart`.
+
+- Do **not** use Material `Scaffold` + `AppBar` on pages.
+- `showBackButton: false` on root routes: Home, Splash, Login.
+- `showBackButton: true` on all other pages (add-page, feature pages, nested routes).
+- Use `bodyBuilder` with `topPadding` for scrollable content.
+- Move toolbar actions (add, refresh) to the `action` slot — no `FloatingActionButton`.
+
+```dart
+import 'package:caravaggio_ui/caravaggio_ui.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
+
+CustomScaffold(
+  title: CText.title('Title', size: TextSize.small),
+  showBackButton: true,
+  body: ...,
+);
+```
+
+Reusable BLoC **components** (`*_component.dart`) do **not** include a scaffold — the parent page provides `CustomScaffold` and `BlocProvider`.
 
 ## Widget locations
 
 | Type | Path | Use when |
 |------|------|----------|
-| App-wide shared | `lib/widgets/common/` | Loading, error, empty states — **reuse first** |
+| App-wide shared | `lib/widgets/common/` | Scaffold, loading, error, empty states — **reuse first** |
 | Cross-feature component | `lib/features/components/<name>/` | Reusable UI with its own BLoC (list/single/form) |
 | Feature-local | `lib/features/<feature>/presentation/widgets/` | Widget used only in one feature |
-| Pages | `lib/features/<feature>/presentation/*_page.dart` | Routed screens |
+| Pages | `lib/features/<feature>/presentation/*_page.dart` or `lib/features/<name>/<name>_page.dart` | Routed screens |
 
 ## Existing shared widgets
 
-- `LoadingWidget` — `lib/widgets/common/loading_widget.dart`
-- `ErrorWidget` — `lib/widgets/common/error_widget.dart`
-- `UnknownStateWidget` — `lib/widgets/common/unknown_state_widget.dart`
+| Widget | Path | Implementation |
+|--------|------|----------------|
+| `CustomScaffold` | `lib/widgets/common/custom_scaffold.dart` | Wraps `CScaffold` |
+| `LoadingWidget` | `lib/widgets/common/loading_widget.dart` | `CLoader.bouncing()` |
+| `ErrorWidget` | `lib/widgets/common/error_widget.dart` | `CText.body` |
+| `UnknownStateWidget` | `lib/widgets/common/unknown_state_widget.dart` | `CText.body` |
 
 Import with `package:[[project_name]]/widgets/common/...`.
 
 ## Reuse policy
 
-1. Check `lib/widgets/common/` before creating loading/error UI.
+1. Check `lib/widgets/common/` before creating loading/error UI or page shells.
 2. Check `lib/features/components/` before building similar list/form UIs.
 3. Extract to `features/components/` when a second feature needs the same UI.
 4. Keep feature-specific layout in `presentation/widgets/`.
+5. Consult `CARAVAGGIO_COMPONENTS.md` before introducing new Material widgets.
 
 ## Presentation patterns
 
 - `BlocBuilder` with typed `switch` on Freezed states.
 - Use `ErrorLocalizer` for failure messages.
 - `MultiBlocProvider` with explicit `List<SingleChildWidget>` typing.
+- Lists: `CTile.simple` instead of `ListTile`.
+- Loading: `LoadingWidget` or `CLoader` instead of `CircularProgressIndicator`.
+
+## Cursor skill
+
+For UI implementation patterns use skill **`/caravaggio-ui`** (page, form, list).

@@ -28,6 +28,19 @@ def _copy_static_file(src: Path, dest: Path) -> None:
     shutil.copy2(src, dest)
 
 
+def _copy_skill(skill_src: Path, skill_dest: Path, context: dict) -> None:
+    """Copy or render a single skill directory into the project."""
+    for src in skill_src.rglob("*"):
+        if src.is_dir():
+            continue
+        rel = src.relative_to(skill_src)
+        dest = skill_dest / rel
+        if src.suffix == ".jinja":
+            _render_file(src, dest.with_suffix(""), context)
+        else:
+            _copy_static_file(src, dest)
+
+
 def copy_cursor_ecosystem(project_path: Path, login: bool, project_name: str) -> None:
     """Render Cursor rules, agents, skills, docs, and AGENTS.md into the project."""
     if not CURSOR_STATIC_DIR.is_dir():
@@ -51,17 +64,11 @@ def copy_cursor_ecosystem(project_path: Path, login: bool, project_name: str) ->
     for src in sorted(agents_src.glob("*.md")):
         _copy_static_file(src, root / ".cursor" / "agents" / src.name)
 
-    skill_root = CURSOR_STATIC_DIR / "skills" / "epic-delivery"
-    skill_dest = root / ".cursor" / "skills" / "epic-delivery"
-    for src in skill_root.rglob("*"):
-        if src.is_dir():
+    skills_src = CURSOR_STATIC_DIR / "skills"
+    for skill_dir in sorted(skills_src.iterdir()):
+        if not skill_dir.is_dir():
             continue
-        rel = src.relative_to(skill_root)
-        dest = skill_dest / rel
-        if src.suffix == ".jinja":
-            _render_file(src, dest.with_suffix(""), context)
-        else:
-            _copy_static_file(src, dest)
+        _copy_skill(skill_dir, root / ".cursor" / "skills" / skill_dir.name, context)
 
     arch_src = CURSOR_STATIC_DIR / "docs" / "architecture"
     for src in sorted(arch_src.glob("*.md.jinja")):

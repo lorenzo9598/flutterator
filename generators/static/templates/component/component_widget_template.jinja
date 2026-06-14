@@ -9,6 +9,7 @@
  * Replace placeholder copy and layout with your real UI.
  */
 
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_bloc/flutter_bloc.dart';
 [[bloc_import]]
@@ -48,11 +49,11 @@ class [[pascal_name]]Component extends StatelessWidget {
                     child: Center(child: Text(item.toString())),
                   ),
                   if (isReloading)
-                    const Positioned(
+                    Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
-                      child: LinearProgressIndicator(minHeight: 2),
+                      child: CLinearProgressIndicator.primary(),
                     ),
                 ],
               ),
@@ -78,11 +79,11 @@ class [[pascal_name]]Component extends StatelessWidget {
                     child: Center(child: Text(item.toString())),
                   ),
                   if (isReloading)
-                    const Positioned(
+                    Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
-                      child: LinearProgressIndicator(minHeight: 2),
+                      child: CLinearProgressIndicator.primary(),
                     ),
                 ],
               ),

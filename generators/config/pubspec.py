@@ -17,7 +17,7 @@ def update_pubspec(flutter_name, has_login):
         "bloc",
         "another_flushbar",
         "flutter_lints",
-        "caravaggio_ui",
+        "caravaggio_ui:1.0.6",
         "font_awesome_flutter",
         "uuid",
         "collection", 

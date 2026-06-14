@@ -23,6 +23,7 @@ def generate_files(project_name: str, lib_path: Path, has_login: bool):
 
 def generate_common_widgets(project_name: str, lib_path: Path) -> None:
     """Write shared UI widgets under lib/widgets/common/ (new project create)."""
+    generate_file(project_name, lib_path, "widgets/common/custom_scaffold_template.jinja", "widgets/common/custom_scaffold.dart")
     generate_file(project_name, lib_path, "widgets/common/loading_widget_template.jinja", "widgets/common/loading_widget.dart")
     generate_file(project_name, lib_path, "widgets/common/error_widget_template.jinja", "widgets/common/error_widget.dart")
     generate_file(project_name, lib_path, "widgets/common/unknown_state_widget_template.jinja", "widgets/common/unknown_state_widget.dart")

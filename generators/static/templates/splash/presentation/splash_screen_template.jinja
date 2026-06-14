@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:[[project_name]]/features/home/home_page.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 
 class SplashPage extends StatefulWidget {
   static const String routeName = '/';
@@ -37,7 +38,8 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CustomScaffold(
+      showBackButton: false,
       body: Center(
         child: SizedBox(
           width: 200,

@@ -14,6 +14,7 @@ Read before starting:
 - Root `AGENTS.md`
 - `docs/architecture/DDD_LAYERS.md`
 - `docs/architecture/FILE_TEMPLATES.md`
+- `docs/architecture/CARAVAGGIO_COMPONENTS.md` (when epic includes UI)
 
 ## Workflow
 
@@ -67,5 +68,5 @@ layer-model → layer-infrastructure → layer-application → layer-presentatio
 ## Constraints
 
 - **Never** run `flutterator` CLI — write Dart files directly.
-- Do not duplicate widget policy — use `docs/architecture/WIDGETS_AND_CARAVAGGIO.md`.
+- Do not duplicate widget policy — use `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` and `docs/architecture/CARAVAGGIO_COMPONENTS.md`.
 - Use Explore subagent for codebase search; Bash for analyze and build_runner.

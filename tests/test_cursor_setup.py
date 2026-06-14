@@ -34,8 +34,14 @@ EXPECTED_ARCH_DOCS = [
     "DDD_LAYERS.md",
     "FILE_TEMPLATES.md",
     "WIDGETS_AND_CARAVAGGIO.md",
+    "CARAVAGGIO_COMPONENTS.md",
     "REFERENCE_IMPLEMENTATIONS.md",
     "APIS_AND_INTEGRATION.md",
+]
+
+EXPECTED_SKILLS = [
+    "epic-delivery",
+    "caravaggio-ui",
 ]
 
 
@@ -55,6 +61,7 @@ def test_copy_cursor_ecosystem_default(cursor_project):
     assert (cursor_project / "AGENTS.md").exists()
     assert "my_app" in (cursor_project / "AGENTS.md").read_text()
     assert "flutterator" in (cursor_project / "AGENTS.md").read_text().lower()
+    assert "caravaggio-ui" in (cursor_project / "AGENTS.md").read_text()
 
     core_rule = (cursor_project / ".cursor/rules/architecture-core.mdc").read_text()
     assert "my_app" in core_rule
@@ -72,11 +79,17 @@ def test_copy_cursor_ecosystem_default(cursor_project):
     for agent in EXPECTED_AGENTS:
         assert (agents_dir / agent).exists()
 
-    skill = cursor_project / ".cursor/skills/epic-delivery/SKILL.md"
-    assert skill.exists()
-    skill_text = skill.read_text()
-    assert "small" in skill_text
-    assert "large" in skill_text
+    for skill_name in EXPECTED_SKILLS:
+        skill = cursor_project / ".cursor" / "skills" / skill_name / "SKILL.md"
+        assert skill.exists(), f"Missing skill: {skill_name}"
+
+    epic_skill = (cursor_project / ".cursor/skills/epic-delivery/SKILL.md").read_text()
+    assert "small" in epic_skill
+    assert "large" in epic_skill
+
+    caravaggio_skill = (cursor_project / ".cursor/skills/caravaggio-ui/SKILL.md").read_text()
+    assert "CustomScaffold" in caravaggio_skill
+    assert "CARAVAGGIO_COMPONENTS.md" in caravaggio_skill
 
     for doc in EXPECTED_ARCH_DOCS:
         assert (cursor_project / "docs/architecture" / doc).exists()
@@ -124,3 +137,21 @@ def test_widgets_doc_contains_caravaggio(cursor_project):
     widgets_doc = (cursor_project / "docs/architecture/WIDGETS_AND_CARAVAGGIO.md").read_text()
     assert "caravaggio" in widgets_doc.lower()
     assert "widgets/common" in widgets_doc
+    assert "CustomScaffold" in widgets_doc
+    assert "CARAVAGGIO_COMPONENTS.md" in widgets_doc
+
+
+def test_ui_caravaggio_rule_mentions_custom_scaffold(cursor_project):
+    copy_cursor_ecosystem(cursor_project, login=False, project_name="my_app")
+    rule = (cursor_project / ".cursor/rules/ui-caravaggio.mdc").read_text()
+    assert "CustomScaffold" in rule
+    assert "CARAVAGGIO_COMPONENTS.md" in rule
+
+
+def test_caravaggio_components_catalog(cursor_project):
+    copy_cursor_ecosystem(cursor_project, login=False, project_name="my_app")
+    catalog = (cursor_project / "docs/architecture/CARAVAGGIO_COMPONENTS.md").read_text()
+    assert "1.0.6" in catalog
+    assert "CTile" in catalog
+    assert "CLoader" in catalog
+    assert "CustomScaffold" in catalog

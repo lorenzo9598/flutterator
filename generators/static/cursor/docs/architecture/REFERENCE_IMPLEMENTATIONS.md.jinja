@@ -16,8 +16,8 @@ Use these generated files as canonical examples when implementing new code.
 
 | Feature | Application | Presentation |
 |---------|-------------|--------------|
-| Splash | — | `lib/features/splash/` |
-| Home | — | `lib/features/home/` |
+| Splash | — | `lib/features/splash/splash_page.dart` — `CustomScaffold`, `showBackButton: false` |
+| Home | — | `lib/features/home/home_page.dart` — `CustomScaffold`, `showBackButton: false` |
 
 {% if login %}
 ## Auth (login enabled)
@@ -27,16 +27,18 @@ Use these generated files as canonical examples when implementing new code.
 | Domain | `lib/domain/auth/model/`, `lib/domain/auth/infrastructure/` |
 | Feature | `lib/features/auth/application/`, `lib/features/auth/presentation/` |
 | Sign-in form | `lib/features/auth/sign_in_form/application/`, `.../presentation/` |
+| Login page | `lib/features/auth/presentation/login_page.dart` — `CustomScaffold`, `showBackButton: false` |
 {% endif %}
 
 ## Shared widgets
 
-- `lib/widgets/common/loading_widget.dart`
-- `lib/widgets/common/error_widget.dart`
-- `lib/widgets/common/unknown_state_widget.dart`
+- `lib/widgets/common/custom_scaffold.dart` — page shell (wraps `CScaffold`)
+- `lib/widgets/common/loading_widget.dart` — `CLoader.bouncing()`
+- `lib/widgets/common/error_widget.dart` — `CText.body`
+- `lib/widgets/common/unknown_state_widget.dart` — fallback BLoC state
 
 ## APIs
 
 - `lib/apis/` — clients, interceptors, injectable module
 
-When adding new code, match naming, imports, and patterns from the closest reference above.
+When adding new code, match naming, imports, and patterns from the closest reference above. For UI components see `docs/architecture/CARAVAGGIO_COMPONENTS.md`.

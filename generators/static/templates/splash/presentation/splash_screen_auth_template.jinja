@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
 import 'package:[[project_name]]/features/auth/presentation/login_page.dart';
 import 'package:[[project_name]]/features/home/home_page.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
@@ -35,7 +36,8 @@ class _SplashPageState extends State<SplashPage> {
         Unauthenticated() => context.replace(LoginPage.routeName),
         _ => null,
       },
-      child: Scaffold(
+      child: CustomScaffold(
+        showBackButton: false,
         body: Center(
           child: AnimatedContainer(
             duration: const Duration(seconds: 1),

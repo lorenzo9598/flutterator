@@ -7,6 +7,8 @@ alwaysApply: false
 
 - Location: `lib/features/<feature>/presentation/` or `lib/features/components/<name>/presentation/`
 - Pages: `<name>_page.dart`. Components: `<name>_component.dart`.
+- Pages use `CustomScaffold` — see `docs/architecture/WIDGETS_AND_CARAVAGGIO.md`.
+- UI components: see `docs/architecture/CARAVAGGIO_COMPONENTS.md`.
 - Use `MultiBlocProvider` with typed `providers` list.
 - Import shared states from `lib/widgets/common/` (LoadingWidget, ErrorWidget, UnknownStateWidget).
 - Map failures via `ErrorLocalizer` from `lib/core/errors/error_localizer.dart`.

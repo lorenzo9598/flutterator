@@ -1,3 +1,4 @@
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart';
 
 /// Stato del BLoC non previsto dal widget (fallback).
@@ -12,7 +13,7 @@ class UnknownStateWidget extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(
+        child: CText.body(
           hint ?? 'Stato non gestito',
           textAlign: TextAlign.center,
         ),

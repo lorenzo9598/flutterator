@@ -190,7 +190,7 @@ class SignInForm extends StatelessWidget {
                     ),
                     if (state.isSubmitting) ...<Widget>[
                       const SizedBox(height: 8),
-                      const LinearProgressIndicator(value: null),
+                      CLinearProgressIndicator.primary(),
                     ],
                   ],
                 ),

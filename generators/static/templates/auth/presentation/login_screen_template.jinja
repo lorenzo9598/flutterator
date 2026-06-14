@@ -4,6 +4,7 @@ import 'package:[[project_name]]/features/auth/sign_in_form/application/sign_in_
 import 'package:[[project_name]]/injection.dart';
 import 'package:[[project_name]]/features/auth/sign_in_form/presentation/sign_in_form.dart';
 import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 
 class LoginPage extends StatefulWidget {
   static const String routeName = '/login';
@@ -17,7 +18,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CustomScaffold(
+      showBackButton: false,
       body: BlocProvider<SignInFormBloc>(
         create: (BuildContext context) => SignInFormBloc(getIt<IAuthFacade>()),
         child: const SignInForm(),

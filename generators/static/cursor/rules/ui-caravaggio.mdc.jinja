@@ -5,10 +5,18 @@ alwaysApply: false
 
 # UI — CaravaggioUI and widget reuse
 
-Read `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` before creating UI.
+Read before creating or editing UI:
 
-- Use **CaravaggioUI** (`package:caravaggio_ui/caravaggio_ui.dart`) for buttons, inputs, typography where available.
-- Reuse `lib/widgets/common/` widgets before creating new loading/error states.
+1. `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` — app policy, widget locations, CustomScaffold rules
+2. `docs/architecture/CARAVAGGIO_COMPONENTS.md` — full component catalog (caravaggio_ui 1.0.6)
+
+## Hard rules
+
+- **Pages:** use `CustomScaffold` from `lib/widgets/common/custom_scaffold.dart`. Never Material `Scaffold` + `AppBar` on pages.
+- **Root pages** (Home, Splash, Login): `showBackButton: false`.
+- **Components** (`*_component.dart`): no scaffold — parent page provides shell.
+- Prefer cataloged CaravaggioUI components over Material equivalents (`CTile`, `CLoader`, `CButton`, `CText`, etc.).
+- Reuse `LoadingWidget`, `ErrorWidget`, `UnknownStateWidget` from `lib/widgets/common/` before creating new states.
 - Cross-feature reusable components: `lib/features/components/<name>/` with `application/` + `presentation/`.
-- Feature-local widgets only: `lib/features/<feature>/presentation/widgets/`.
-- Do not duplicate widget policy in comments — follow the architecture doc.
+- Feature-local widgets: `lib/features/<feature>/presentation/widgets/`.
+- Do not duplicate widget policy in comments — follow the architecture docs.

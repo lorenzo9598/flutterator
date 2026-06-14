@@ -10,8 +10,10 @@
  * with configurable navigation items and screens
  */
 
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:[[project_name]]/core/presentation/bottom_nav_bar.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 {% for nav_item in nav_items %}
 import 'package:[[project_name]]/features/home/[[nav_item.name]]_screen.dart';
 {% endfor %}
@@ -46,17 +48,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+    return CustomScaffold(
+      title: CText.title('Home', size: TextSize.small),
+      showBackButton: false,
 {% if has_drawer %}
       drawer: const AppDrawer(),
 {% endif %}
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+      body: Column(
+        children: <Widget>[
+          Expanded(child: _pages[_selectedIndex]),
+          BottomNavBar(
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+          ),
+        ],
       ),
     );
   }

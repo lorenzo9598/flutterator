@@ -1,0 +1,317 @@
+# CaravaggioUI component catalog — [[project_name]]
+
+Reference for `caravaggio_ui` **1.0.6**. Import:
+
+```dart
+import 'package:caravaggio_ui/caravaggio_ui.dart';
+```
+
+Initialize once in `main.dart` via `CaravaggioUI.initialize(...)`.
+
+For app-specific scaffold policy see `WIDGETS_AND_CARAVAGGIO.md`. Full API edge cases: [caravaggio_ui README](https://pub.dev/packages/caravaggio_ui).
+
+---
+
+## Design tokens
+
+| Token | Use |
+|-------|-----|
+| `AppColors` | Static palette (primary, secondary, shades) |
+| `AppSpacing` | Consistent spacing constants |
+| `AppRadius` | Border radius presets (`AppRadius.s`, `.m`, `.l`) |
+| `AppShadow` | Elevation shadows |
+| `CColors` | Runtime theme colors from `CaravaggioUI.initialize` |
+| `CGradient` | Background gradients (`CGradient.primaryLightToSecondaryLight`, etc.) |
+
+```dart
+padding: const EdgeInsets.all(AppSpacing.m),
+borderRadius: BorderRadius.circular(AppRadius.s),
+color: CColors.primaryColor,
+```
+
+---
+
+## Generics
+
+### CText
+
+Typography aligned with the design system. Factories: `display`, `headline`, `title`, `body`, `label` — each with optional `TextSize` (`small`, `medium`, `large`).
+
+```dart
+CText.title('Page title', size: TextSize.small),
+CText.body('Description', textAlign: TextAlign.center),
+CText.label('Submit'),
+```
+
+### CGradient
+
+Background gradients for scaffolds and containers.
+
+```dart
+backgroundGradient: CGradient.primaryLightToSecondaryLight,
+```
+
+---
+
+## Forms
+
+### CButton
+
+Elevated, outlined, text variants. Use `radius: AppRadius.s` for consistency.
+
+```dart
+CButton.elevated(
+  radius: AppRadius.s,
+  onPressed: () {},
+  child: CText.label('Save'),
+),
+CButton.outlined(onPressed: () {}, child: CText.label('Cancel')),
+```
+
+### CTextField
+
+Bordered text input with validation support.
+
+```dart
+CTextField.bordered(
+  decoration: CFieldDecoration(label: 'Email'),
+  onChanged: (value) {},
+),
+```
+
+### CAutocomplete
+
+Searchable dropdown with async suggestions.
+
+```dart
+CAutocomplete<String>(
+  decoration: CFieldDecoration(label: 'City'),
+  optionsBuilder: (query) => suggestions.where((s) => s.contains(query)),
+  onSelected: (value) {},
+),
+```
+
+### CDropdown
+
+Single-select dropdown with controller.
+
+```dart
+final controller = CDropdownController<String>();
+CDropdown<String>(
+  decoration: CFieldDecoration(label: 'Role'),
+  items: [CDropdownItemModel(value: 'a', label: 'Admin')],
+  controller: controller,
+),
+```
+
+### CCheckbox / CRadioGroup
+
+```dart
+CCheckbox(value: accepted, onChanged: (v) {}),
+CRadioGroup<String>(
+  values: items,
+  controller: radioController,
+  orientation: CRadioGroupOrientation.vertical,
+),
+```
+
+### CDatePicker / CTimePicker
+
+```dart
+CDatePicker(
+  decoration: CFieldDecoration(label: 'Date'),
+  onChanged: (date) {},
+),
+CTimePicker(
+  decoration: CFieldDecoration(label: 'Time'),
+  onChanged: (time) {},
+),
+```
+
+### CFieldDecoration
+
+Shared decoration for form fields (label, hint, error).
+
+---
+
+## Views — scaffold & layout
+
+### CScaffold (via CustomScaffold in this project)
+
+Design-system scaffold: gradient background, scroll-linked app bar, back pill, optional drawer.
+
+**In this project use `CustomScaffold`** from `lib/widgets/common/custom_scaffold.dart` for all routed pages.
+
+```dart
+CustomScaffold(
+  title: CText.title('Items', size: TextSize.small),
+  showBackButton: true, // false on Home, Splash, Login
+  action: IconButton(icon: Icon(Icons.add), onPressed: () {}),
+  bodyBuilder: (context, topPadding) => ListView(
+    padding: EdgeInsets.only(top: topPadding),
+    children: [...],
+  ),
+),
+```
+
+Key API: `body`, `bodyBuilder(context, topPadding)`, `title`, `action`, `leading`, `drawer`, `showBackButton`, `hideTitleOnScroll`, `scrollController`, `CustomScaffold.topPaddingOf(context)`.
+
+### CTile
+
+List/modal tile. Prefer `CTile.simple` for standard rows.
+
+```dart
+CTile.simple(
+  title: 'Item name',
+  description: 'Optional subtitle',
+  icon: Icons.folder_outlined,
+  trailing: Icon(Icons.chevron_right),
+  onTap: () {},
+),
+```
+
+### CTabs
+
+Pill tab bar with content panel.
+
+```dart
+CTabs(
+  tabs: const [
+    CTabItem(label: 'Overview', icon: Icons.dashboard_outlined),
+    CTabItem(label: 'Details', icon: Icons.info_outline),
+  ],
+  children: [OverviewTab(), DetailsTab()],
+),
+```
+
+### CCarousel
+
+Horizontal carousel for cards or images.
+
+```dart
+CCarousel(
+  itemCount: items.length,
+  itemBuilder: (context, index) => Card(child: ...),
+),
+```
+
+### CWrapper
+
+Card-style container with padding and optional title.
+
+```dart
+CWrapper(
+  title: CText.title('Section'),
+  child: ...,
+),
+```
+
+### CIconBadge / CTagChip
+
+```dart
+CIconBadge(icon: Icons.notifications, count: 3),
+CTagChip(label: 'Active', variant: CTagChipVariant.primary),
+```
+
+---
+
+## Views — dialogs & feedback
+
+### CPopup / showCPopup
+
+```dart
+showCPopup(
+  context: context,
+  title: 'Confirm',
+  message: 'Delete this item?',
+  actions: [
+    CPopupAction(label: 'Cancel', onPressed: () => Navigator.pop(context)),
+    CPopupAction(label: 'Delete', style: CPopupActionStyle.destructive, onPressed: onDelete),
+  ],
+),
+```
+
+### CModalBottomSheet / showCModalBottomSheet
+
+```dart
+showCModalBottomSheet(
+  context: context,
+  builder: (context) => YourSheetContent(),
+),
+```
+
+### CToast
+
+Requires `CToastScope` ancestor (typically in app root).
+
+```dart
+CToastScope.of(context).show('Saved successfully', variant: CToastVariant.success),
+```
+
+---
+
+## Indicators & data
+
+### CLoader
+
+Animated loading indicator (preferred over Material spinners).
+
+```dart
+CLoader.bouncing(),
+CLoader.orbit(color: CColors.primaryColor),
+```
+
+### Progress indicators
+
+Themed Material progress wrappers.
+
+```dart
+CCircularProgressIndicator.primary(),
+CLinearProgressIndicator.primary(),
+```
+
+### CCircularIndicator
+
+Radial gauge with optional label.
+
+```dart
+CCircularIndicator(value: 0.75, label: '75%'),
+```
+
+### CTable
+
+Structured data table.
+
+```dart
+CTable(
+  headers: [CTableHeader('Name'), CTableHeader('Status')],
+  rows: [
+    CTableRow(cells: [CTableCell.text('Item'), CTableCell.text('Active')]),
+  ],
+),
+```
+
+---
+
+## Quick mapping (Material → Caravaggio)
+
+| Avoid in presentation | Prefer |
+|-----------------------|--------|
+| `Scaffold` + `AppBar` on pages | `CustomScaffold` |
+| `CircularProgressIndicator` | `CLoader` or `CCircularProgressIndicator.primary()` |
+| `LinearProgressIndicator` | `CLinearProgressIndicator.primary()` |
+| `ListTile` | `CTile.simple` |
+| Raw `Text` for UI copy | `CText.*` |
+| Raw `ElevatedButton` | `CButton.elevated` |
+| Raw `TextField` | `CTextField.bordered` |
+
+---
+
+## App wrappers (generated)
+
+| Widget | Path | Role |
+|--------|------|------|
+| `CustomScaffold` | `lib/widgets/common/custom_scaffold.dart` | All routed pages |
+| `LoadingWidget` | `lib/widgets/common/loading_widget.dart` | BLoC loading states (`CLoader.bouncing`) |
+| `ErrorWidget` | `lib/widgets/common/error_widget.dart` | Localized errors (`CText.body`) |
+| `UnknownStateWidget` | `lib/widgets/common/unknown_state_widget.dart` | Unhandled BLoC states |

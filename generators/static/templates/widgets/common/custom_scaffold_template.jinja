@@ -1,0 +1,52 @@
+import 'package:caravaggio_ui/caravaggio_ui.dart';
+import 'package:flutter/material.dart';
+
+/// App-level scaffold wrapping [CScaffold] with project defaults.
+class CustomScaffold extends StatelessWidget {
+  const CustomScaffold({
+    super.key,
+    this.body,
+    this.bodyBuilder,
+    this.title,
+    this.action,
+    this.leading,
+    this.drawer,
+    this.scrollController,
+    this.showBackButton = true,
+    this.hideTitleOnScroll = true,
+    this.titleAlignment = Alignment.centerLeft,
+    this.onBackPressed,
+  });
+
+  final Widget? body;
+  final Widget Function(BuildContext context, double topPadding)? bodyBuilder;
+  final Widget? title;
+  final Widget? action;
+  final Widget? leading;
+  final Widget? drawer;
+  final ScrollController? scrollController;
+  final bool showBackButton;
+  final bool hideTitleOnScroll;
+  final Alignment titleAlignment;
+  final VoidCallback? onBackPressed;
+
+  /// Returns the top padding from the nearest [CustomScaffold] / [CScaffold].
+  static double? topPaddingOf(BuildContext context) => CScaffold.topPaddingOf(context);
+
+  @override
+  Widget build(BuildContext context) {
+    return CScaffold(
+      body: body,
+      bodyBuilder: bodyBuilder,
+      title: title,
+      action: action,
+      leading: leading,
+      drawer: drawer,
+      scrollController: scrollController,
+      showBackButton: showBackButton,
+      hideTitleOnScroll: hideTitleOnScroll,
+      titleAlignment: titleAlignment,
+      onBackPressed: onBackPressed,
+    );
+  }
+}

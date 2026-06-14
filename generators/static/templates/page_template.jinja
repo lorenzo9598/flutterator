@@ -1,13 +1,15 @@
 /*
  * Simple page template for Flutter screens
  * Generates a basic StatelessWidget page with:
- * - AppBar with page title
+ * - CustomScaffold with page title
  * - Centered content placeholder
  * - Route name constant for navigation
  * Use this template for creating simple, static pages
  */
 
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 
 class [[page_name|title]]Page extends StatelessWidget {
   static const String routeName = '/[[page_name]]';
@@ -16,12 +18,11 @@ class [[page_name|title]]Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('[[page_name|replace("_", " ")|title]]'),
-      ),
-      body: const Center(
-        child: Text('[[page_name|replace("_", " ")|title]] Page'),
+    return CustomScaffold(
+      title: CText.title('[[page_name|replace("_", " ")|title]]', size: TextSize.small),
+      showBackButton: true,
+      body: Center(
+        child: CText.body('[[page_name|replace("_", " ")|title]] Page'),
       ),
     );
   }

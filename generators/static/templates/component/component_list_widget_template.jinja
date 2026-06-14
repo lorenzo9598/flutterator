@@ -9,6 +9,7 @@
  * This component expects the BLoC to be provided by a parent widget.
  */
 
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_bloc/flutter_bloc.dart';
 {% if not empty_component %}
@@ -42,15 +43,15 @@ class [[component_pascal]]Component extends StatelessWidget {
           ) =>
             Column(
               children: <Widget>[
-                if (isReloading) const LinearProgressIndicator(minHeight: 2),
+                if (isReloading) CLinearProgressIndicator.primary(),
                 Expanded(
                   child: ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (BuildContext context, int index) {
                       final [[domain_model_pascal]] item = items[index];
-                      return ListTile(
-                          title: Text(item.toString()),
-                          trailing: Row(
+                      return CTile.simple(
+                        title: item.toString(),
+                        trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
                               IconButton(

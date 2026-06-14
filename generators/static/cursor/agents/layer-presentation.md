@@ -10,7 +10,12 @@ Implement only the **presentation** layer for the current epic.
 
 ## Before coding
 
-Read `docs/architecture/WIDGETS_AND_CARAVAGGIO.md`.
+Read both:
+
+1. `docs/architecture/WIDGETS_AND_CARAVAGGIO.md`
+2. `docs/architecture/CARAVAGGIO_COMPONENTS.md`
+
+Optional pattern reference: skill `/caravaggio-ui`.
 
 ## Output paths
 
@@ -20,7 +25,9 @@ Read `docs/architecture/WIDGETS_AND_CARAVAGGIO.md`.
 
 ## Rules
 
-- Use CaravaggioUI components where available.
+- **Pages:** `CustomScaffold` (not Material `Scaffold`). `showBackButton: false` only on Home/Splash/Login.
+- **Components:** no scaffold; parent provides `CustomScaffold` + `BlocProvider`.
+- Use CaravaggioUI components from the catalog where available.
 - Reuse `LoadingWidget`, `ErrorWidget`, `UnknownStateWidget` from `lib/widgets/common/`.
 - Use `BlocBuilder` with typed states and `ErrorLocalizer` for failures.
 - Do not modify `router.dart` — leave to `integration-wiring`.

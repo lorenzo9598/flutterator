@@ -1,3 +1,4 @@
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 
 /// Messaggio di errore già localizzato o pronto per la UI.
@@ -11,7 +12,7 @@ class ErrorWidget extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(
+        child: CText.body(
           message,
           textAlign: TextAlign.center,
         ),

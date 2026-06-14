@@ -108,16 +108,16 @@ class [[pascal_name]]Component extends StatelessWidget {
                       context.read<[[bloc_name]]>().add(const [[pascal_name]]FormEvent.submit());
                     },
                     child: state.isSubmitting 
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CCircularProgressIndicator.primary(),
                           )
                         : CText.label('Submit'),
                   ),
                   if (state.isSubmitting) ...<Widget>[
                     const SizedBox(height: 8),
-                    const LinearProgressIndicator(value: null),
+                    CLinearProgressIndicator.primary(),
                   ],
                 ],
               ),

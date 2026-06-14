@@ -1,13 +1,14 @@
+import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart';
 
-/// Indicatore di caricamento predefinito per componenti e pagine.
+/// Indicatore di caricamento condiviso (wrapper su [CLoader]).
 class LoadingWidget extends StatelessWidget {
   const LoadingWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Center(
+      child: CLoader.bouncing(),
     );
   }
 }
