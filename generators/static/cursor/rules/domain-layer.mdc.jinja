@@ -9,12 +9,16 @@ Domain entities live under `lib/domain/<entity>/`:
 
 **model/** — `<entity>.dart`, `<entity>_failure.dart`, `i_<entity>_repository.dart`, `value_objects.dart`, `value_validators.dart`
 
-**infrastructure/** — `<entity>_dto.dart`, `<entity>_service.dart`, `<entity>_mapper.dart`, `<entity>_repository.dart`
+**infrastructure/** — `<entity>_dto.dart`, `i_<entity>_service.dart`, `<entity>_remote_service.dart`, `mock_<entity>_service.dart`, `<entity>_service_module.dart`, `<entity>_mapper.dart`, `<entity>_repository.dart`
 
 Enums: `lib/domain/enums/<enum_snake>.dart`
+
+Mock JSON: `assets/mock/<entity>.json` — see `docs/architecture/MOCK_AND_REMOTE_DATA.md`.
 
 ## Rules
 
 - No widgets, no BLoC, no `BuildContext` in domain.
 - Repository interface in `model/`; implementation in `infrastructure/`.
+- Repository injects `I*Service`; service module selects mock vs remote via `DataSourceConfig`.
+- When adding an entity, create/update `assets/mock/<entity>.json` with 2–3 sample rows.
 - After adding a new `*_failure.dart`, update `lib/core/errors/error_localizer.dart` with a `localize*Failure` method (or delegate to `integration-wiring` subagent).

@@ -1,0 +1,106 @@
+import 'dart:convert';
+
+import 'package:dartz/dartz.dart';
+import 'package:flutter/services.dart';
+import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:[[project_name]]/core/model/value_objects.dart';
+import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
+import 'package:[[project_name]]/domain/auth/model/user.dart' as auth_user;
+import 'package:[[project_name]]/domain/auth/model/value_objects.dart';
+import 'package:[[project_name]]/storage/storage_repository.dart';
+
+/// Mock authentication — any sign-in succeeds using [assets/mock/auth_user.json].
+@lazySingleton
+class MockAuthFacade implements IAuthFacade {
+  static const String _assetPath = 'assets/mock/auth_user.json';
+  static const String _userPrefsKey = 'mock_auth_user_json';
+
+  final StorageRepository _storageRepository;
+
+  MockAuthFacade(this._storageRepository);
+
+  Future<auth_user.User> _seedUser() async {
+    final String raw = await rootBundle.loadString(_assetPath);
+    final Map<String, dynamic> json = jsonDecode(raw) as Map<String, dynamic>;
+    return auth_user.User(
+      id: UniqueId.fromUniqueString(json['id'] as String),
+      name: StringSingleLine(json['name'] as String),
+      emailAddress: EmailAddress(json['emailAddress'] as String),
+    );
+  }
+
+  Future<void> _persistUser(auth_user.User user) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _userPrefsKey,
+      jsonEncode(<String, String>{
+        'id': user.id.getOrCrash(),
+        'name': user.name.getOrCrash(),
+        'emailAddress': user.emailAddress.getOrCrash(),
+      }),
+    );
+    await _storageRepository.saveToken(
+      const TokenData(token: 'mock-access-token', refreshToken: 'mock-refresh-token'),
+    );
+  }
+
+  Future<Option<auth_user.User>> _readUser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? raw = prefs.getString(_userPrefsKey);
+    if (raw == null || raw.isEmpty) {
+      return none();
+    }
+    final Map<String, dynamic> json = jsonDecode(raw) as Map<String, dynamic>;
+    return some(
+      auth_user.User(
+        id: UniqueId.fromUniqueString(json['id'] as String),
+        name: StringSingleLine(json['name'] as String),
+        emailAddress: EmailAddress(json['emailAddress'] as String),
+      ),
+    );
+  }
+
+  Future<Either<AuthFailure, Unit>> _signIn() async {
+    final auth_user.User user = await _seedUser();
+    await _persistUser(user);
+    return right(unit);
+  }
+
+  @override
+  Future<Option<auth_user.User>> getSignedInUser() => _readUser();
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithEmailAndPassword({
+    required EmailAddress emailAddress,
+    required Password password,
+  }) =>
+      _signIn();
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithEmailAndPassword({
+    required EmailAddress emailAddress,
+    required Password password,
+  }) =>
+      _signIn();
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithGoogle() => _signIn();
+
+  @override
+  Future<Either<AuthFailure, Unit>> signInWithApple() => _signIn();
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithGoogle() => _signIn();
+
+  @override
+  Future<Either<AuthFailure, Unit>> registerWithApple() => _signIn();
+
+  @override
+  Future<void> signOut() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userPrefsKey);
+    await _storageRepository.removeToken();
+  }
+}

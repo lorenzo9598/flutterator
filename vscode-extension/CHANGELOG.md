@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.6] - 2026-06-15
+
+### Release
+
+- Version aligned with CLI **3.1.6**; published automatically via GitHub Actions to VS Code Marketplace and Open VSX alongside PyPI.
+
+### Compatibilità CLI
+
+- **Ultima verifica** con il CLI del repo: **3.1.6** (`pyproject.toml` / `flutterator --version`).
+
 ## [3.1.5] - 2026-04-16
 
 ### Documentazione / versioning

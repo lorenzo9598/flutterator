@@ -16,12 +16,12 @@ import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]].dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/[[file_name]]_failure.dart';
 import 'package:[[project_name]]/[[import_prefix]]/model/i_[[file_name]]_repository.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
-import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_service.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/i_[[file_name]]_service.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_mapper.dart';
 
 @Injectable(as: I[[entity_name]]Repository)
 class [[entity_name]]Repository with BaseRepositoryMixin<[[entity_name]]Failure> implements I[[entity_name]]Repository {
-  final [[entity_name]]Service _service;
+  final I[[entity_name]]Service _service;
   final [[entity_name]]Mapper _mapper;
 
   [[entity_name]]Repository(

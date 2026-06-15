@@ -24,6 +24,8 @@ def generate_application(project_name: str, lib_path: Path):
 
 def generate_infrastructure(project_name: str, lib_path: Path):
     generate_file(project_name, lib_path, "auth/infrastructure/auth_facade_template.jinja", "domain/auth/infrastructure/auth_facade.dart")
+    generate_file(project_name, lib_path, "auth/infrastructure/mock_auth_facade_template.jinja", "domain/auth/infrastructure/mock_auth_facade.dart")
+    generate_file(project_name, lib_path, "auth/infrastructure/auth_facade_module_template.jinja", "domain/auth/infrastructure/auth_facade_module.dart")
 
 def generate_user_profile(project_name: str, lib_path: Path):
     """Generate user_profile domain as a separate domain entity."""

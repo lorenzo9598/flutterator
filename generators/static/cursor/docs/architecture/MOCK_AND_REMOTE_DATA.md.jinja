@@ -1,0 +1,87 @@
+# Mock and remote data sources — [[project_name]]
+
+## Why mock by default
+
+New entities use **mock** data so the app runs immediately without `Constants.apiUrl` or a live backend. Switch individual entities to **remote** when their API is ready.
+
+## Registry — `DataSourceConfig`
+
+File: `lib/apis/common/data_source_config.dart`
+
+```dart
+static const Map<String, DataSource> entities = {
+  'auth': DataSource.mock,   // when login enabled
+  'task': DataSource.mock,
+  'user': DataSource.remote, // example after API is ready
+};
+```
+
+- Keys: **snake_case** entity folder name; `'auth'` for authentication.
+- Change one line: `DataSource.mock` → `DataSource.remote`.
+- New entities from `add-domain` are added as `mock` automatically (existing `remote` entries are preserved).
+
+Startup calls `DataSourceConfig.validateRemoteRequiresApiUrl()` in `main.dart`. Any **non-auth** entity set to `remote` without a configured `Constants.apiUrl` throws a clear `StateError`. Placeholder strings like `INSERT YOUR LOCAL URL HERE` do **not** count as configured.
+
+`Constants.apiUrl` defaults to **empty** in `main.dart` for mock-only development. Dio uses `Constants.dioBaseUrl` (`http://127.0.0.1` when unset) so DI starts without network calls.
+
+## Infrastructure layout (per domain entity)
+
+| File | Role |
+|------|------|
+| `i_<entity>_service.dart` | Service interface |
+| `<entity>_remote_service.dart` | Retrofit REST client |
+| `mock_<entity>_service.dart` | Loads `assets/mock/<entity>.json`, in-memory CRUD |
+| `<entity>_service_module.dart` | DI: picks mock or remote via `DataSourceConfig` |
+| `<entity>_repository.dart` | Single repository; injects `I<Entity>Service` |
+
+Auth (`--login`):
+
+| File | Role |
+|------|------|
+| `auth_facade.dart` | Remote skeleton (Firebase/API — developer implements) |
+| `mock_auth_facade.dart` | Mock sign-in from `assets/mock/auth_user.json` |
+| `auth_facade_module.dart` | DI for `IAuthFacade` |
+
+## Mock JSON format
+
+Path: `assets/mock/<entity_snake_case>.json`
+
+```json
+{
+  "items": [
+    { "id": "1", "title": "Sample task", "done": false }
+  ]
+}
+```
+
+- Field names and types must match `<entity>_dto.dart` JSON serialization.
+- Include **at least 2–3 realistic records**.
+- `flutterator add-domain` generates a starter file; **agents must update it** when adding entities manually or extending fields.
+
+Auth seed: `assets/mock/auth_user.json`
+
+```json
+{
+  "id": "mock-user-1",
+  "name": "Demo User",
+  "emailAddress": "demo@example.com"
+}
+```
+
+## Developer checklist — API ready
+
+1. Implement / verify `<entity>_remote_service.dart` endpoints.
+2. Set `'entity_key': DataSource.remote` in `DataSourceConfig.entities`.
+3. Set `Constants.apiUrl` in `initEnvironment()` in `main.dart`.
+4. Run `dart run build_runner build --delete-conflicting-outputs`.
+
+## AI obligation
+
+When implementing a **new domain entity** (epic or manual):
+
+1. Create `i_<entity>_service.dart`, `mock_<entity>_service.dart`, `<entity>_remote_service.dart`, `<entity>_service_module.dart`.
+2. **Create or update** `assets/mock/<entity>.json` with 2–3 coherent sample rows.
+3. Register the entity in `DataSourceConfig.entities` as `DataSource.mock` unless remote is explicitly required.
+4. Repository injects `I<Entity>Service` only — never Retrofit directly.
+
+See also: `docs/architecture/APIS_AND_INTEGRATION.md`.

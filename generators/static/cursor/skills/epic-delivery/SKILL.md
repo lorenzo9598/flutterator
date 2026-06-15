@@ -15,6 +15,7 @@ Read before starting:
 - `docs/architecture/DDD_LAYERS.md`
 - `docs/architecture/FILE_TEMPLATES.md`
 - `docs/architecture/CARAVAGGIO_COMPONENTS.md` (when epic includes UI)
+- `docs/architecture/MOCK_AND_REMOTE_DATA.md` (when epic includes domain entities or API)
 
 ## Workflow
 
@@ -46,17 +47,17 @@ Delegate to subagent **`epic-orchestrator`** with:
 - Epic file path
 - Complexity tag (`small` | `large`)
 
-**small** pipeline (~4–5 subagents):
+**small** pipeline (~4 subagents):
 
 ```
-feature-implementer → integration-wiring → doc-writer + test-writer → layer-guardian
+feature-implementer → integration-wiring → doc-writer → layer-guardian
 ```
 
 **large** pipeline (~6–7 subagents):
 
 ```
 layer-model → layer-infrastructure → layer-application → layer-presentation
-  → integration-wiring → doc-writer + test-writer → layer-guardian
+  → integration-wiring → doc-writer → layer-guardian
 ```
 
 ### 5. Close epic
@@ -69,4 +70,5 @@ layer-model → layer-infrastructure → layer-application → layer-presentatio
 
 - **Never** run `flutterator` CLI — write Dart files directly.
 - Do not duplicate widget policy — use `docs/architecture/WIDGETS_AND_CARAVAGGIO.md` and `docs/architecture/CARAVAGGIO_COMPONENTS.md`.
+- For data layers use `docs/architecture/MOCK_AND_REMOTE_DATA.md` — default mock, create `assets/mock/<entity>.json`.
 - Use Explore subagent for codebase search; Bash for analyze and build_runner.

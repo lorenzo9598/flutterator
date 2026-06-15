@@ -85,4 +85,3 @@ def copy_cursor_ecosystem(project_path: Path, login: bool, project_name: str) ->
         _copy_static_file(CURSOR_STATIC_DIR / rel, root / rel)
 
     _copy_static_file(CURSOR_STATIC_DIR / "docs" / "epics" / "README.md", root / "docs" / "epics" / "README.md")
-    _copy_static_file(CURSOR_STATIC_DIR / "test" / "README.md", root / "test" / "README.md")

@@ -17,7 +17,7 @@ def update_pubspec(flutter_name, has_login):
         "bloc",
         "another_flushbar",
         "flutter_lints",
-        "caravaggio_ui:1.0.6",
+        "caravaggio_ui",
         "font_awesome_flutter",
         "uuid",
         "collection", 
@@ -27,7 +27,8 @@ def update_pubspec(flutter_name, has_login):
         "dio",
         "retrofit",
         "go_router",
-        "json_annotation"
+        "json_annotation",
+        "intl",
     ]
     
     # Dipendenze di sviluppo
@@ -38,7 +39,7 @@ def update_pubspec(flutter_name, has_login):
         "json_serializable",
         "retrofit_generator",
         "flutter_launcher_icons",
-        "analyzer"
+        "analyzer",
     ]
 
     # Add all main dependencies in a single command
@@ -70,7 +71,6 @@ def add_multiple_dependencies(project_path: Path, packages: list, dev: bool = Fa
     except FileNotFoundError:
         print("❌ Flutter not found in PATH")
         sys.exit(1)
-
 # def add_dependency(project_path: Path, package: str, dev: bool = False):
 #     """Adds a single dependency using flutter pub add"""
 #     try:
@@ -119,7 +119,8 @@ def update_flutter_config(project_path: Path):
                 new_lines.extend([
                     f"{indent}assets:",
                     f"{indent}  - assets/",
-                    f"{indent}  - assets/svgs/"
+                    f"{indent}  - assets/svgs/",
+                    f"{indent}  - assets/mock/"
                 ])
             elif stripped.startswith("uses-material-design:"):
                 new_lines.append(line)

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
+import 'package:[[project_name]]/features/auth/presentation/login_page.dart';
 import 'package:[[project_name]]/features/auth/sign_in_form/application/sign_in_form_bloc.dart';
 import 'package:[[project_name]]/features/home/home_page.dart';
 import 'package:[[project_name]]/domain/auth/model/auth_failure.dart';
@@ -39,166 +40,342 @@ class SignInForm extends StatelessWidget {
         );
       },
       builder: (BuildContext context, SignInFormState state) {
-        return Form(
-          autovalidateMode: state.showErrorMessages ? AutovalidateMode.always : AutovalidateMode.disabled,
-          child: SingleChildScrollView(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 50, left: 16, right: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Image.asset(
-                      'assets/logo.png',
-                      height: 80,
-                    ),
-                    const SizedBox(height: 8),
-                    CText.display(
-                      'Accedi',
-                      textAlign: TextAlign.center,
-                    ).bold,
-                    const SizedBox(height: 8),
-                    CTextField.bordered(
-                      decoration: const CFieldDecoration(
-                        prefixIcon: Icon(Icons.email),
-                        labelText: 'Email',
-                      ),
-                      initialValue: kDebugMode ? 'email@example.com' : null,
-                      autocorrect: false,
-                      onChanged: (String value) {
-                        context.read<SignInFormBloc>().add(SignInFormEvent.emailChanged(value));
-                      },
-                      validator: (String? value) {
-                        return EmailAddress(value ?? '').value.fold(
-                              (ValueFailure<String> failure) => failure.title(context, failure),
-                              (_) => null,
-                            );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    CTextField.bordered(
-                      // controller: passwordController,
-                      decoration: const CFieldDecoration(
-                        prefixIcon: Icon(Icons.lock),
-                        labelText: 'Password',
-                      ),
-                      obscureText: true,
-                      autocorrect: false,
-                      initialValue: kDebugMode ? 'password' : null,
-                      onChanged: (String value) {
-                        context.read<SignInFormBloc>().add(SignInFormEvent.passwordChanged(value));
-                      },
-                      validator: (String? value) {
-                        return Password(value ?? '').value.fold(
-                              (ValueFailure<String> failure) => failure.title(context, failure),
-                              (_) => null,
-                            );
-                      },
-                    ),
-                    if (state.signInAction == SignInAction.signUp) ...<Widget>[
-                      const SizedBox(height: 8),
-                      CTextField.bordered(
-                        decoration: const CFieldDecoration(
-                          prefixIcon: Icon(Icons.person),
-                          labelText: 'Confirm Password',
+        final ThemeData theme = Theme.of(context);
+        final Color? muted = theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7);
+        final bool isSignIn = state.signInAction == SignInAction.signIn;
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: CGradient.primaryLightToSecondaryLight,
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Hero(
+                        tag: LoginPage.logoHeroTag,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Image.asset(
+                            'assets/logo.png',
+                            height: 58,
+                          ),
                         ),
-                        obscureText: true,
-                        autocorrect: false,
-                        initialValue: kDebugMode ? 'password' : null,
-                        onChanged: (String value) {
-                          context.read<SignInFormBloc>().add(SignInFormEvent.confirmPasswordChanged(value));
-                        },
-                        validator: (String? value) {
-                          return ConfirmPassword(context.read<SignInFormBloc>().state.password.rawValue, value ?? '').value.fold(
-                                (ValueFailure<String> failure) => failure.title(context, failure),
-                                (_) => null,
-                              );
-                        },
+                      ),
+                      const SizedBox(height: 20),
+                      CWrapper(
+                        loading: state.isSubmitting,
+                        message: isSignIn ? 'Accesso in corso...' : 'Registrazione in corso...',
+                        borderRadius: const BorderRadius.all(AppRadius.l),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: const BorderRadius.all(AppRadius.l),
+                            boxShadow: AppShadow.sm,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                                child: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: _AuthModeTab(
+                                        label: 'Accedi',
+                                        selected: isSignIn,
+                                        onTap: state.isSubmitting
+                                            ? null
+                                            : () {
+                                                if (!isSignIn) {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.toggleSignInAction(),
+                                                      );
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _AuthModeTab(
+                                        label: 'Registrati',
+                                        selected: !isSignIn,
+                                        onTap: state.isSubmitting
+                                            ? null
+                                            : () {
+                                                if (isSignIn) {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.toggleSignInAction(),
+                                                      );
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  children: <Widget>[
+                                    Container(
+                                      width: 52,
+                                      height: 52,
+                                      decoration: BoxDecoration(
+                                        borderRadius: const BorderRadius.all(AppRadius.m),
+                                        gradient: CGradient.primaryToSecondary,
+                                      ),
+                                      child: Icon(
+                                        isSignIn ? Icons.lock_outline : Icons.person_add_outlined,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          CText.headline(
+                                            isSignIn ? 'Bentornato' : 'Crea il tuo account',
+                                            size: TextSize.small,
+                                          ).bold,
+                                          const SizedBox(height: 4),
+                                          CText.body(
+                                            isSignIn
+                                                ? 'Inserisci le tue credenziali per continuare'
+                                                : 'Compila i campi per registrarti',
+                                            size: TextSize.small,
+                                            style: TextStyle(color: muted),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(height: 1, color: CColors.secondary.shade200),
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Form(
+                                  autovalidateMode: state.showErrorMessages
+                                      ? AutovalidateMode.always
+                                      : AutovalidateMode.disabled,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: <Widget>[
+                                      CText.label('Account', size: TextSize.small).bold,
+                                      const SizedBox(height: 12),
+                                      CTextField.filled(
+                                        decoration: const CFieldDecoration(
+                                          labelText: 'Email',
+                                          hintText: 'nome@esempio.com',
+                                          prefixIcon: Icon(Icons.email_outlined),
+                                        ),
+                                        initialValue: kDebugMode ? 'email@example.com' : null,
+                                        autocorrect: false,
+                                        keyboardType: TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        enabled: !state.isSubmitting,
+                                        onChanged: (String value) {
+                                          context.read<SignInFormBloc>().add(SignInFormEvent.emailChanged(value));
+                                        },
+                                        validator: (String? value) {
+                                          return EmailAddress(value ?? '').value.fold(
+                                                (ValueFailure<String> failure) => failure.title(context, failure),
+                                                (_) => null,
+                                              );
+                                        },
+                                      ),
+                                      const SizedBox(height: 14),
+                                      CTextField.filled(
+                                        decoration: const CFieldDecoration(
+                                          labelText: 'Password',
+                                          hintText: 'Inserisci la password',
+                                          labelIcon: Icon(Icons.lock_outline, color: Color(0xFF6B7280)),
+                                        ),
+                                        obscureText: true,
+                                        autocorrect: false,
+                                        textInputAction: isSignIn ? TextInputAction.done : TextInputAction.next,
+                                        initialValue: kDebugMode ? 'password' : null,
+                                        enabled: !state.isSubmitting,
+                                        onChanged: (String value) {
+                                          context.read<SignInFormBloc>().add(SignInFormEvent.passwordChanged(value));
+                                        },
+                                        validator: (String? value) {
+                                          return Password(value ?? '').value.fold(
+                                                (ValueFailure<String> failure) => failure.title(context, failure),
+                                                (_) => null,
+                                              );
+                                        },
+                                      ),
+                                      if (!isSignIn) ...<Widget>[
+                                        const SizedBox(height: 14),
+                                        CTextField.filled(
+                                          decoration: const CFieldDecoration(
+                                            labelText: 'Conferma password',
+                                            hintText: 'Ripeti la password',
+                                            labelIcon: Icon(Icons.lock_outline, color: Color(0xFF6B7280)),
+                                          ),
+                                          obscureText: true,
+                                          autocorrect: false,
+                                          textInputAction: TextInputAction.done,
+                                          initialValue: kDebugMode ? 'password' : null,
+                                          enabled: !state.isSubmitting,
+                                          onChanged: (String value) {
+                                            context.read<SignInFormBloc>().add(
+                                                  SignInFormEvent.confirmPasswordChanged(value),
+                                                );
+                                          },
+                                          validator: (String? value) {
+                                            return ConfirmPassword(
+                                              context.read<SignInFormBloc>().state.password.rawValue,
+                                              value ?? '',
+                                            ).value.fold(
+                                                  (ValueFailure<String> failure) => failure.title(context, failure),
+                                                  (_) => null,
+                                                );
+                                          },
+                                        ),
+                                      ],
+                                      const SizedBox(height: 20),
+                                      CButton.elevated(
+                                        radius: AppRadius.s,
+                                        onPressed: state.isSubmitting
+                                            ? null
+                                            : () {
+                                                if (isSignIn) {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.signInWithEmailAndPasswordPressed(),
+                                                      );
+                                                } else {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.registerWithEmailAndPasswordPressed(),
+                                                      );
+                                                }
+                                              },
+                                        child: CText.label(isSignIn ? 'Accedi' : 'Registrati').bold,
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Row(
+                                        children: <Widget>[
+                                          Expanded(child: Divider(color: CColors.secondary.shade200)),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                                            child: CText.label(
+                                              'oppure continua con',
+                                              size: TextSize.small,
+                                              style: TextStyle(color: muted),
+                                            ),
+                                          ),
+                                          Expanded(child: Divider(color: CColors.secondary.shade200)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      CButton.outlined(
+                                        onPressed: state.isSubmitting
+                                            ? null
+                                            : () {
+                                                if (isSignIn) {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.signInWithGooglePressed(),
+                                                      );
+                                                } else {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.registerWithGooglePressed(),
+                                                      );
+                                                }
+                                              },
+                                        radius: AppRadius.s,
+                                        color: Colors.grey,
+                                        suffixIcon: SvgPicture.asset(
+                                          'assets/svgs/google.svg',
+                                          semanticsLabel: 'Google logo',
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        child: CText.label('Google').bold,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      CButton.elevated(
+                                        onPressed: state.isSubmitting
+                                            ? null
+                                            : () {
+                                                if (isSignIn) {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.signInWithApplePressed(),
+                                                      );
+                                                } else {
+                                                  context.read<SignInFormBloc>().add(
+                                                        const SignInFormEvent.registerWithApplePressed(),
+                                                      );
+                                                }
+                                              },
+                                        color: Colors.black,
+                                        radius: AppRadius.s,
+                                        suffixIcon: SvgPicture.asset(
+                                          'assets/svgs/apple.svg',
+                                          semanticsLabel: 'Apple logo',
+                                          color: Colors.white,
+                                          width: 24,
+                                          height: 24,
+                                        ),
+                                        child: CText.label('Apple').white.bold,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    CButton.elevated(
-                      radius: AppRadius.s,
-                      onPressed: () {
-                        if (state.signInAction == SignInAction.signIn) {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.signInWithEmailAndPasswordPressed());
-                        } else {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.registerWithEmailAndPasswordPressed());
-                        }
-                      },
-                      child: state.signInAction == SignInAction.signIn ? CText.label('SIGN IN') : CText.label('REGISTER'),
-                    ),
-                    const SizedBox(height: 16),
-                    CButton.outlined(
-                      onPressed: () {
-                        if (state.signInAction == SignInAction.signIn) {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.signInWithGooglePressed());
-                        } else {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.registerWithGooglePressed());
-                        }
-                      },
-                      radius: AppRadius.s,
-                      color: Colors.grey,
-                      suffixIcon: SvgPicture.asset(
-                        'assets/svgs/google.svg',
-                        semanticsLabel: 'Google logo',
-                        width: 24,
-                        height: 24,
-                      ),
-                      child: CText.label(
-                        'Continue with Google',
-                      ).bold,
-                    ),
-                    const SizedBox(height: 8),
-                    CButton.elevated(
-                      onPressed: () {
-                        if (state.signInAction == SignInAction.signIn) {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.signInWithApplePressed());
-                        } else {
-                          context.read<SignInFormBloc>().add(const SignInFormEvent.registerWithApplePressed());
-                        }
-                      },
-                      color: Colors.black,
-                      radius: AppRadius.s,
-                      suffixIcon: SvgPicture.asset(
-                        'assets/svgs/apple.svg',
-                        semanticsLabel: 'Apple logo',
-                        color: Colors.white,
-                        width: 24,
-                        height: 24,
-                      ),
-                      child: CText.label(
-                        'Continue with Apple',
-                      ).white.bold,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        CText.label(
-                          state.signInAction == SignInAction.signIn ? "Don't have an account? " : "Already have an account? ",
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            context.read<SignInFormBloc>().add(const SignInFormEvent.toggleSignInAction());
-                          },
-                          child: CText.label(
-                            state.signInAction == SignInAction.signIn ? 'Register' : 'Sign In',
-                          ).bold.withColor(Colors.blue),
-                        ),
-                      ],
-                    ),
-                    if (state.isSubmitting) ...<Widget>[
-                      const SizedBox(height: 8),
-                      CLinearProgressIndicator.primary(),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _AuthModeTab extends StatelessWidget {
+  const _AuthModeTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? CColors.primaryColor.withValues(alpha: 0.12) : Colors.transparent,
+      borderRadius: const BorderRadius.all(AppRadius.s),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(AppRadius.s),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Center(
+            child: CText.label(
+              label,
+              size: TextSize.small,
+            ).withColor(selected ? CColors.primaryColor : CColors.secondary.shade500).bold,
+          ),
+        ),
+      ),
     );
   }
 }

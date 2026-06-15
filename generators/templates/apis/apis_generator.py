@@ -1,15 +1,22 @@
 from pathlib import Path
 from ..copier import generate_file
+from generators.helpers.data_source import regenerate_data_source_config
 
 
 def generate_files(project_name: str, lib_path: Path, has_login: bool = False):
-    generate_common(project_name, lib_path)
+    generate_common(project_name, lib_path, has_login=has_login)
     generate_core(project_name, lib_path)
     generate_interceptors(project_name, lib_path, has_login=has_login)
 
 
-def generate_common(project_name: str, lib_path: Path):
+def generate_common(project_name: str, lib_path: Path, has_login: bool = False):
     generate_constants(project_name, lib_path)
+    regenerate_data_source_config(
+        project_name,
+        lib_path,
+        domain_folder="domain",
+        has_login=has_login,
+    )
 
 
 def generate_core(project_name: str, lib_path: Path):

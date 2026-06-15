@@ -1,0 +1,73 @@
+/*
+ * Mock [[entity_name]] service — loads seed data from assets/mock/[[file_name]].json.
+ * CRUD mutations are kept in memory for the current app session.
+ */
+
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/i_[[file_name]]_service.dart';
+
+@lazySingleton
+class Mock[[entity_name]]Service implements I[[entity_name]]Service {
+  static const String _assetPath = 'assets/mock/[[file_name]].json';
+
+  List<[[entity_name]]Dto>? _items;
+
+  Future<List<[[entity_name]]Dto>> _loadItems() async {
+    if (_items != null) {
+      return _items!;
+    }
+    final String raw = await rootBundle.loadString(_assetPath);
+    final Map<String, dynamic> decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final List<dynamic> list = decoded['items'] as List<dynamic>? ?? <dynamic>[];
+    _items = list
+        .map((dynamic e) => [[entity_name]]Dto.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    return _items!;
+  }
+
+  @override
+  Future<List<[[entity_name]]Dto>> getAll() => _loadItems();
+
+  @override
+  Future<[[entity_name]]Dto> getById(String id) async {
+    final List<[[entity_name]]Dto> items = await _loadItems();
+    for (final [[entity_name]]Dto item in items) {
+      if (item.id == id) {
+        return item;
+      }
+    }
+    throw StateError('[[entity_name]] not found: $id');
+  }
+
+  @override
+  Future<[[entity_name]]Dto> create([[entity_name]]Dto [[entity_name_camel]]Dto) async {
+    final List<[[entity_name]]Dto> items = await _loadItems();
+    items.add([[entity_name_camel]]Dto);
+    return [[entity_name_camel]]Dto;
+  }
+
+  @override
+  Future<[[entity_name]]Dto> update(String id, [[entity_name]]Dto [[entity_name_camel]]Dto) async {
+    final List<[[entity_name]]Dto> items = await _loadItems();
+    final int index = items.indexWhere(([[entity_name]]Dto e) => e.id == id);
+    if (index < 0) {
+      throw StateError('[[entity_name]] not found: $id');
+    }
+    items[index] = [[entity_name_camel]]Dto;
+    return [[entity_name_camel]]Dto;
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    final List<[[entity_name]]Dto> items = await _loadItems();
+    final int before = items.length;
+    items.removeWhere(([[entity_name]]Dto e) => e.id == id);
+    if (items.length == before) {
+      throw StateError('[[entity_name]] not found: $id');
+    }
+  }
+}

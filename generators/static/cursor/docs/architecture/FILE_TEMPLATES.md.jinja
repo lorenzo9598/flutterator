@@ -17,9 +17,29 @@
 | File | Purpose |
 |------|---------|
 | `<entity>_dto.dart` | JSON DTO |
-| `<entity>_service.dart` | Retrofit API client |
+| `i_<entity>_service.dart` | Service interface |
+| `<entity>_remote_service.dart` | Retrofit REST client |
+| `mock_<entity>_service.dart` | Mock service (reads `assets/mock/<entity>.json`) |
+| `<entity>_service_module.dart` | DI binding mock vs remote |
 | `<entity>_mapper.dart` | DTO ↔ entity |
-| `<entity>_repository.dart` | `@Injectable` repository impl |
+| `<entity>_repository.dart` | `@Injectable` repository (injects `I*Service`) |
+
+### Mock assets
+
+| File | Purpose |
+|------|---------|
+| `assets/mock/<entity>.json` | Seed data (`{ "items": [...] }`) |
+
+{% if login %}
+### Auth infrastructure
+
+| File | Purpose |
+|------|---------|
+| `domain/auth/infrastructure/auth_facade.dart` | Remote auth skeleton |
+| `domain/auth/infrastructure/mock_auth_facade.dart` | Mock auth |
+| `domain/auth/infrastructure/auth_facade_module.dart` | DI for `IAuthFacade` |
+| `assets/mock/auth_user.json` | Mock user seed |
+{% endif %}
 
 ## Feature `<feature>` with BLoC
 
@@ -48,6 +68,9 @@ Same `application/` + `presentation/` structure as a feature.
 
 ## Integration (after layers)
 
+- `lib/apis/common/data_source_config.dart` — per-entity mock/remote
 - `lib/router.dart` — GoRouter routes
 - `lib/injection.dart` — GetIt / injectable init
 - `lib/core/errors/error_localizer.dart` — user-facing failure messages
+
+See `docs/architecture/MOCK_AND_REMOTE_DATA.md` for mock JSON and switching to remote.

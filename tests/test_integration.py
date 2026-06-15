@@ -377,6 +377,15 @@ class TestCLICommands:
                 )
             assert result.exit_code == 0
             assert (Path("test_project") / "lib" / "domain" / "empty_entity" / "model").exists()
+            infra = Path("test_project") / "lib" / "domain" / "empty_entity" / "infrastructure"
+            assert (infra / "i_empty_entity_service.dart").exists()
+            assert (infra / "mock_empty_entity_service.dart").exists()
+            assert (infra / "empty_entity_remote_service.dart").exists()
+            assert (Path("test_project") / "assets" / "mock" / "empty_entity.json").exists()
+            config = (
+                Path("test_project") / "lib" / "apis" / "common" / "data_source_config.dart"
+            ).read_text()
+            assert "'empty_entity': DataSource.mock" in config
 
     def test_add_component_domain_model_none_dry_run(self, sample_project_structure):
         """add-component with explicit --domain-model skips prompts (dry-run)."""
@@ -1052,6 +1061,10 @@ class TestFeatureModes:
         assert (domain_dir / "model" / "product_failure.dart").exists()
         assert (domain_dir / "model" / "i_product_repository.dart").exists()
         assert (domain_dir / "infrastructure" / "product_repository.dart").exists()
+        assert (domain_dir / "infrastructure" / "i_product_service.dart").exists()
+        assert (domain_dir / "infrastructure" / "product_remote_service.dart").exists()
+        assert (domain_dir / "infrastructure" / "mock_product_service.dart").exists()
+        assert (domain_dir / "infrastructure" / "product_service_module.dart").exists()
         
         # Should NOT have application or presentation
         assert not (domain_dir / "application").exists()
@@ -1079,7 +1092,7 @@ class TestFeatureModes:
         assert not (domain_dir / "model" / "i_address_repository.dart").exists()
         assert (domain_dir / "infrastructure" / "address_dto.dart").exists()
         assert (domain_dir / "infrastructure" / "address_mapper.dart").exists()
-        assert not (domain_dir / "infrastructure" / "address_service.dart").exists()
+        assert not (domain_dir / "infrastructure" / "address_remote_service.dart").exists()
         assert not (domain_dir / "infrastructure" / "address_repository.dart").exists()
 
     def test_add_domain_no_repo_cli(self, sample_project_structure):

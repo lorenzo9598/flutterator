@@ -8,7 +8,7 @@ import 'package:[[project_name]]/apis/interceptors/auth_interceptor.dart';
 abstract class ApisInjectableModule {
   @lazySingleton
   Dio get dio => Dio()
-    ..options.baseUrl = Constants.apiUrl
+    ..options.baseUrl = Constants.dioBaseUrl
     ..interceptors.add(ApiLogger())
-    ..interceptors.add(AuthInterceptor(Constants.apiUrl));
+    ..interceptors.add(AuthInterceptor(Constants.dioBaseUrl));
 }

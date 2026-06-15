@@ -416,14 +416,18 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
     to_dto_fields_str = ",\n".join(to_dto_fields)
     
     if not no_repo:
-        # Create Service (Retrofit)
-        generate_file(project_name, infra_dir, "domain/domain_service_template.jinja", f"{entity_folder_name}_service.dart", {
-            "entity_name": entity_class_name,  # Use class name for template (PascalCase)
-            "file_name": entity_folder_name,  # Use folder name for file references (snake_case)
-            "entity_name_camel": pascal_case_to_camel_case(entity_class_name),  # camelCase for variable names
-            "kebab_name": pascal_case_to_kebab_case(entity_class_name),  # kebab-case for API routes
-            "import_prefix": import_prefix
-        })
+        # Create service interface, remote, mock, and DI module
+        service_ctx = {
+            "entity_name": entity_class_name,
+            "file_name": entity_folder_name,
+            "entity_name_camel": pascal_case_to_camel_case(entity_class_name),
+            "kebab_name": pascal_case_to_kebab_case(entity_class_name),
+            "import_prefix": import_prefix,
+        }
+        generate_file(project_name, infra_dir, "domain/i_domain_service_template.jinja", f"i_{entity_folder_name}_service.dart", service_ctx)
+        generate_file(project_name, infra_dir, "domain/domain_remote_service_template.jinja", f"{entity_folder_name}_remote_service.dart", service_ctx)
+        generate_file(project_name, infra_dir, "domain/mock_domain_service_template.jinja", f"mock_{entity_folder_name}_service.dart", service_ctx)
+        generate_file(project_name, infra_dir, "domain/domain_service_module_template.jinja", f"{entity_folder_name}_service_module.dart", service_ctx)
     
     # Create Mapper
     # Build mapper imports and constructor parameters
@@ -454,7 +458,7 @@ import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failur
         repo_import = f"""import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}.dart';
 import 'package:{project_name}/{import_prefix}/model/{entity_folder_name}_failure.dart';
 import 'package:{project_name}/{import_prefix}/model/i_{entity_folder_name}_repository.dart';
-import 'package:{project_name}/{import_prefix}/infrastructure/{entity_folder_name}_service.dart';
+import 'package:{project_name}/{import_prefix}/infrastructure/i_{entity_folder_name}_service.dart';
 import 'package:{project_name}/{import_prefix}/infrastructure/{entity_folder_name}_mapper.dart';
 """
         generate_file(project_name, infra_dir, "domain/domain_repository_template.jinja", f"{entity_folder_name}_repository.dart", {

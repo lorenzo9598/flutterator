@@ -4,22 +4,17 @@ import 'package:[[project_name]]/features/auth/sign_in_form/application/sign_in_
 import 'package:[[project_name]]/injection.dart';
 import 'package:[[project_name]]/features/auth/sign_in_form/presentation/sign_in_form.dart';
 import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
-import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends StatelessWidget {
   static const String routeName = '/login';
+  static const String logoHeroTag = 'auth-logo';
 
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  @override
   Widget build(BuildContext context) {
-    return CustomScaffold(
-      showBackButton: false,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
       body: BlocProvider<SignInFormBloc>(
         create: (BuildContext context) => SignInFormBloc(getIt<IAuthFacade>()),
         child: const SignInForm(),

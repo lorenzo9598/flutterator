@@ -16,6 +16,11 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  static const Duration _splashMinDuration = Duration(seconds: 1);
+
+  bool _minDelayElapsed = false;
+  bool _hasNavigated = false;
+  AuthState? _resolvedAuthState;
   int _animation = 0;
 
   @override
@@ -26,24 +31,64 @@ class _SplashPageState extends State<SplashPage> {
         _animation = 1;
       });
     });
+    Future<void>.delayed(_splashMinDuration, () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _minDelayElapsed = true;
+      });
+      _tryNavigate();
+    });
+  }
+
+  void _onAuthStateChanged(AuthState state) {
+    if (_hasNavigated) {
+      return;
+    }
+    if (state is Authenticated || state is Unauthenticated) {
+      _resolvedAuthState = state;
+      _tryNavigate();
+    }
+  }
+
+  void _tryNavigate() {
+    if (_hasNavigated || _resolvedAuthState == null) {
+      return;
+    }
+
+    final AuthState state = _resolvedAuthState!;
+
+    if (state is Authenticated) {
+      _hasNavigated = true;
+      context.replace(HomePage.routeName);
+      return;
+    }
+
+    if (state is Unauthenticated && _minDelayElapsed) {
+      _hasNavigated = true;
+      context.pushReplacement(LoginPage.routeName);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (BuildContext context, AuthState state) => switch (state) {
-        Authenticated() => context.replace(HomePage.routeName),
-        Unauthenticated() => context.replace(LoginPage.routeName),
-        _ => null,
-      },
+      listener: (BuildContext context, AuthState state) => _onAuthStateChanged(state),
       child: CustomScaffold(
         showBackButton: false,
         body: Center(
-          child: AnimatedContainer(
-            duration: const Duration(seconds: 1),
-            curve: Curves.easeInOut,
-            width: _animation == 1 ? 200 : 100,
-            child: Image.asset('assets/logo.png'),
+          child: Hero(
+            tag: LoginPage.logoHeroTag,
+            child: Material(
+              type: MaterialType.transparency,
+              child: AnimatedContainer(
+                duration: const Duration(seconds: 1),
+                curve: Curves.easeInOut,
+                width: _animation == 1 ? 200 : 100,
+                child: Image.asset('assets/logo.png'),
+              ),
+            ),
           ),
         ),
       ),

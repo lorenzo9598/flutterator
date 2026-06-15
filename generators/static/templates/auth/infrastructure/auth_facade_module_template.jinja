@@ -1,0 +1,16 @@
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/apis/common/data_source_config.dart';
+import 'package:[[project_name]]/domain/auth/infrastructure/auth_facade.dart';
+import 'package:[[project_name]]/domain/auth/infrastructure/mock_auth_facade.dart';
+import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
+
+@module
+abstract class AuthFacadeModule {
+  @lazySingleton
+  IAuthFacade authFacade(AuthFacade remote, MockAuthFacade mock) {
+    if (DataSourceConfig.useMock('auth')) {
+      return mock;
+    }
+    return remote;
+  }
+}

@@ -2,7 +2,7 @@
   "name": "flutterator",
   "displayName": "Flutterator",
   "description": "Interfaccia VS Code per il Flutterator CLI. Richiede il comando flutterator sul PC: pip install flutterator (e PATH che include lo script) oppure impostare flutterator.executablePath con il percorso completo dell'eseguibile.",
-  "version": "0.1.1",
+  "version": "3.1.6",
   "publisher": "lorenzobusi",
   "license": "MIT",
   "homepage": "https://pypi.org/project/flutterator/",

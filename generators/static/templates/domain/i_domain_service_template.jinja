@@ -1,0 +1,18 @@
+/*
+ * Service interface for [[entity_name]] data access.
+ * Implemented by mock (JSON) and remote (Retrofit) services.
+ */
+
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
+
+abstract class I[[entity_name]]Service {
+  Future<List<[[entity_name]]Dto>> getAll();
+
+  Future<[[entity_name]]Dto> getById(String id);
+
+  Future<[[entity_name]]Dto> create([[entity_name]]Dto [[entity_name_camel]]Dto);
+
+  Future<[[entity_name]]Dto> update(String id, [[entity_name]]Dto [[entity_name_camel]]Dto);
+
+  Future<void> delete(String id);
+}

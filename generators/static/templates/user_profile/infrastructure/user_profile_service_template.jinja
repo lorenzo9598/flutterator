@@ -8,10 +8,9 @@ part 'user_profile_service.g.dart';
 
 @module
 abstract class UserProfileRemoteModule {
-  @preResolve
-  @LazySingleton()
-  Future<UserProfileService> userProfileService(Dio dio) async {
-    return UserProfileService(dio, baseUrl: Constants.apiUrl);
+  @lazySingleton
+  UserProfileService userProfileService(Dio dio) {
+    return UserProfileService(dio, baseUrl: Constants.dioBaseUrl);
   }
 }
 

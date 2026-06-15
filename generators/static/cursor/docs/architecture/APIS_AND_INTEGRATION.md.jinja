@@ -4,23 +4,33 @@
 
 | Path | Role |
 |------|------|
-| `apis/clients/` | Retrofit `@RestApi` interfaces |
+| `apis/common/constants.dart` | `apiUrl`, headers |
+| `apis/common/data_source_config.dart` | Per-entity mock vs remote registry |
 | `apis/interceptors/` | Dio interceptors (auth, logging) |
-| `apis/common/` | Shared API types |
-| `apis/core/` | API module wiring |
+| `apis/core/` | Dio injectable module |
+
+**Mock data:** `assets/mock/<entity>.json` — see `docs/architecture/MOCK_AND_REMOTE_DATA.md`.
+
+## Mock vs remote
+
+Each domain entity has `I*Service` with **mock** (JSON assets) and **remote** (Retrofit) implementations. `DataSourceConfig.entities` selects which implementation DI provides. Default: **mock**.
+
+Read `docs/architecture/MOCK_AND_REMOTE_DATA.md` before adding entities or switching to remote.
 
 ## When to add API code
 
-Add Retrofit services when an epic needs new HTTP endpoints. Domain DTOs live in `lib/domain/<entity>/infrastructure/<entity>_dto.dart`; the Retrofit client typically lives in `infrastructure/<entity>_service.dart`.
+Add or extend `<entity>_remote_service.dart` when an epic needs HTTP endpoints. DTOs live in `lib/domain/<entity>/infrastructure/<entity>_dto.dart`. Repositories inject `I<Entity>Service`, never Retrofit directly.
 
 ## Integration wiring (subagent: integration-wiring)
 
 After domain and feature layers exist:
 
 1. **router.dart** — import new page, add `GoRoute` with path and name consistent with existing routes.
-2. **injection.dart** — ensure `configureDependencies()` covers new `@injectable` classes.
-3. **error_localizer.dart** — add `localize<Entity>Failure` method per new `*_failure.dart`.
-4. **build_runner** — run after Injectable/Freezed/Retrofit changes:
+2. **injection.dart** — ensure `configureDependencies()` covers new `@injectable` classes and service modules.
+3. **data_source_config.dart** — register new entity as `DataSource.mock` (or `remote` when API ready).
+4. **assets/mock/** — create/update `<entity>.json` with sample data.
+5. **error_localizer.dart** — add `localize<Entity>Failure` method per new `*_failure.dart`.
+6. **build_runner** — run after Injectable/Freezed/Retrofit changes:
    ```
    dart run build_runner build --delete-conflicting-outputs
    ```
@@ -29,3 +39,4 @@ After domain and feature layers exist:
 
 - No UI in `lib/apis/`.
 - Presentation never calls Retrofit directly — use repository from domain.
+- Remote entities require non-empty `Constants.apiUrl` (validated at startup).

@@ -14,10 +14,10 @@ core ← all layers (shared types, errors)
 | Layer | Path | Contains | Must not contain |
 |-------|------|----------|------------------|
 | Domain model | `lib/domain/<e>/model/` | Entity, failure, `I*Repository`, VOs | Widgets, BLoC, Dio |
-| Domain infra | `lib/domain/<e>/infrastructure/` | DTO, service, mapper, repository impl | Widgets, BLoC |
+| Domain infra | `lib/domain/<e>/infrastructure/` | DTO, `I*Service`, mock/remote services, mapper, repository impl | Widgets, BLoC |
 | Application | `lib/features/<f>/application/` | BLoC, events, states | Widgets |
 | Presentation | `lib/features/<f>/presentation/` | Pages, components | Direct infra imports |
-| APIs | `lib/apis/` | HTTP, interceptors | UI |
+| APIs | `lib/apis/` | HTTP, interceptors, `DataSourceConfig` | UI |
 | Core | `lib/core/` | Shared errors, app shell | Feature-specific logic |
 
 ## Anti-patterns

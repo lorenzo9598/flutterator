@@ -5,12 +5,17 @@ alwaysApply: false
 
 # APIs layer
 
-- `lib/apis/clients/` — Retrofit service interfaces
+- `lib/apis/common/constants.dart` — `apiUrl`, headers
+- `lib/apis/common/data_source_config.dart` — per-entity `DataSource.mock` / `DataSource.remote`
 - `lib/apis/interceptors/` — Dio interceptors (auth token, logging)
-- `lib/apis/common/`, `lib/apis/core/` — shared API utilities
+- `lib/apis/core/` — Dio injectable module
+
+Read `docs/architecture/MOCK_AND_REMOTE_DATA.md` before adding or switching data sources.
 
 ## Rules
 
 - No UI in `lib/apis/`.
-- Register new services via `@injectable` modules; run `build_runner` after changes.
-- Coordinate router/DI changes with `integration-wiring` subagent when adding endpoints for a new epic.
+- Register services via `@injectable` modules; run `build_runner` after changes.
+- Non-auth entities set to `remote` require non-empty `Constants.apiUrl` (validated in `main.dart`).
+- New entities: add `assets/mock/<entity>.json` and register in `DataSourceConfig`.
+- Coordinate router/DI/mock JSON with `integration-wiring` subagent when adding endpoints for a new epic.

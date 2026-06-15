@@ -42,7 +42,7 @@ def generate_files(lib_path, login: bool, project_name: str, primary_color: str 
 
 
     # Generate home files
-    generate_home_files(project_name, lib_path)
+    generate_home_files(project_name, lib_path, has_login=login)
 
     if login:
         # Generate auth files

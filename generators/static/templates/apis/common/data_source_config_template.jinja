@@ -1,0 +1,47 @@
+/*
+ * Per-entity data source registry (mock vs remote).
+ *
+ * Change a single entry from DataSource.mock to DataSource.remote when the
+ * backend API for that entity is ready. New entities default to mock so the
+ * app runs without Constants.apiUrl.
+ */
+
+import 'package:[[project_name]]/apis/common/constants.dart';
+
+enum DataSource {
+  mock,
+  remote,
+}
+
+abstract class DataSourceConfig {
+  /// Keys: snake_case entity folder name; 'auth' when login is enabled.
+  static const Map<String, DataSource> entities = {
+[[entities_entries]]
+  };
+
+  static DataSource forEntity(String key) => entities[key] ?? DataSource.mock;
+
+  static bool useMock(String key) => forEntity(key) == DataSource.mock;
+
+  /// Throws if any non-auth entity uses remote but [Constants.apiUrl] is not configured.
+  static void validateRemoteRequiresApiUrl() {
+    if (Constants.isApiUrlConfigured) {
+      return;
+    }
+    final List<String> remoteWithoutUrl = entities.entries
+        .where(
+          (MapEntry<String, DataSource> e) =>
+              e.value == DataSource.remote && e.key != 'auth',
+        )
+        .map((MapEntry<String, DataSource> e) => e.key)
+        .toList();
+    if (remoteWithoutUrl.isEmpty) {
+      return;
+    }
+    throw StateError(
+      'DataSourceConfig: entity/entities ${remoteWithoutUrl.join(', ')} '
+      'use DataSource.remote but Constants.apiUrl is not configured. '
+      'Set apiUrl in initEnvironment() or switch to DataSource.mock.',
+    );
+  }
+}

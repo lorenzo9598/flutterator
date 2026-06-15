@@ -28,7 +28,6 @@
 - [ ] Domain model and infrastructure complete
 - [ ] BLoC and presentation complete
 - [ ] Router, DI, error_localizer updated
-- [ ] Tests written
 - [ ] `flutter analyze` clean
 - [ ] `layer-guardian` audit passed
 

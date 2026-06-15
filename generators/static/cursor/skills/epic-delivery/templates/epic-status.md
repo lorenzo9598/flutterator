@@ -8,7 +8,6 @@
 | Presentation | | |
 | Integration wiring | | |
 | Documentation | | |
-| Tests | | |
 | layer-guardian audit | | |
 
 **Completed at:** _ISO date_  

@@ -37,8 +37,12 @@ Use these generated files as canonical examples when implementing new code.
 - `lib/widgets/common/error_widget.dart` — `CText.body`
 - `lib/widgets/common/unknown_state_widget.dart` — fallback BLoC state
 
-## APIs
+## APIs and data sources
 
-- `lib/apis/` — clients, interceptors, injectable module
+- `lib/apis/common/data_source_config.dart` — per-entity mock vs remote
+- `lib/apis/common/constants.dart` — `apiUrl`
+- `assets/mock/` — JSON seed data per entity
+
+See `docs/architecture/MOCK_AND_REMOTE_DATA.md`.
 
 When adding new code, match naming, imports, and patterns from the closest reference above. For UI components see `docs/architecture/CARAVAGGIO_COMPONENTS.md`.

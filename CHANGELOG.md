@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.6] - 2026-06-15
+
+### ✨ Features
+
+- **Mock / remote data source**: generated projects support switching between mock JSON assets and Retrofit remote services via `DataSourceConfig`; domain services split into `I*Service`, `*RemoteService`, and `Mock*Service` with injectable modules.
+- **Auth mock**: optional `MockAuthFacade` alongside real `AuthFacade`, wired through `AuthFacadeModule`.
+
+### 🚀 Release
+
+- **CI**: push on `main` publishes to **PyPI**, **VS Code Marketplace** (`vsce`), and **Open VSX** (`ovsx`) when `project.version` is bumped; extension version is synced from `pyproject.toml`.
+
+### 📚 Documentation
+
+- Cursor docs and agents updated for mock/remote data patterns (`MOCK_AND_REMOTE_DATA.md`, layer rules, epic delivery skill).
+
+---
+
 ## [3.1.5] - 2026-04-16
 
 ### 📚 Documentation

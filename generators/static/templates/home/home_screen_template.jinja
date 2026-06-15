@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
-      title: CText.title('Home', size: TextSize.small),
+      title: CText.title('Home', size: TextSize.medium).bold,
       showBackButton: false,
 {% if has_drawer %}
       drawer: const AppDrawer(),

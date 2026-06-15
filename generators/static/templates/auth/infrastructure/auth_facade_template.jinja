@@ -17,7 +17,7 @@ import 'package:[[project_name]]/domain/auth/model/i_auth_facade.dart';
 /// When implementing getSignedInUser/sign-in flows that need to sync UserProfile,
 /// resolve IUserProfileRepository lazily (e.g. via GetIt) only when needed.
 
-@Singleton(as: IAuthFacade)
+@lazySingleton
 class AuthFacade implements IAuthFacade {
   // final FirebaseAuth _firebaseAuth; // Uncomment the following line to use Firebase Authentication
   // final FirebaseUserMapper _firebaseUserMapper; // Uncomment the following line to use Firebase Authentication

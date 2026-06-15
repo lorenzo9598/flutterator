@@ -15,7 +15,6 @@ EXPECTED_AGENTS = [
     "layer-presentation.md",
     "integration-wiring.md",
     "doc-writer.md",
-    "test-writer.md",
     "layer-guardian.md",
 ]
 
@@ -35,6 +34,7 @@ EXPECTED_ARCH_DOCS = [
     "FILE_TEMPLATES.md",
     "WIDGETS_AND_CARAVAGGIO.md",
     "CARAVAGGIO_COMPONENTS.md",
+    "MOCK_AND_REMOTE_DATA.md",
     "REFERENCE_IMPLEMENTATIONS.md",
     "APIS_AND_INTEGRATION.md",
 ]
@@ -95,7 +95,7 @@ def test_copy_cursor_ecosystem_default(cursor_project):
         assert (cursor_project / "docs/architecture" / doc).exists()
 
     assert (cursor_project / "docs/epics/README.md").exists()
-    assert (cursor_project / "test/README.md").exists()
+    assert not (cursor_project / "test/README.md").exists()
     assert (cursor_project / "lib/domain/AGENTS.md").exists()
     assert (cursor_project / "lib/features/AGENTS.md").exists()
     assert (cursor_project / "lib/widgets/AGENTS.md").exists()
@@ -155,3 +155,12 @@ def test_caravaggio_components_catalog(cursor_project):
     assert "CTile" in catalog
     assert "CLoader" in catalog
     assert "CustomScaffold" in catalog
+
+
+def test_mock_and_remote_doc(cursor_project):
+    copy_cursor_ecosystem(cursor_project, login=False, project_name="my_app")
+    doc = (cursor_project / "docs/architecture/MOCK_AND_REMOTE_DATA.md").read_text()
+    assert "DataSourceConfig" in doc
+    assert "assets/mock" in doc
+    infra = (cursor_project / ".cursor/agents/layer-infrastructure.md").read_text()
+    assert "assets/mock" in infra

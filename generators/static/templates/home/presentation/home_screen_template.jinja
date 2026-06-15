@@ -1,5 +1,11 @@
 import 'package:caravaggio_ui/caravaggio_ui.dart';
 import 'package:flutter/material.dart';
+{% if has_login %}
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:[[project_name]]/features/auth/application/auth_bloc.dart';
+import 'package:[[project_name]]/features/auth/presentation/login_page.dart';
+{% endif %}
 import 'package:[[project_name]]/widgets/common/custom_scaffold.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,12 +20,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
+{% if has_login %}
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (BuildContext context, AuthState state) => switch (state) {
+        Unauthenticated() => context.go(LoginPage.routeName),
+        _ => null,
+      },
+      child: CustomScaffold(
+        title: CText.title('Home', size: TextSize.medium).bold,
+        showBackButton: false,
+        action: CButton.icon(
+          icon: Icons.logout,
+          tooltip: 'Logout',
+          onPressed: () => context.read<AuthBloc>().add(const AuthEvent.signedOut()),
+        ),
+        body: const Center(
+          child: Text('Home Screen'),
+        ),
+      ),
+    );
+{% else %}
     return CustomScaffold(
-      title: CText.title('Home', size: TextSize.small),
+      title: CText.title('Home', size: TextSize.medium).bold,
       showBackButton: false,
       body: const Center(
         child: Text('Home Screen'),
       ),
     );
+{% endif %}
   }
 }

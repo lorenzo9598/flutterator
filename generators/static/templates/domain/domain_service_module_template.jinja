@@ -1,0 +1,23 @@
+/*
+ * Binds I[[entity_name]]Service to mock or remote implementation per DataSourceConfig.
+ */
+
+import 'package:injectable/injectable.dart';
+import 'package:[[project_name]]/apis/common/data_source_config.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/i_[[file_name]]_service.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_remote_service.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/mock_[[file_name]]_service.dart';
+
+@module
+abstract class [[entity_name]]ServiceModule {
+  @lazySingleton
+  I[[entity_name]]Service [[entity_name_camel]]Service(
+    [[entity_name]]RemoteService remote,
+    Mock[[entity_name]]Service mock,
+  ) {
+    if (DataSourceConfig.useMock('[[file_name]]')) {
+      return mock;
+    }
+    return remote;
+  }
+}

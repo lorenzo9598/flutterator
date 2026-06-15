@@ -13,9 +13,11 @@ alwaysApply: true
 | `lib/domain/enums/` | Domain enums |
 | `lib/features/<feature>/` | Vertical features: `application/` (BLoC) + `presentation/` (UI) |
 | `lib/features/components/` | Reusable UI components with their own BLoC |
-| `lib/apis/` | HTTP client, Retrofit services, interceptors |
+| `lib/apis/` | HTTP, Dio, `DataSourceConfig`, interceptors |
 | `lib/logging/`, `lib/storage/` | Cross-cutting infrastructure |
 | `lib/widgets/common/` | App-wide widgets (CustomScaffold, Loading, Error, UnknownState) |
+
+Mock seed data: `assets/mock/<entity>.json` (per-entity mock services). See `docs/architecture/MOCK_AND_REMOTE_DATA.md`.
 
 Entry points: `lib/main.dart`, `lib/injection.dart`, `lib/router.dart`.
 

@@ -1,9 +1,5 @@
 /*
- * Remote Service template for API communication
- * Uses Retrofit to define REST API endpoints
- * 
- * This service handles all HTTP calls to the backend API
- * and returns DTOs that will be mapped to domain entities
+ * Remote [[entity_name]] service — Retrofit REST client.
  */
 
 import 'package:dio/dio.dart';
@@ -11,35 +7,40 @@ import 'package:injectable/injectable.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:[[project_name]]/apis/common/constants.dart';
 import 'package:[[project_name]]/[[import_prefix]]/infrastructure/[[file_name]]_dto.dart';
+import 'package:[[project_name]]/[[import_prefix]]/infrastructure/i_[[file_name]]_service.dart';
 
-part '[[file_name]]_service.g.dart';
+part '[[file_name]]_remote_service.g.dart';
 
 @module
 abstract class [[entity_name]]RemoteModule {
-  @preResolve
-  @LazySingleton()
-  Future<[[entity_name]]Service> [[entity_name_camel]]Service(Dio dio) async {
-    return [[entity_name]]Service(dio, baseUrl: Constants.apiUrl);
+  @lazySingleton
+  [[entity_name]]RemoteService [[entity_name_camel]]RemoteService(Dio dio) {
+    return [[entity_name]]RemoteService(dio, baseUrl: Constants.dioBaseUrl);
   }
 }
 
 @RestApi()
-abstract class [[entity_name]]Service {
+abstract class [[entity_name]]RemoteService implements I[[entity_name]]Service {
   @factoryMethod
-  factory [[entity_name]]Service(Dio dio, {String baseUrl}) = _[[entity_name]]Service;
+  factory [[entity_name]]RemoteService(Dio dio, {String baseUrl}) = _[[entity_name]]RemoteService;
 
+  @override
   @GET('/[[kebab_name]]s')
   Future<List<[[entity_name]]Dto>> getAll();
 
+  @override
   @GET('/[[kebab_name]]s/{id}')
   Future<[[entity_name]]Dto> getById(@Path('id') String id);
 
+  @override
   @POST('/[[kebab_name]]s')
   Future<[[entity_name]]Dto> create(@Body() [[entity_name]]Dto [[entity_name_camel]]Dto);
 
+  @override
   @PUT('/[[kebab_name]]s/{id}')
   Future<[[entity_name]]Dto> update(@Path('id') String id, @Body() [[entity_name]]Dto [[entity_name_camel]]Dto);
 
+  @override
   @DELETE('/[[kebab_name]]s/{id}')
   Future<void> delete(@Path('id') String id);
 }

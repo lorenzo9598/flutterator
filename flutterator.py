@@ -59,7 +59,7 @@ from generators.helpers import (
 from generators.helpers.utils import to_camel_case
 
 # Version
-VERSION = "3.1.5"
+VERSION = "3.1.6"
 
 # Rich console for colored output
 console = Console()
@@ -622,7 +622,12 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
         f"{entity_folder_name}_mapper.dart",
     ]
     if not no_repo:
-        infra_files[1:1] = [f"{entity_folder_name}_service.dart"]
+        infra_files[1:1] = [
+            f"i_{entity_folder_name}_service.dart",
+            f"{entity_folder_name}_remote_service.dart",
+            f"mock_{entity_folder_name}_service.dart",
+            f"{entity_folder_name}_service_module.dart",
+        ]
         infra_files.append(f"{entity_folder_name}_repository.dart")
     
     # Dry-run mode: show what would be created
@@ -667,9 +672,28 @@ def add_domain(name, fields, folder, project_path, dry_run, no_build, non_intera
         folder,
         no_repo=no_repo,
     )
+
+    from generators.templates._core.core_generator import generate_error_localizer, infer_has_login
+
+    if not no_repo:
+        from generators.helpers.data_source import generate_mock_json, regenerate_data_source_config
+        from generators.helpers.feature import find_enums_with_info
+
+        enums_info = find_enums_with_info(lib_path, folder) if lib_path.exists() else {}
+        generate_mock_json(
+            project_dir,
+            entity_folder_name,
+            field_list,
+            known_enums=enums_info,
+        )
+        regenerate_data_source_config(
+            project_name,
+            lib_path,
+            domain_folder=folder,
+            has_login=infer_has_login(lib_path),
+        )
     
     # Regenerate error_localizer with the newly added domain failure
-    from generators.templates._core.core_generator import generate_error_localizer, infer_has_login
 
     generate_error_localizer(
         project_name,

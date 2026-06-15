@@ -11,11 +11,29 @@
  */
 
 class Constants {
-  /// Main REST API base URL (also used as [Dio.options.baseUrl] in [ApisInjectableModule]).
-  static String apiUrl = "";
+  static const String _placeholderMarker = 'INSERT YOUR';
 
-  /// Base URL for token refresh (e.g. Supabase auth). If empty, [AuthInterceptor] falls back to [apiUrl].
-  static String authUrl = "";
+  /// Main REST API base URL. Leave empty for mock-only development.
+  static String apiUrl = '';
+
+  /// Base URL for token refresh (e.g. Supabase auth). If empty, [AuthInterceptor] falls back to [dioBaseUrl].
+  static String authUrl = '';
+
+  /// True when [apiUrl] is a real URL (not empty or a generator placeholder).
+  static bool get isApiUrlConfigured {
+    final String url = apiUrl.trim();
+    if (url.isEmpty || url.contains(_placeholderMarker)) {
+      return false;
+    }
+    final Uri? uri = Uri.tryParse(url);
+    return uri != null && uri.hasScheme && uri.host.isNotEmpty;
+  }
+
+  /// Base URL for Dio / Retrofit construction.
+  ///
+  /// When [apiUrl] is not configured, returns a valid localhost URL so DI can
+  /// start while all entities use mock data (no HTTP calls are made).
+  static String get dioBaseUrl => isApiUrlConfigured ? apiUrl : 'http://127.0.0.1';
 
   /// Sent as the `apikey` header on requests and refresh calls (set in your environment).
   static const String apiKey = '';
